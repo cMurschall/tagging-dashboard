@@ -1,0 +1,8 @@
+
+
+### Get static file
+GET http://127.0.0.1:8888
+
+### Get healthcheck
+GET http://127.0.0.1:8888/healthcheck
+Accept: application/json

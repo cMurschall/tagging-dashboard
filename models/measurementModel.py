@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class MeasurementModel(BaseModel):
     timestamp: float
     throttle: float

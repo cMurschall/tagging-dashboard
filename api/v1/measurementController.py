@@ -1,4 +1,6 @@
 from fastapi import APIRouter
+
+
 class MeasurementController:
     def __init__(self):
         self.router = APIRouter()

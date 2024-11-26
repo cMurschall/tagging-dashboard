@@ -4,7 +4,6 @@ from fastapi.staticfiles import StaticFiles
 from api import router as global_router
 from api.v1 import router as v1_router
 
-
 app = FastAPI()
 
 # Include global endpoints

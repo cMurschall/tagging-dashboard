@@ -4,5 +4,13 @@
 GET http://127.0.0.1:8888
 
 ### Get healthcheck
-GET http://127.0.0.1:8888/healthcheck
+GET http://127.0.0.1:8888/api/healthcheck
 Accept: application/json
+
+
+
+### Get docs
+GET http://127.0.0.1:8888/docs
+
+### Get swagger.json
+GET http://127.0.0.1:8888/openapi.json

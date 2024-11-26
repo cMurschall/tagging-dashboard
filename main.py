@@ -1,19 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from api import router as global_router
 from api.v1 import router as v1_router
 
-
 app = FastAPI()
 
-# Serve static files
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 # Include global endpoints
-app.include_router(global_router)
+app.include_router(global_router, prefix="/api")
 
 # Include API routers
 app.include_router(v1_router, prefix="/api/v1")
+
+# Serve static files
+# Note: We must mount the static files at last, because otherwise it overrides all / routes
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 
 

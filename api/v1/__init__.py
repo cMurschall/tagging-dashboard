@@ -3,8 +3,6 @@ from . import playerEndpoint
 
 router = APIRouter()
 
-print("api/v1/__init__.py")
-print(playerEndpoint.router)
 
 
 # Include endpoints

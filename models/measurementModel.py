@@ -1,3 +1,6 @@
+import random
+from typing import Type
+
 from pydantic import BaseModel
 
 
@@ -74,3 +77,16 @@ class MeasurementModel(BaseModel):
     car0_engine_max_rpm: int
     engine_rpm: int
     brakes_vol: int
+
+
+# Define the function to create a random instance of a Pydantic model
+def create_random_instance(model: Type[BaseModel]) -> BaseModel:
+    random_data = {}
+    for field_name, field_type in model.__annotations__.items():
+        if field_type is int:
+            random_data[field_name] = random.randint(0, 1000)  # Random int in a specified range
+        elif field_type is float:
+            random_data[field_name] = random.uniform(0.0, 1000.0)  # Random float in a specified range
+        else:
+            raise ValueError(f"Unsupported field type: {field_type} for field {field_name}")
+    return model(**random_data)

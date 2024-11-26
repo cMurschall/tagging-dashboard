@@ -1,10 +1,12 @@
-import random
 import time
 from threading import Lock
 
+from models.measurementModel import create_random_instance
 
-class DataProcess:
+
+class LiveDataProcess:
     """Simulates a class that receives a new measurement every 10 microseconds."""
+
     def __init__(self):
         self.latest_measurement = None
         self.lock = Lock()
@@ -14,11 +16,7 @@ class DataProcess:
         while True:
             with self.lock:
                 # Simulate receiving a new measurement
-
-                self.latest_measurement = {
-                    "value": random.uniform(0, 100),  # Random value for simulation
-                    "timestamp": time.time()
-                }
+                self.latest_measurement = create_random_instance()
             time.sleep(1e-5)  # 10 microseconds
 
     def get_latest_measurement(self):

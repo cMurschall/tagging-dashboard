@@ -1,10 +1,11 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+
 from api import router as global_router
 from api.v1 import router as v1_router
 
-app = FastAPI()
 
+app = FastAPI()
 
 # Include global endpoints
 app.include_router(global_router, prefix="/api")
@@ -15,8 +16,6 @@ app.include_router(v1_router, prefix="/api/v1")
 # Serve static files
 # Note: We must mount the static files at last, because otherwise it overrides all / routes
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
-
-
 
 #
 # from threading import Thread
@@ -46,4 +45,3 @@ app.mount("/", StaticFiles(directory="static", html=True), name="static")
 #         return {"value": 0.0, "timestamp": 0.0}  # Return default values if no data is available
 #     return latest_measurement
 #
-

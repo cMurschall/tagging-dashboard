@@ -25,10 +25,8 @@ class SimulatedNetworkStreamDataSource(DataSource):
     async def get_next_data(self) -> Optional[MeasurementModel]:
         return await self.data_queue.get()
 
-
     async def jump_to_timestamp(self, timestamp: float):
         """Jump to the closest timestamp."""
 
         # This is a network stream, so we can't jump to a specific timestamp.
         pass
-

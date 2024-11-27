@@ -15,8 +15,10 @@ router = APIRouter()
 class LoadCsvPayload(BaseModel):
     file_name: str
 
+
 class JumpToTimestampPayload(BaseModel):
     timestamp: float
+
 
 class PlayerController:
     def __init__(self):
@@ -27,9 +29,8 @@ class PlayerController:
         self.csv_file_folder = "D:/Praxisprojekt Herms"
 
     def _define_routes(self):
-
         @self.router.post("/load_csv")
-        async def load_csv(payload: LoadCsvPayload,  player: Player = Depends(get_player)):
+        async def load_csv(payload: LoadCsvPayload, player: Player = Depends(get_player)):
             file_name = payload.file_name
             file_path = Path(f"{self.csv_file_folder}/{file_name}")
             if file_path.is_file() is False:
@@ -59,4 +60,3 @@ class PlayerController:
         async def jump_to_timestamp(payload: JumpToTimestampPayload, player: Player = Depends(get_player)):
             await player.jump_to_timestamp(payload.timestamp)
             return {"message": f"Jumped to timestamp {payload.timestamp}"}
-

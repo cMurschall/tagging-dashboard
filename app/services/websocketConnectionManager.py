@@ -5,7 +5,7 @@ from starlette.websockets import WebSocket
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections : List[WebSocket] = []
+        self.active_connections: List[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -13,6 +13,7 @@ class ConnectionManager:
 
     def disconnect(self, websocket: WebSocket):
         self.active_connections.remove(websocket)
+
     async def broadcast_text(self, message: str):
         for connection in self.active_connections:
             await connection.send_text(message)

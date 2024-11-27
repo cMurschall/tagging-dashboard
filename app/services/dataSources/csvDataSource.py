@@ -24,7 +24,7 @@ class CSVDataSource(DataSource):
                 # Skip the first row explicitly (contains zero values)
                 next(csv_reader, None)
 
-                parsed_data =[]
+                parsed_data = []
                 # Parse the CSV file
                 for row in csv_reader:
                     try:
@@ -32,7 +32,6 @@ class CSVDataSource(DataSource):
                         parsed_data.append(model)
                     except ValueError as e:
                         print(f"Error: Failed to parse the CSV file '{self.file_path}'. {e}")
-
 
                 # Store the sorted data and initialize the iterator
                 self.data = parsed_data

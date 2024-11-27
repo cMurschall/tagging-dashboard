@@ -82,9 +82,11 @@ class MeasurementModel(BaseModel):
         return list(map(float, value.split(",")))
 
     # Validator for vector-like fields
-    @field_validator("car0_vehicle_pos","car0_vehicle_quat","car0_vehicle_vel","car0_steer_quat","car0_wheel0_pos",
-        "car0_wheel0_quat","car0_caliper0_quat","car0_wheel1_pos","car0_wheel1_quat","car0_caliper1_quat","car0_wheel2_pos",
-        "car0_wheel2_quat","car0_caliper2_quat","car0_wheel3_pos","car0_wheel3_quat","car0_caliper3_quat","lin_vel","lin_acc","rot_acc",mode="before")
+    @field_validator("car0_vehicle_pos", "car0_vehicle_quat", "car0_vehicle_vel", "car0_steer_quat", "car0_wheel0_pos",
+                     "car0_wheel0_quat", "car0_caliper0_quat", "car0_wheel1_pos", "car0_wheel1_quat",
+                     "car0_caliper1_quat", "car0_wheel2_pos",
+                     "car0_wheel2_quat", "car0_caliper2_quat", "car0_wheel3_pos", "car0_wheel3_quat",
+                     "car0_caliper3_quat", "lin_vel", "lin_acc", "rot_acc", mode="before")
     def validate_vector(cls, value):
         if isinstance(value, str):  # If input is a string, parse it
             return cls.parse_vector(value)

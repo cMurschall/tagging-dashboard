@@ -40,4 +40,3 @@ def test_create_random_instance():
             assert all(isinstance(item, float) for item in field_value), f"Field {field_name} contains non-float items"
         else:
             pytest.fail(f"Unsupported field type {field_type} for field {field_name}")
-

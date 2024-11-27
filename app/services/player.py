@@ -1,8 +1,6 @@
 # Player class
 import asyncio
 
-from fastapi import WebSocket
-
 from .dataSources.emptyDataSource import EmptyDataSource
 from .websocketConnectionManager import ConnectionManager
 from ..services.dataSources.dataSource import DataSource

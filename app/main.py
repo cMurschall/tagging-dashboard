@@ -1,8 +1,7 @@
 import asyncio
 import sys
 
-import uvicorn
-from fastapi import FastAPI, Depends,  WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 
 from .api import router as global_router
@@ -10,19 +9,17 @@ from .api.v1 import router as v1_router
 from .services.player import Player
 from .services.websocketConnectionManager import ConnectionManager
 
-
-
-
 connection_manager_instance = ConnectionManager()
 player_instance = Player(connection_manager_instance)
-
 
 
 def get_player():
     return player_instance
 
+
 def get_connection_manager():
     return connection_manager_instance
+
 
 app = FastAPI()
 
@@ -38,18 +35,15 @@ if "pytest" not in sys.modules:
     app.mount("/", StaticFiles(directory="app/static", html=True), name="static")
 
 
-
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await get_connection_manager().connect(websocket)
     try:
         while True:
-            await websocket.send_text("ping") # keep alive
-            await asyncio.sleep(20) # should be okay so clients may not time out and close the connection
+            await websocket.send_text("ping")  # keep alive
+            await asyncio.sleep(20)  # should be okay so clients may not time out and close the connection
     except WebSocketDisconnect:
-            get_connection_manager().disconnect(websocket)
-
-
+        get_connection_manager().disconnect(websocket)
 
 # if __name__ == "__main__":
 #     print("Starting server manually")

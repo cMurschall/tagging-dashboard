@@ -6,19 +6,11 @@ from fastapi.staticfiles import StaticFiles
 
 from .api import router as global_router
 from .api.v1 import router as v1_router
-from .services.player import Player
-from .services.websocketConnectionManager import ConnectionManager
-
-connection_manager_instance = ConnectionManager()
-player_instance = Player(connection_manager_instance)
+from .dependencies import get_player, get_connection_manager
 
 
-def get_player():
-    return player_instance
 
 
-def get_connection_manager():
-    return connection_manager_instance
 
 
 app = FastAPI()

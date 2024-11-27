@@ -93,20 +93,6 @@ class MeasurementModel(BaseModel):
         return value  # Otherwise, return the value as-is
 
 
-# Define the function to create a random instance of a Pydantic model
-def create_random_instance2(model: Type[BaseModel]) -> BaseModel:
-    random_data = {}
-    for field_name, field_type in model.__annotations__.items():
-        if field_type is int:
-            random_data[field_name] = random.randint(0, 1000)  # Random int in a specified range
-        elif field_type is float:
-            random_data[field_name] = random.uniform(0.0, 1000.0)  # Random float in a specified range
-        elif field_type is List[float]:
-            random_data[field_name] = [random.uniform(0.0, 1000.0) for _ in range(3)]
-        else:
-            raise ValueError(f"Unsupported field type: {field_type} for field {field_name}")
-    return model(**random_data)
-
 
 def create_random_instance(model: Type[BaseModel]) -> BaseModel:
     random_data = {}

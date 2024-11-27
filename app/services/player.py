@@ -7,8 +7,8 @@ from ..services.dataSources.dataSource import DataSource
 
 
 class Player:
-    def __init__(self, websocketManager: ConnectionManager):
-        self.websocketManager = websocketManager
+    def __init__(self, websocket_manager: ConnectionManager):
+        self.websocket_manager = websocket_manager
         self._is_playing = False
         self._data_source = EmptyDataSource()
         self._lock = asyncio.Lock()  # Protects shared state
@@ -41,13 +41,13 @@ class Player:
                 data = await current_data_source.get_next_data()
                 if data is None:
                     break  # End of data
-                await self.websocketManager.broadcast_text(data.json())
+                await self.websocket_manager.broadcast_text(data.json())
         finally:
             async with self._lock:
                 self._is_playing = False
                 self._stop_event.clear()  # Ensure the stop event is reset
 
-    def pause(self):
+    async def pause(self):
         async with self._lock:
             self._stop_event.set()
 

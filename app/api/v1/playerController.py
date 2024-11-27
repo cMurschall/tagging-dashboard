@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from ...main import get_player
+from ...dependencies import get_player
 from ...services.dataSources.csvDataSource import CSVDataSource
 from ...services.dataSources.simulatedNetworkDataSource import SimulatedNetworkStreamDataSource
 from ...services.player import Player

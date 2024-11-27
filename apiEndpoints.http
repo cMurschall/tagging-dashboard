@@ -16,3 +16,35 @@ GET http://127.0.0.1:8888/docs
 GET http://127.0.0.1:8888/openapi.json
 
 
+### Load CSV File
+POST http://127.0.0.1:8888/api/v1/player/load
+Content-Type: application/json
+
+{
+  "file_name": "recording_2024_04_17__16_44_14_mapping_trip_01.csv",
+  "chunk_size": 1000
+}
+
+### Play Stream
+POST http://127.0.0.1:8888/api/v1/player/play
+Content-Type: application/json
+
+{}
+
+### Pause Stream
+POST http://127.0.0.1:8888/api/v1/player/pause
+Content-Type: application/json
+
+{}
+
+### Jump to Timestamp
+POST http://127.0.0.1:8888/api/v1/player/toTimeStamp
+Content-Type: application/json
+
+{
+  "timestamp": 12.5
+}
+
+### Get the data stream
+WEBSOCKET ws://127.0.0.1:8888/ws/replay
+Content-Type: application/json // Used for content highlighting only

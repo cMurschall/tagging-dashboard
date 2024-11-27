@@ -2,9 +2,10 @@ from http.client import HTTPException
 
 from fastapi import APIRouter
 
-from controllers.CsvLoader import CSVLoader
-from controllers.CsvPlayback import CSVPlayback
 from models.measurementModel import MeasurementModel
+from services.dataSources.csvDataSource import CSVDataSource
+from services.dataSources.simulatedNetworkDataSource import SimulatedNetworkStreamDataSource
+from services.player import Player
 
 router = APIRouter()
 
@@ -16,35 +17,39 @@ class PlayerController:
         self._define_routes()
 
     def _define_routes(self):
-        @self.router.post("/load")
-        async def load_file(file_name: str):
-            """Load a new CSV file for playback."""
-            loader = CSVLoader(file_name)
-            self.playback = CSVPlayback(loader.load_all())
-            return {"message": f"CSV file '{file_name}' loaded successfully"}
+
+        @self.router.post("/load_csv")
+        async def load_csv(file_path: str):
+            global player
+            data_source = CSVDataSource(file_path)
+            player = Player(data_source)
+            return {"message": f"CSV data source initialized from {file_path}"}
+
+        @self.router.post("/load_stream")
+        async def load_stream():
+            global player
+            data_source = SimulatedNetworkStreamDataSource()
+            player = Player(data_source)
+            return {"message": "Network stream data source initialized"}
 
         @self.router.post("/play")
-        async def play_stream():
-            if not self.playback:
-                raise HTTPException(status_code=400, detail="No file loaded for playback")
-            if not self.playback.is_playing:
-                self.playback.is_playing = True
+        async def play():
+            if player:
+                player.play()
                 return {"message": "Playback started"}
-            return {"message": "Playback is already running"}
+            return {"error": "No data source loaded"}
 
         @self.router.post("/pause")
-        async def pause_stream():
-            if not self.playback:
-                raise HTTPException(status_code=400, detail="No file loaded for playback")
-            if self.playback.is_playing:
-                self.playback.pause()
+        async def pause():
+            if player:
+                player.pause()
                 return {"message": "Playback paused"}
-            return {"message": "Playback is already paused"}
+            return {"error": "No data source loaded"}
 
-        @self.router.post("/toTimeStamp")
-        async def jump_to_time(timestamp: float):
-            if not self.playback:
-                raise HTTPException(status_code=400, detail="No file loaded for playback")
-            self.playback.jump_to_timestamp(timestamp)
-            return {"message": f"Jumped to timestamp {timestamp}"}
+        @self.router.post("/jump_to_timestamp")
+        async def jump_to_timestamp(timestamp: float):
+            if player:
+                await player.jump_to_timestamp(timestamp)
+                return {"message": f"Jumped to timestamp {timestamp}"}
+            return {"error": "No data source loaded"}
 

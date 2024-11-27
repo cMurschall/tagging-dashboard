@@ -3,8 +3,8 @@ import asyncio
 import csv
 from typing import List, Optional, AsyncIterator
 
-from models.measurementModel import MeasurementModel
-from services.dataSources.dataSource import DataSource
+from ...models.measurementModel import MeasurementModel
+from ...services.dataSources.dataSource import DataSource
 
 
 class CSVDataSource(DataSource):

@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import mock_open, patch
 
-from services.dataSources.csvDataSource import CSVDataSource
+from app.services.dataSources.csvDataSource import CSVDataSource
 
 
 @pytest.mark.asyncio

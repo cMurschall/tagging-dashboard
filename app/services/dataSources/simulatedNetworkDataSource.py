@@ -2,8 +2,8 @@ import asyncio
 from random import random
 from typing import Optional
 
-from models.measurementModel import MeasurementModel, create_random_instance
-from services.dataSources.dataSource import DataSource
+from ...models.measurementModel import MeasurementModel, create_random_instance
+from ...services.dataSources.dataSource import DataSource
 
 
 # Network Stream Data Source Implementation

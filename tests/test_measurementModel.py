@@ -3,7 +3,7 @@ from typing import List
 
 import pytest
 
-from models.measurementModel import create_random_instance, MeasurementModel
+from app.models.measurementModel import create_random_instance, MeasurementModel
 
 
 def test_convert_single_from_csv():

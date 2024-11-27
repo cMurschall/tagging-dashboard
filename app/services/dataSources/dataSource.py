@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from models.measurementModel import MeasurementModel
+from ...models.measurementModel import MeasurementModel
 
 
 class DataSource(ABC):

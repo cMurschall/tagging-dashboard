@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from ...models.measurementModel import MeasurementModel
+from ...models.loggingRow import LoggingRow
 
 
 class DataSource(ABC):
@@ -13,7 +13,7 @@ class DataSource(ABC):
         pass
 
     @abstractmethod
-    async def get_next_data(self) -> Optional[MeasurementModel]:
+    async def get_next_data(self) -> Optional[LoggingRow]:
         """Asynchronously fetch the next piece of data based on the timestamp."""
         pass
 

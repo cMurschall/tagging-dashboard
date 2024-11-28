@@ -3,7 +3,7 @@ import asyncio
 import csv
 from typing import List, Optional, AsyncIterator
 
-from ...models.measurementModel import MeasurementModel
+from ...models.loggingRow import LoggingRow
 from ...services.dataSources.dataSource import DataSource
 
 
@@ -11,8 +11,8 @@ class CSVDataSource(DataSource):
 
     def __init__(self, file_path: str):
         self.file_path = file_path
-        self.data: List[MeasurementModel] = []
-        self.iterator: Optional[AsyncIterator[MeasurementModel]] = None
+        self.data: List[LoggingRow] = []
+        self.iterator: Optional[AsyncIterator[LoggingRow]] = None
         self.previous_timestamp = 0.0
 
     async def load_data(self):
@@ -28,7 +28,7 @@ class CSVDataSource(DataSource):
                 # Parse the CSV file
                 for row in csv_reader:
                     try:
-                        model = MeasurementModel.model_validate(row)
+                        model = LoggingRow.model_validate(row)
                         parsed_data.append(model)
                     except ValueError as e:
                         print(f"Error: Failed to parse the CSV file '{self.file_path}'. {e}")
@@ -45,7 +45,7 @@ class CSVDataSource(DataSource):
             print(f"Error: Failed to parse the CSV file '{self.file_path}'. {e}")
             raise
 
-    async def get_next_data(self) -> Optional[MeasurementModel]:
+    async def get_next_data(self) -> Optional[LoggingRow]:
         try:
             data = next(self.iterator)
             delay = max(0, data.timestamp - self.previous_timestamp)

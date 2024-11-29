@@ -1,19 +1,11 @@
-try:
-    import panthera as pt
-except ImportError:
-    from .mockPanthera import MockPanthera
-    pt = MockPanthera()
+from .mockPanthera import MockPanthera as pt
 
-from dataclasses import asdict, dataclass, field, fields
-from typing import Type, List, Dict, Any
+from dataclasses import asdict
 
 import sys
-import math
-import time
-import re
 import csv
 
-
+from ...models.loggingRow import LoggingRow
 
 
 class Process(pt.Process):
@@ -38,13 +30,6 @@ class Process(pt.Process):
         # Manually send the signals (to reduce latency, send them as soon as their values are set)
         # Done with the `self.SendSignals()` call
         self.StepHandlesSendSignals(False)
-
-        # Add a single field the process sends out
-        ns = self.GetNamedStructInterfaceFromProcess().GetNamedStruct()
-        # Initialize the field we expect to receive
-        self.receive_field = False
-        self.rf = ["steer_angle", "car0_gear", "speed", "lin_acc"]
-
         self.has_written_header = False
 
     def Run(self):
@@ -384,4 +369,3 @@ class Process(pt.Process):
             print(field_name)
             return None
         return field
-

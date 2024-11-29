@@ -34,12 +34,12 @@ async def test_get_next_data():
         # Second call
         data = await datasource.get_next_data()
         assert data is not None
-        mock_sleep.assert_called_with(1.8277)  # Delay based on the timestamp difference
+        mock_sleep.assert_called_with(0.010999999999967258)  # Delay based on the timestamp difference
 
         # Third call
         data = await datasource.get_next_data()
         assert data is not None
-        mock_sleep.assert_called_with(0.011949999999999905)  # Delay based on the timestamp difference
+        mock_sleep.assert_called_with(0.009000000000014552)  # Delay based on the timestamp difference
 
 
 @pytest.mark.asyncio

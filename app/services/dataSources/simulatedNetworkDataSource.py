@@ -2,7 +2,7 @@ import asyncio
 from random import random
 from typing import Optional
 
-from ...models.loggingRow import LoggingRow, create_random_instance
+from ...models.loggingRow import LoggingRow
 from ...services.dataSources.dataSource import DataSource
 
 
@@ -15,7 +15,7 @@ class SimulatedNetworkStreamDataSource(DataSource):
         """Simulates data arrival in a network stream."""
         while True:
             await asyncio.sleep(random.uniform(0.5, 2.0))  # Simulate random delays
-            new_data = create_random_instance(LoggingRow)
+            new_data = LoggingRow.create_random_instance()
             await self.data_queue.put(new_data)
 
     async def load_data(self):

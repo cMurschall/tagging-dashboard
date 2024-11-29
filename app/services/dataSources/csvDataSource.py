@@ -28,15 +28,15 @@ class CSVDataSource(DataSource):
                 # Parse the CSV file
                 for row in csv_reader:
                     try:
-                        model = LoggingRow.model_validate(row)
+                        model = LoggingRow.from_dict(row)
                         parsed_data.append(model)
                     except ValueError as e:
                         print(f"Error: Failed to parse the CSV file '{self.file_path}'. {e}")
 
                 # Store the sorted data and initialize the iterator
                 self.data = parsed_data
+                self.previous_timestamp = parsed_data[0].timestamp if len(parsed_data) > 0 else 0
                 self.iterator = iter(self.data)
-                self.previous_timestamp = 0.0
 
         except FileNotFoundError:
             print(f"Error: The file '{self.file_path}' does not exist.")

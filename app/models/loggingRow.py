@@ -158,16 +158,21 @@ class LoggingRow:
                                        metadata={'panthera_name': 'wheel_raw_torque_adas', 'panthera_type': 'int'})
 
     @staticmethod
+    def get_field_mapping():
+        mapping = {
+            f.metadata.get("panthera_name"): f.name
+            for f in fields(LoggingRow)
+            if "panthera_name" in f.metadata
+        }
+        return {**mapping, 'timestamp': 'timestamp'}
+
+    @staticmethod
     def from_dict(data: Dict[str, Any]) -> "LoggingRow":
         """
         Create a LoggingRow instance from a dictionary using panthera_name metadata.
         """
         # Prepare field mapping: panthera_name -> dataclass field name
-        field_mapping = {
-            f.metadata.get("panthera_name"): f.name
-            for f in fields(LoggingRow)
-            if "panthera_name" in f.metadata
-        }
+        field_mapping = LoggingRow.get_field_mapping()
 
         # Prepare data for the dataclass
         parsed_data = {}

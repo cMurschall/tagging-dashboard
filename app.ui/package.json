@@ -1,0 +1,26 @@
+{
+  "name": "tagging-dashbaord.ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.3",
+    "bootstrap-vue": "^2.23.1",
+    "pinia": "^2.2.8",
+    "socket.io-client": "^4.8.1",
+    "vue": "^3.5.13",
+    "winbox": "^0.2.82"
+  },
+  "devDependencies": {
+    "@types/winbox": "^0.2.5",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.1",
+    "vue-tsc": "^2.1.10"
+  }
+}

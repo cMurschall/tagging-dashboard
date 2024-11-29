@@ -1,6 +1,7 @@
-class Process:
-    def __init__(self, data):
-        self.data = data
+class MockPanthera:
+    class Process:
+        def __init__(self):
+            pass
 
-    def process(self):
-        return self.data
+    def __init__(self):
+        pass

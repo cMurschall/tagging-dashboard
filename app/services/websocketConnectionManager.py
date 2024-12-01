@@ -3,7 +3,7 @@ from typing import List, Any
 from starlette.websockets import WebSocket
 
 
-class ConnectionManager:
+class WebsocketConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
 

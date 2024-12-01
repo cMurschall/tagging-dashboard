@@ -2,18 +2,31 @@ import asyncio
 import sys
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
 
 from .api import router as global_router
 from .api.v1 import router as v1_router
-from .dependencies import get_player, get_connection_manager
-
-
-
-
-
+from .dependencies import get_player, get_connection_manager, get_testdata_manager
 
 app = FastAPI()
+
+
+def custom_openapi(version: str):
+    def generate_openapi():
+        openapi_schema = get_openapi(
+            title=f"Tagging dashboard {version}",
+            version=version,
+            description=f"This is version {version} of the backend API.",
+            routes=app.routes,  # Use the app's current routes
+        )
+        return openapi_schema
+
+    return generate_openapi
+
+
+# Add version-specific OpenAPI schemas
+app.openapi = custom_openapi("1.0.0")
 
 # Include global endpoints
 app.include_router(global_router, prefix="/api")

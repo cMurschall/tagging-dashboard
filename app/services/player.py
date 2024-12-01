@@ -2,12 +2,12 @@
 import asyncio
 
 from .dataSources.emptyDataSource import EmptyDataSource
-from .websocketConnectionManager import ConnectionManager
+from .websocketConnectionManager import WebsocketConnectionManager
 from ..services.dataSources.dataSource import DataSource
 
 
 class Player:
-    def __init__(self, websocket_manager: ConnectionManager):
+    def __init__(self, websocket_manager: WebsocketConnectionManager):
         self.websocket_manager = websocket_manager
         self._is_playing = False
         self._data_source = EmptyDataSource()

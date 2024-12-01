@@ -1,25 +1,76 @@
-<script setup lang="ts">
-import Dashboard from "./components/Dashboard.vue";
-</script>
-
 <template>
-    <header class="bg-primary text-white py-3">
-      <div class="container">
-        <h1 class="mb-0">Tagging Dashboard</h1>
-      </div>
-    </header>
+    <div id="app" class="d-flex flex-column min-vh-100">
+        <!-- Header -->
+        <header class="bg-primary text-white p-2">
+            <h1 class="text-center">Tagging Dashboard</h1>
+        </header>
 
-    <main class="container my-4">
-      <dashboard />
-    </main>
+        <!-- Main Layout -->
+        <div class="container-fluid flex-grow-1 d-flex">
+            <div class="row flex-grow-1 w-100 align-items-stretch">
+                <!-- Left Sidebar -->
+                <aside class="col-md-2 col-sm-3 bg-light p-3 border-end d-flex flex-column">
+                    <h5>Available records</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Link 1</a></li>
+                        <li><a href="#">Link 2</a></li>
+                        <li><a href="#">Link 3</a></li>
+                    </ul>
+                </aside>
 
-    <footer class="bg-light py-3 mt-auto text-center">
-      <div class="container">
-        <small>&copy; 2024 Tagging Dashboard. All Rights Reserved.</small>
-      </div>
-    </footer>
+                <!-- Main Content -->
+                <main class="col-md-8 col-sm-6 p-3 d-flex flex-column">
+                    <h2>Main Content Area</h2>
+                </main>
+
+                <!-- Right Sidebar -->
+                <aside class="col-md-2 col-sm-3 bg-light p-3 border-start d-flex flex-column">
+                    <h5>Tags</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Link A</a></li>
+                        <li><a href="#">Link B</a></li>
+                        <li><a href="#">Link C</a></li>
+                    </ul>
+                </aside>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-dark text-white text-center p-1">
+            <p>© 2024 Christin Murschall</p>
+        </footer>
+    </div>
 </template>
 
-<style scoped>
+<script>
+export default {
+    name: 'App',
+};
+</script>
 
+<style scoped>
+/* Ensure header and footer stick appropriately while the main content grows */
+#app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+footer {
+    margin-top: auto;
+}
+
+.row {
+    height: 100%;
+}
+
+aside {
+    height: 100%;
+}
 </style>

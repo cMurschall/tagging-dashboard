@@ -2,6 +2,11 @@
 import { defineStore } from 'pinia';
 
 import { safeFetch, ApiClient as client, TestDriveDataOutput } from './../services/Utilities';
+import { useToastController } from 'bootstrap-vue-next'
+
+const { show: showToast } = useToastController()
+
+
 
 export const useAppStore = defineStore('app', {
   state: () => ({
@@ -11,17 +16,33 @@ export const useAppStore = defineStore('app', {
     loadedProject: {},
 
 
-    isLoading: false,
-    errors: [] as Error[],
+    isLoading: false
 
   }),
   actions: {
+    addProject(project: TestDriveDataOutput) {
+      this.availableProjects.push(project);
+    },
+    removeProject(projectId: number) {
+      this.availableProjects = this.availableProjects.filter(
+        (project) => project.id !== projectId
+      );
+    },
     async initializeStore() {
       this.isLoading = true;
 
       const [csvFilesError, csvFilesData] = await safeFetch(() => client.getCsvFilesApiV1ProjectFilesCsvGet());
       if (csvFilesError) {
-        this.errors.push(csvFilesError);
+        showToast?.({
+          props: {
+            title: 'Error loading csv files',
+            body: csvFilesError.message,
+            value: 2500,
+            variant: 'danger',
+            pos: 'top-end',
+
+          }
+        });
         // log error 
         console.error('Error fetching csv files', csvFilesError);
 
@@ -32,7 +53,16 @@ export const useAppStore = defineStore('app', {
 
       const [videoFilesError, videoFilesData] = await safeFetch(() => client.getVideoFilesApiV1ProjectFilesVideoGet());
       if (videoFilesError) {
-        this.errors.push(videoFilesError);
+        showToast?.({
+          props: {
+            title: 'Error loading video files',
+            body: videoFilesError.message,
+            value: 2500,
+            variant: 'danger',
+            pos: 'top-end',
+
+          }
+        });
         // log error
         console.error('Error fetching video files', videoFilesError);
       }
@@ -44,7 +74,16 @@ export const useAppStore = defineStore('app', {
 
       const [allProjectsError, allProjectesData] = await safeFetch(() => client.getAllTestdrivesApiV1ProjectAllGet());
       if (allProjectsError) {
-        this.errors.push(allProjectsError);
+        showToast?.({
+          props: {
+            title: 'Error loading projects',
+            body: allProjectsError.message,
+            value: 2500,
+            variant: 'danger',
+            pos: 'top-end',
+
+          }
+        });
         // log error
         console.error('Error fetching all projects', allProjectsError);
       }

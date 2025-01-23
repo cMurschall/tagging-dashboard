@@ -33,34 +33,21 @@
 
         <!-- Footer -->
         <footer class="bg-dark text-white text-center p-1">
-            <p>© 2024 Christian Murschall</p>
+            <p>© 2025 Christian Murschall</p>
         </footer>
     </div>
 </template>
 
-<script>
-import { defineComponent, onMounted } from 'vue';
+<script setup lang="ts">
+import { onMounted } from 'vue';
 import { useAppStore } from './stores/appStore';
 import LeftSideBar from './components/LeftSideBar.vue';
 
-export default defineComponent({
-    name: 'App',
-    components: {
-        LeftSideBar
-    },
-    setup() {
+// Initialize the store
+const appStore = useAppStore();
 
-        const appStore = useAppStore();
-
-        onMounted(async () => {
-            await appStore.initializeStore();
-        });
-
-
-        return {
-            // Return reactive properties and methods for use in the template
-        };
-    },
+onMounted(async () => {
+    await appStore.initializeStore();
 });
 </script>
 

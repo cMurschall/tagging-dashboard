@@ -1,6 +1,5 @@
 <template>
     <div>
-        <h3>Projects</h3>
         <BButton variant="success" @click="showNewProjectModal = !showNewProjectModal">Create new project</BButton>
 
         <BModal v-model="showNewProjectModal" title="Create New Project" @ok="createNewProject">
@@ -50,17 +49,20 @@
 
 
 
-        <h4 v-if="store.availableProjects.length">Avaliable Projects</h4>
-        <ul>
-            <li v-for="(project, index) in store.availableProjects" :key="index">
-                {{ project.metaData?.driverName }}
-            </li>
-        </ul>
+        <h4 v-if="store.availableProjects.length">Available Projects</h4>
+
+        <div v-for="(project, index) in store.availableProjects" :key="index">
+            <ProjectListItem :project="project" />
+        </div>
+
 
     </div>
 </template>
 
 <script setup lang="ts">
+import ProjectListItem from './ProjectListItem.vue';
+
+
 import { ref } from 'vue'
 import { useAppStore } from './../stores/appStore';
 import { useToastController } from 'bootstrap-vue-next'
@@ -95,9 +97,8 @@ const newProject = ref<TestDriveDataOutput>(createDefaultTestDriveData())
 
 
 
-
-
 const store = useAppStore()
+
 
 const createNewProject = async () => {
     // Add your project creation logic here
@@ -107,8 +108,8 @@ const createNewProject = async () => {
     const [error, data] = await safeFetch(() => client.createTestdriveApiV1ProjectPost({
         testDriveDataInput: newProject.value
     }))
-    if (error && showToast) {
-        showToast({
+    if (error) {
+        showToast?.({
             props: {
                 title: 'Error',
                 body: error.message,
@@ -118,8 +119,8 @@ const createNewProject = async () => {
 
             }
         });
-    } else if (data && showToast) {
-        showToast({
+    } else if (data) {
+        showToast?.({
             props: {
                 title: 'Project created',
                 body: `the project was created successfully with id: ${data.testdrive.id}.`,
@@ -129,6 +130,7 @@ const createNewProject = async () => {
 
             }
         });
+        store.addProject(data.testdrive)
     }
     // reset new Project
     newProject.value = createDefaultTestDriveData()

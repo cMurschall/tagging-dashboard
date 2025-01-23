@@ -5,15 +5,6 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-#
-# @dataclass
-# class TestDriveMetaData:
-#     driver_name: str
-#     vehicle_id: str
-#     route_name: str
-#     notes: str = ""
-#     test_date: Optional[datetime] = datetime.now()
-
 class TestDriveMetaData(BaseModel):
     driver_name: str
     vehicle_id: str

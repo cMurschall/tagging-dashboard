@@ -80,6 +80,12 @@ class ProjectController:
             created_testdrive = service.create_testdrive(testdrive)
             return {"testdrive": created_testdrive}
 
+        @self.router.patch("/", response_model=TestDriveResponse)
+        async def update_testdrive(testdrive: TestDriveData,
+                                   service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+            created_testdrive = service.update_testdrive(testdrive)
+            return {"testdrive": created_testdrive}
+
         @self.router.delete("/", response_model=TestDriveResponse)
         async def delete_testdrive(testdrive_id: int,
                                    service: TestDriveDataService = Depends(lambda: get_testdata_manager())):

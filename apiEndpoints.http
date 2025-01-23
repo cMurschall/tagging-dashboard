@@ -15,6 +15,10 @@ GET http://127.0.0.1:8888/docs
 ### Get swagger.json
 GET http://127.0.0.1:8888/openapi.json
 
+### Load csv files
+GET http://127.0.0.1:8888/api/v1/project/files/csv
+
+
 
 ### Load CSV File
 POST http://127.0.0.1:8888/api/v1/player/load_csv

@@ -4,12 +4,22 @@ import sys
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from .api import router as global_router
 from .api.v1 import router as v1_router
 from .dependencies import get_player, get_connection_manager, get_testdata_manager
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all HTTP methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 
 def custom_openapi(version: str):

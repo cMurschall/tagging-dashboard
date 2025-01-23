@@ -1,5 +1,6 @@
 <template>
     <div id="app" class="d-flex flex-column min-vh-100">
+        <BToastOrchestrator />
         <!-- Header -->
         <header class="bg-primary text-white p-2">
             <h1 class="text-center">Tagging Dashboard</h1>
@@ -10,12 +11,7 @@
             <div class="row flex-grow-1 w-100 align-items-stretch">
                 <!-- Left Sidebar -->
                 <aside class="col-md-2 col-sm-3 bg-light p-3 border-end d-flex flex-column">
-                    <h5>Available records</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="#">Link 1</a></li>
-                        <li><a href="#">Link 2</a></li>
-                        <li><a href="#">Link 3</a></li>
-                    </ul>
+                    <LeftSideBar />
                 </aside>
 
                 <!-- Main Content -->
@@ -37,15 +33,35 @@
 
         <!-- Footer -->
         <footer class="bg-dark text-white text-center p-1">
-            <p>© 2024 Christin Murschall</p>
+            <p>© 2024 Christian Murschall</p>
         </footer>
     </div>
 </template>
 
 <script>
-export default {
+import { defineComponent, onMounted } from 'vue';
+import { useAppStore } from './stores/appStore';
+import LeftSideBar from './components/LeftSideBar.vue';
+
+export default defineComponent({
     name: 'App',
-};
+    components: {
+        LeftSideBar
+    },
+    setup() {
+
+        const appStore = useAppStore();
+
+        onMounted(async () => {
+            await appStore.initializeStore();
+        });
+
+
+        return {
+            // Return reactive properties and methods for use in the template
+        };
+    },
+});
 </script>
 
 <style scoped>
@@ -54,12 +70,13 @@ export default {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    height: 100%;
 }
 
 header {
     position: sticky;
     top: 0;
-    z-index: 1030;
+
 }
 
 footer {

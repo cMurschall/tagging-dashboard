@@ -1,6 +1,10 @@
 import json
 import os
-from typing import Dict
+from typing import Dict, List
+
+from dataclasses import asdict
+
+from pydantic import ValidationError
 
 from app.models.tags import Tag
 from app.models.testDriveData import TestDriveData
@@ -13,13 +17,28 @@ class TestDriveDataService:
         self.current_id = 1
         self._load_data()
 
+    # def _load_data(self):
+    #     if os.path.exists(self.storage_path):
+    #         with open(self.storage_path, "r") as f:
+    #             data = json.load(f)
+    #             self.test_drive_data_store = {int(k): TestDriveData(**v) for k, v in
+    #                                           data.get("test_drive_data_store", {}).items()}
+    #             self.current_id = data.get("current_id", 1)
+
     def _load_data(self):
         if os.path.exists(self.storage_path):
             with open(self.storage_path, "r") as f:
-                data = json.load(f)
-                self.test_drive_data_store = {int(k): TestDriveData(**v) for k, v in
-                                              data.get("test_drive_data_store", {}).items()}
-                self.current_id = data.get("current_id", 1)
+                try:
+                    data = json.load(f)
+                    self.test_drive_data_store = {
+                        int(k): TestDriveData.model_validate(v) for k, v in
+                        data.get("test_drive_data_store", {}).items()
+                    }
+                    self.current_id = data.get("current_id", 1)
+                except ValidationError as e:
+                    print(f"Failed to parse data: {e}")
+                except json.JSONDecodeError as e:
+                    print(f"Failed to load JSON: {e}")
 
     def _save_data(self):
         with open(self.storage_path, "w") as f:
@@ -29,16 +48,20 @@ class TestDriveDataService:
             }
             json.dump(data, f, default=str)
 
+    def get_testdrives(self) -> List[TestDriveData]:
+        return self.test_drive_data_store.values()
+
     def get_testdrive(self, testdrive_id: int) -> TestDriveData:
         if testdrive_id not in self.test_drive_data_store:
             return None
         return self.test_drive_data_store[testdrive_id]
 
-    def create_testdrive_from_csv(self, testdrive: TestDriveData) -> int:
+    def create_testdrive(self, testdrive: TestDriveData) -> TestDriveData:
+        testdrive.id = self.current_id
         self.test_drive_data_store[self.current_id] = testdrive
         self.current_id += 1
         self._save_data()
-        return self.current_id - 1
+        return testdrive
 
     def create_testdrive_from_live_data(self, live_data_stream):
         test_drive_data = TestDriveData(raw_data={})
@@ -74,3 +97,21 @@ class TestDriveDataService:
         del self.test_drive_data_store[testdrive_id].tags[tag_index]
         self._save_data()
         return tag
+
+    def list_csv_files(self, folder_path: str) -> List[str]:
+        """
+        List all CSV files in the specified folder.
+        """
+        if not os.path.exists(folder_path) or not os.path.isdir(folder_path):
+            raise FileNotFoundError(f"The folder {folder_path} does not exist or is not a directory.")
+
+        return [f for f in os.listdir(folder_path) if f.endswith(".csv")]
+
+    def list_video_files(self, folder_path: str) -> List[str]:
+        """
+        List all MP4 video files in the specified folder.
+        """
+        if not os.path.exists(folder_path) or not os.path.isdir(folder_path):
+            raise FileNotFoundError(f"The folder {folder_path} does not exist or is not a directory.")
+
+        return [f for f in os.listdir(folder_path) if f.endswith(".m4v")]

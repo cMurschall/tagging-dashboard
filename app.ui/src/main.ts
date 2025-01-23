@@ -1,9 +1,12 @@
 import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import { createBootstrap } from 'bootstrap-vue-next';
+
 import App from './App.vue';
 
 // Import Bootstrap and BootstrapVue CSS files
 import 'bootstrap/dist/css/bootstrap.css';
-import 'bootstrap-vue-3/dist/bootstrap-vue-3.css';
+import 'bootstrap-vue-next/dist/bootstrap-vue-next.css';
 
 // Import your custom SCSS file (this should come after Bootstrap CSS so it can override styles)
 import './globalStyles.scss';
@@ -11,10 +14,13 @@ import './globalStyles.scss';
 // Import Bootstrap JavaScript functionality
 import 'bootstrap/dist/js/bootstrap.js';
 
-import BootstrapVue3 from 'bootstrap-vue-3';
+const pinia = createPinia();
+const bootstrap = createBootstrap();
 
-app = createApp(App);
-app.use(BootstrapVue3);
+const app = createApp(App);
+app.use(bootstrap); // Important
+app.use(pinia);
+
 app.mount('#app');
 
 import 'bootstrap/dist/js/bootstrap.js';

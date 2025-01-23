@@ -20,6 +20,9 @@ if __name__ == "__main__":
     with open("openapi.json", "w") as f:
         json.dump(openapi, f, indent=2)
 
+    # print("fetch template")
+    # os.system("java -jar openapi-generator-cli.jar author template -g typescript-fetch -o ./custom-templates")
+
     print("generating client")
     #  generate -i openapi.json -g typescript-fetch -o ./typescript-client
     os.system(

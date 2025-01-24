@@ -1,8 +1,13 @@
 <template>
-    <BCard bg-variant="light" text-variant="dark" class="mb-2">
+    <BCard bg-variant="light" text-variant="dark" class="mb-2" 
+     :header-bg-variant="isProjectLoaded ? 'warning' : 'light'"
+     :header="props.project.metaData?.routeName ">
+    
+        
+        
         <BCardText>
             <div>
-                <p>Route: {{ props.project.metaData?.routeName }}</p>
+                <p>Date: {{ props.project.metaData?.testDate }}</p>
                 <p>Driver: {{ props.project.metaData?.driverName }}</p>
             </div>
         </BCardText>
@@ -10,7 +15,7 @@
 
         <template #footer>
             <div class="d-flex justify-content-between">
-                <BButton>Load</BButton>
+                <BButton  @click="handleLoadProject">Load</BButton>
                 <BButton variant="info">Edit</BButton>
                 <BButton variant="danger" @click="handleDeleteProject">Delete</BButton>
             </div>
@@ -23,7 +28,7 @@
 
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
+import { computed, defineProps } from 'vue'
 import { useAppStore } from './../stores/appStore';
 
 import { safeFetch, ApiClient as client, TestDriveDataOutput } from '../services/Utilities'
@@ -40,6 +45,15 @@ interface ProjectListItemProps {
 
 const props = defineProps<ProjectListItemProps>()
 
+
+const isProjectLoaded = computed(() => {
+  return store.loadedProject?.id === props.project.id
+})
+
+const handleLoadProject = () => {
+    console.log('Loading project:', props.project.id)
+    store.loadProject(props.project.id)
+}
 
 const handleDeleteProject = async () => {
     console.log('Deleting project:', props.project.id)

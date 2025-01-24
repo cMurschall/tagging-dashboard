@@ -14,10 +14,15 @@ export async function safeFetch<T>(
     }
   }
   
+export const BasePath = 'http://localhost:8888';
+export const ApiPath = BasePath+'/api/v1';
+
 
 export const ApiClient = new RestClient.ProjectEndpointApi(new RestClient.Configuration({
-    basePath: 'http://localhost:8888',
+    basePath: BasePath,
 }));
+
+
 
 
 // Optionally export all types for convenience

@@ -21,6 +21,7 @@ declare module 'vue' {
     LeftSideBar: typeof import('./src/components/LeftSideBar.vue')['default']
     PluginUI: typeof import('./src/components/PluginUI.vue')['default']
     ProjectListItem: typeof import('./src/components/ProjectListItem.vue')['default']
+    VideoJsPlayer: typeof import('./src/components/VideoJsPlayer.vue')['default']
     VideoPlayer: typeof import('./src/components/VideoPlayer.vue')['default']
     WindowManager: typeof import('./src/components/WindowManager.vue')['default']
   }

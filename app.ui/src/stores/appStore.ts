@@ -13,12 +13,14 @@ export const useAppStore = defineStore('app', {
     availableCsvValues: [] as string[],
     availableVideoValues: [] as string[],
     availableProjects: [] as TestDriveDataOutput[],
-    loadedProject: {},
-
+    loadedProject: undefined as TestDriveDataOutput | undefined,
 
     isLoading: false
 
   }),
+  getters: {
+    isProjectLoaded: (state) => !!state.loadedProject,
+  },
   actions: {
     addProject(project: TestDriveDataOutput) {
       this.availableProjects.push(project);
@@ -27,6 +29,16 @@ export const useAppStore = defineStore('app', {
       this.availableProjects = this.availableProjects.filter(
         (project) => project.id !== projectId
       );
+    },
+    loadProject(projectId: number) {
+      this.loadedProject = this.availableProjects.find(
+        (project) => project.id === projectId
+      );
+      if (!this.loadedProject) {
+        console.error('Project not found');
+      } else {
+        console.info('Project loaded', this.loadedProject);
+      }
     },
     async initializeStore() {
       this.isLoading = true;

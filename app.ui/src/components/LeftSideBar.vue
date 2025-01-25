@@ -64,7 +64,7 @@ import ProjectListItem from './ProjectListItem.vue';
 
 
 import { ref } from 'vue'
-import { useAppStore } from './../stores/appStore';
+import { getProjectStore } from './../stores/appStore';
 import { useToastController } from 'bootstrap-vue-next'
 
 const { show: showToast } = useToastController()
@@ -97,7 +97,7 @@ const newProject = ref<TestDriveDataOutput>(createDefaultTestDriveData())
 
 
 
-const store = useAppStore()
+const store = getProjectStore()
 
 
 const createNewProject = async () => {

@@ -53,6 +53,10 @@ const videoOptions = ref<videojs.PlayerOptions>({
   },
 })
 
+
+let lastProcessedSecond = -1;
+
+
 const error = ref<string | undefined>(undefined)
 
 
@@ -93,7 +97,6 @@ const loadVideo = (filename: string) => {
   if (videoPlayer.value) {
     videoPlayer.value.src(videoOptions.value.sources);
   }
-  console.log('video thumbnailSource:', props.thumbnailSource)
 
   if (videoPlayer.value && props.thumbnailSource) {
     const spriteInfo = parseSpriteFileName(props.thumbnailSource);
@@ -110,8 +113,8 @@ const loadVideo = (filename: string) => {
       url: thumbnailUrl,
       columns: spriteInfo.columns,
       rows: spriteInfo.rows,
-      width: 120,
-      height: 90
+      width: spriteInfo.width,
+      height: spriteInfo.height,
     });
   }
 }
@@ -133,10 +136,24 @@ watch(() => props.videoSource, (newValue) => {
 
 
 onMounted(() => {
-  videoPlayer.value = videojs(videoPlayer.value, videoOptions.value, () => {
+  videoPlayer.value = videojs(videoPlayer.value, videoOptions.value, function () {
     console.log('Video player is ready');
     console.log('Video.js plugins:', videojs.getPlugins());
     console.log('Video.js player:', videoPlayer.value);
+
+
+    videoPlayer.value.on('timeupdate', () => {
+      // Get the current time in seconds (rounded down to the nearest second)
+      const currentSecond = Math.floor(videoPlayer.value.currentTime());
+
+      // Check if the current second is different from the last processed second
+      if (currentSecond !== lastProcessedSecond) {
+        lastProcessedSecond = currentSecond;
+
+        // Example: Synchronize data to the current timestamp
+        synchronizeData(currentSecond);
+      }
+    });
 
 
     // Ensure loadVideo is called only after the video player is ready
@@ -155,6 +172,10 @@ onBeforeUnmount(() => {
 })
 
 
+
+const synchronizeData = (currentSecond: number) => {
+  console.log('synchronizeData:', currentSecond)
+}
 </script>
 
 <style scoped>

@@ -16,11 +16,11 @@
 
                 <!-- Main Content -->
                 <main class="col-md-8 col-sm-6 p-3 d-flex flex-column">
-                    <h2>Is Project loaded; {{ appStore.isProjectLoaded }}</h2>
+                    <h2>Is Project loaded; {{ projectStore.isProjectLoaded }}</h2>
                     <VideoPlayer
-                     v-if="appStore.isProjectLoaded"
-                     :videoSource="appStore.loadedProject?.videoPath" 
-                     :thumbnailSource="appStore.loadedProject?.videoSpritePath"/>
+                     v-if="projectStore.isProjectLoaded"
+                     :videoSource="projectStore.loadedProject?.videoPath" 
+                     :thumbnailSource="projectStore.loadedProject?.videoSpritePath"/>
 
                 </main>
 
@@ -45,15 +45,15 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useAppStore } from './stores/appStore';
+import { getProjectStore } from './stores/projectStore';
 import LeftSideBar from './components/LeftSideBar.vue';
 import VideoPlayer from './components/VideoPlayer.vue';
 
 // Initialize the store
-const appStore = useAppStore();
+const projectStore = getProjectStore();
 
 onMounted(async () => {
-    await appStore.initializeStore();
+    await projectStore.initializeStore();
 });
 </script>
 

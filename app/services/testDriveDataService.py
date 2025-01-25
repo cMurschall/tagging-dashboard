@@ -15,6 +15,8 @@ class TestDriveDataService:
         self.current_id = 1
         self._load_data()
 
+        self.active_testdrive_id = None
+
     def _load_data(self):
         """
         Load the data from the storage file.
@@ -157,3 +159,23 @@ class TestDriveDataService:
             raise FileNotFoundError(f"The folder {folder_path} does not exist or is not a directory.")
 
         return [f for f in os.listdir(folder_path) if f.endswith(".m4v")]
+
+    def get_active_testdrive(self) -> TestDriveData:
+        """
+        Get the active test drive.
+        """
+        if self.active_testdrive_id is None:
+            return None
+        return self.get_testdrive(self.active_testdrive_id)
+
+    def activate_testdrive(self, testdrive_id: int):
+        """
+        Activate a test drive.
+        """
+        if testdrive_id not in self.test_drive_data_store:
+            return None
+        self.active_testdrive_id = testdrive_id
+        return self.get_active_testdrive()
+
+    def deactivate_testdrive(self):
+        pass

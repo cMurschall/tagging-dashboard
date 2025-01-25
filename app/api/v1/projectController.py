@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.dependencies import get_testdata_manager
@@ -67,11 +67,6 @@ class ProjectController:
         async def get_all_testdrives(service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
             return {"testdrives": service.get_testdrives()}
 
-        @self.router.get("/{testdrive_id}", response_model=TestDriveResponse)
-        async def get_testdrive(testdrive_id: int,
-                                service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
-            return {"testdrive": service.get_testdrive(testdrive_id)}
-
         @self.router.post("/", response_model=TestDriveResponse)
         async def create_testdrive(testdrive: TestDriveData,
                                    service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
@@ -115,3 +110,25 @@ class ProjectController:
                              service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
             service.delete_tag(testdrive_id, tag_index)
             return {"message": "Tag deleted"}
+
+        @self.router.get("/active", response_model=TestDriveResponse)
+        async def get_active_testdrive(service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+            active_testdrive = service.get_active_testdrive()
+            if active_testdrive is None:
+                raise HTTPException(status_code=404, detail="Active testdrive not found")
+            return {"testdrive": active_testdrive}
+
+        @self.router.put("/activate/{testdrive_id}", response_model=TestDriveResponse)
+        async def activate_testdrive(testdrive_id: int,
+                                     service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+            activated_testdrive = service.activate_testdrive(testdrive_id)
+            if activated_testdrive is None:
+                raise HTTPException(status_code=404, detail=f"Testdrive with id {testdrive_id} not found")
+            return {"testdrive": activated_testdrive}
+
+        @self.router.put("/deactivate", response_model=TestDriveResponse)
+        async def deactivate_testdrive(service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+            deactivated_testdrive = service.deactivate_testdrive()
+            if deactivated_testdrive is None:
+                raise HTTPException(status_code=404, detail="No active testdrive found")
+            return {"testdrive": deactivated_testdrive}

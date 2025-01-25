@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import { computed, defineProps } from 'vue'
-import { useAppStore } from './../stores/appStore';
+import { getProjectStore } from './../stores/projectStore';
 
 import { safeFetch, ApiClient as client, TestDriveDataOutput } from '../services/Utilities'
 
@@ -37,7 +37,7 @@ import { useToastController } from 'bootstrap-vue-next'
 
 const { show: showToast } = useToastController()
 
-const store = useAppStore();
+const store = getProjectStore();
 
 interface ProjectListItemProps {
     project: TestDriveDataOutput

@@ -8,7 +8,7 @@ const { show: showToast } = useToastController()
 
 
 
-export const useAppStore = defineStore('app', {
+export const getProjectStore = defineStore('app', {
   state: () => ({
     availableCsvValues: [] as string[],
     availableVideoValues: [] as string[],

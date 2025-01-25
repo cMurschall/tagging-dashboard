@@ -15,10 +15,12 @@
     "pinia": "^2.2.8",
     "socket.io-client": "^4.8.1",
     "video.js": "^8.21.0",
+    "videojs-sprite-thumbnails": "^2.2.3",
     "vue": "^3.5.13",
     "winbox": "^0.2.82"
   },
   "devDependencies": {
+    "@types/video.js": "^7.3.58",
     "@types/winbox": "^0.2.5",
     "@vitejs/plugin-vue": "^5.2.1",
     "prettier": "3.4.1",

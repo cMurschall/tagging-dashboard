@@ -19,7 +19,8 @@
                     <h2>Is Project loaded; {{ appStore.isProjectLoaded }}</h2>
                     <VideoPlayer
                      v-if="appStore.isProjectLoaded"
-                     :videoSource="appStore.loadedProject?.videoPath" />
+                     :videoSource="appStore.loadedProject?.videoPath" 
+                     :thumbnailSource="appStore.loadedProject?.videoSpritePath"/>
 
                 </main>
 

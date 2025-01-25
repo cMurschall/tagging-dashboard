@@ -2,9 +2,10 @@
   <div class="card" style="width: 100%; max-width: 800px; margin: 0 auto;">
     <div class="card-body">
       <h5 class="card-title">Video Player</h5>
-      <video ref="video" controls class="card-img-top" :src="videoUrl" @error="handleError">
-        Your browser does not support the video tag.
-      </video>
+      <div class="card-img-top">
+        <video-js ref="videoPlayer" class="vjs-default-skin" :options="videoOptions" @error="handleError"></video-js>
+        <div id="thumbnail-preview"></div>
+      </div>
       <div v-if="error" class="alert alert-danger mt-3">
         {{ error }}
       </div>
@@ -13,41 +14,145 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, watch } from 'vue';
+import { defineProps, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { ApiPath } from '../services/Utilities';
-
+import videojs from "video.js";
+import "videojs-sprite-thumbnails";
 
 
 interface VideoPlayerProps {
   videoSource: string | undefined;
+  thumbnailSource: string | undefined;
 }
+
+interface SpriteInfo {
+  baseName: string;
+  columns: number;
+  rows: number;
+  interval: number;
+  width: number;
+  height: number;
+};
+
 
 const props = defineProps<VideoPlayerProps>()
 
-const videoUrl = ref<string | undefined>(undefined)
+const videoPlayer = ref<videojs.Player | undefined>(undefined)
+const videoOptions = ref<videojs.PlayerOptions>({
+  controls: true,
+  autoplay: true,
+  preload: 'auto',
+  fluid: true,
+  sources: [],
+  aspectRatio: '16:9',
+  responsive: true,
+  controlBar: {
+    volumePanel: {
+      inline: false,
+    },
+  },
+})
+
 const error = ref<string | undefined>(undefined)
 
+
+const parseSpriteFileName = (fileName: string): SpriteInfo | null => {
+  // Define the updated regex pattern
+  const regex = /^(.*)_sprite_(\d+)x(\d+)_int(\d+)_w(\d+)_h(\d+)\.png$/;
+
+  // Match the file name with the regex
+  const match = fileName.match(regex);
+
+  if (!match) {
+    console.error(`Filename "${fileName}" does not match the expected pattern.`);
+    return null;
+  }
+
+  const [, baseName, columns, rows, interval, width, height] = match;
+
+  return {
+    baseName,
+    columns: parseInt(columns, 10),
+    rows: parseInt(rows, 10),
+    interval: parseInt(interval, 10),
+    width: parseInt(width, 10),
+    height: parseInt(height, 10),
+  };
+}
+
 const loadVideo = (filename: string) => {
-  console.log('Loading video filename:', filename)
-  const baseUrl = ApiPath; // Replace with your FastAPI server address
   const encodedFileName = encodeURIComponent(filename);
-  videoUrl.value = `${baseUrl}/player/video/${encodedFileName}`;
+  const videoUrl = `${ApiPath}/player/video/${encodedFileName}`;
   error.value = undefined;
 
-  console.log('Loading video:', videoUrl.value);
+  videoOptions.value.sources = [{
+    src: videoUrl,
+    type: "video/mp4",
+  }];
+
+  if (videoPlayer.value) {
+    videoPlayer.value.src(videoOptions.value.sources);
+  }
+  console.log('video thumbnailSource:', props.thumbnailSource)
+
+  if (videoPlayer.value && props.thumbnailSource) {
+    const spriteInfo = parseSpriteFileName(props.thumbnailSource);
+    if (!spriteInfo) {
+      return;
+    }
+
+    const encodedFileName = encodeURIComponent(props.thumbnailSource);
+    const thumbnailUrl = `${ApiPath}/player/thumbnail/${encodedFileName}`;
+
+    // setup sprite thumbnails
+    videoPlayer.value.spriteThumbnails({
+      interval: spriteInfo.interval,
+      url: thumbnailUrl,
+      columns: spriteInfo.columns,
+      rows: spriteInfo.rows,
+      width: 120,
+      height: 90
+    });
+  }
 }
 
 const handleError = () => {
   error.value = "Unable to load the video. Please try again.";
 }
 
+// Updated watch to avoid calling `loadVideo` prematurely
 watch(() => props.videoSource, (newValue) => {
-  // log watched value
-  console.log('watched value:', newValue)
-  if (newValue) {
+  console.log('watched value:', newValue);
+  // Call loadVideo only if the video player is initialized
+  if (newValue && videoPlayer.value) {
     loadVideo(newValue);
   }
-}, { immediate: true })
+},
+  { immediate: false } // Remove immediate to avoid preemptive execution
+);
+
+
+onMounted(() => {
+  videoPlayer.value = videojs(videoPlayer.value, videoOptions.value, () => {
+    console.log('Video player is ready');
+    console.log('Video.js plugins:', videojs.getPlugins());
+    console.log('Video.js player:', videoPlayer.value);
+
+
+    // Ensure loadVideo is called only after the video player is ready
+    if (props.videoSource) {
+      loadVideo(props.videoSource);
+    }
+  });
+
+
+})
+onBeforeUnmount(() => {
+  if (videoPlayer.value) {
+    videoPlayer.value.dispose();
+    videoPlayer.value = undefined;
+  }
+})
 
 
 </script>
@@ -69,5 +174,19 @@ watch(() => props.videoSource, (newValue) => {
 
 .alert {
   text-align: center;
+}
+
+
+
+#thumbnail-preview {
+  position: absolute;
+  bottom: 50px;
+  left: 0;
+  width: 120px;
+  height: 90px;
+  background-size: cover;
+  background-position: center;
+  display: none;
+  z-index: 10;
 }
 </style>

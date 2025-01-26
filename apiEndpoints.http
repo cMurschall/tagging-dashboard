@@ -24,8 +24,8 @@ POST http://127.0.0.1:8888/api/v1/project/create
 Content-Type: application/json
 
 {
-  "csv_file_name": "recording_2024_04_06__14_15_33.csv",
-  "video_file_name": "2024-04-06 14-05-37-1-cropped.m4v",
+  "csv_file_name": "paul_timing_cw2.csv",
+  "video_file_name": "paul_timing_cw2.mp4",
   "driver_name": "Christian Murschall",
   "vehicle_name": "Audi TT",
   "route_name": "Ostsee-Ring"
@@ -36,10 +36,10 @@ POST http://127.0.0.1:8888/api/v1/project/create
 Content-Type: application/json
 
 {
-  "csv_file_name": "recording_2024_04_17__16_44_14_mapping_trip_01.csv",
-  "video_file_name": "2024-04-17 16-10-09 Mapping Trip 01-1.m4v",
+  "csv_file_name": "AA_log_29_11_2024_12_04_22.csv",
+  "video_file_name": "AA_2024-11-29 12-04-07.mp4",
   "driver_name": "Michael Schumacher",
-  "vehicle_id": "Ferrari F1 2000",
+  "vehicle_name": "Ferrari F1 2000",
   "route_name": "Monaco"
 }
 

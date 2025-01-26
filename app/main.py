@@ -15,14 +15,15 @@ from .dependencies import get_player, get_connection_manager, get_testdata_manag
 
 
 def start_background_tasks(background_threads, stop_event):
-    from .services.backgroundTasks.spriteGeneratorProcess import process_videos_in_folder
+    from .services.backgroundTasks.projectDataUpdater import process_projects
 
-    sprite_generator_background_thread = Thread(target=process_videos_in_folder, args=(stop_event,), daemon=True)
-    background_threads.append(sprite_generator_background_thread)
+    process_projects_thread = Thread(target=process_projects, args=(stop_event,), daemon=True)
+    background_threads.append(process_projects_thread)
 
     # loop over all background threads and start them
     for thread in background_threads:
         thread.start()
+
     return background_threads, stop_event
 
 

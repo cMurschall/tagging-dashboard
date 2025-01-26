@@ -8,7 +8,6 @@ class TestDriveDataInfo(BaseModel):
                                      description="The distance driven in meters")
     driven_time_s: float = Field(0.0, title="Driven time",
                                  description="The time driven in seconds")
-    simulation_start_time_s: float = Field(0.0, title="Simulation start time",
-                                           description="Start time of the simulation in seconds")
-    simulation_stop_time_s: float = Field(0.0, title="Simulation stop time",
-                                          description="Stop time of the simulation in seconds")
+    average_speed_m_s: float = Field(0.0, title="Average speed",
+                                     description="The average speed in meters per second")
+    max_speed_m_s: float = Field(0.0, title="Max speed", description="The maximum speed in meters per second")

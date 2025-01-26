@@ -5,17 +5,17 @@ from typing import Dict, List
 from pydantic import ValidationError
 
 from app.models.tags import Tag
-from app.models.testDriveData import TestDriveData
+from app.models.testDriveProjectInfo import TestDriveProjectInfo
 
 
 class TestDriveDataService:
     def __init__(self, storage_path: str = "test_drive_data.json"):
         self.storage_path = storage_path
-        self.test_drive_data_store: Dict[int, TestDriveData] = {}
+        self.test_drive_data_store: Dict[int, TestDriveProjectInfo] = {}
         self.current_id = 1
-        self._load_data()
-
         self.active_testdrive_id = None
+
+        self._load_data()
 
     def _load_data(self):
         """
@@ -27,7 +27,7 @@ class TestDriveDataService:
                 try:
                     data = json.load(f)
                     self.test_drive_data_store = {
-                        int(k): TestDriveData.model_validate(v) for k, v in
+                        int(k): TestDriveProjectInfo.model_validate(v) for k, v in
                         data.get("test_drive_data_store", {}).items()
                     }
                     self.current_id = max(self.test_drive_data_store.keys(), default=0) + 1
@@ -47,14 +47,14 @@ class TestDriveDataService:
             }
             json.dump(data, f, default=str, indent=2)
 
-    def get_testdrives(self) -> List[TestDriveData]:
+    def get_testdrives(self) -> List[TestDriveProjectInfo]:
         """
         Get all test drives.
         :return:
         """
         return self.test_drive_data_store.values()
 
-    def get_testdrive(self, testdrive_id: int) -> TestDriveData:
+    def get_testdrive(self, testdrive_id: int) -> TestDriveProjectInfo:
         """
         Get a test drive by ID.
         :param testdrive_id:
@@ -64,7 +64,7 @@ class TestDriveDataService:
             return None
         return self.test_drive_data_store[testdrive_id]
 
-    def create_testdrive(self, testdrive: TestDriveData) -> TestDriveData:
+    def create_testdrive(self, testdrive: TestDriveProjectInfo) -> TestDriveProjectInfo:
         """
         Create a new test drive.
         :param testdrive:
@@ -88,7 +88,7 @@ class TestDriveDataService:
         self._save_data()
         return testdrive
 
-    def delete_testdrive(self, testdrive_id: int) -> TestDriveData:
+    def delete_testdrive(self, testdrive_id: int) -> TestDriveProjectInfo:
         """
         Delete a test drive.
         :param testdrive_id:
@@ -102,7 +102,7 @@ class TestDriveDataService:
         return testdrive
 
     def create_testdrive_from_live_data(self, live_data_stream):
-        test_drive_data = TestDriveData(raw_data={})
+        test_drive_data = TestDriveProjectInfo(raw_data={})
         for data_point in live_data_stream:
             for key, value in data_point.items():
                 if key not in test_drive_data.raw_data:
@@ -160,7 +160,7 @@ class TestDriveDataService:
 
         return [f for f in os.listdir(folder_path) if f.endswith(".m4v")]
 
-    def get_active_testdrive(self) -> TestDriveData:
+    def get_active_testdrive(self) -> TestDriveProjectInfo | None:
         """
         Get the active test drive.
         """
@@ -168,7 +168,7 @@ class TestDriveDataService:
             return None
         return self.get_testdrive(self.active_testdrive_id)
 
-    def activate_testdrive(self, testdrive_id: int):
+    def activate_testdrive(self, testdrive_id: int) -> TestDriveProjectInfo | None:
         """
         Activate a test drive.
         """
@@ -177,5 +177,13 @@ class TestDriveDataService:
         self.active_testdrive_id = testdrive_id
         return self.get_active_testdrive()
 
-    def deactivate_testdrive(self):
-        pass
+    def deactivate_testdrive(self) -> TestDriveProjectInfo | None:
+        """
+        Deactivate the active test drive.
+        :return:
+        """
+        if self.active_testdrive_id is None:
+            return None
+        testdrive = self.get_active_testdrive()
+        self.active_testdrive_id = None
+        return testdrive

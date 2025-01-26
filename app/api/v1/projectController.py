@@ -1,17 +1,30 @@
+import os
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from app.dependencies import get_testdata_manager
+from app.dependencies import get_testdata_manager, get_settings
 from app.models.tags import SingleTimeTag, TimeRangeTag
-from app.models.testDriveData import TestDriveData
+from app.models.testDriveDataInfo import TestDriveDataInfo
+from app.models.testDriveMetaData import TestDriveMetaData
+from app.models.testDriveProjectInfo import TestDriveProjectInfo
+from app.models.testDriveVideoInfo import TestDriveVideoInfo
 from app.services.testDriveDataService import TestDriveDataService
+from app.settings import Settings
+
+
+class CreateProjectPayload(BaseModel):
+    csv_file_name: str = Field("", title="CSV file name", description="The name of the CSV file")
+    video_file_name: str = Field("", title="Video file name", description="The name of the video file")
+    driver_name: str = Field("", title="Driver name", description="The name of the driver")
+    vehicle_name: str = Field("", title="Vehicle name", description="The name of the vehicle")
+    route_name: str = Field("", title="Route name", description="The name of the route")
 
 
 class SingleTimeTagModel(BaseModel):
-    timestamp: float
-    notes: str
+    timestamp: float = Field(0.0, title="Timestamp", description="The timestamp of the tag")
+    notes: str = Field("", title="Notes", description="Notes for the tag")
 
 
 class TimeRangeTagModel(BaseModel):
@@ -29,11 +42,11 @@ class VideoFileResponse(BaseModel):
 
 
 class AllTestDrivesResponse(BaseModel):
-    testdrives: List[TestDriveData]
+    testdrives: List[TestDriveProjectInfo]
 
 
 class TestDriveResponse(BaseModel):
-    testdrive: TestDriveData
+    testdrive: TestDriveProjectInfo
 
 
 class AddTimeTagResponse(BaseModel):
@@ -67,19 +80,33 @@ class ProjectController:
         async def get_all_testdrives(service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
             return {"testdrives": service.get_testdrives()}
 
-        @self.router.post("/", response_model=TestDriveResponse)
-        async def create_testdrive(testdrive: TestDriveData,
-                                   service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+        @self.router.post("/create", response_model=TestDriveResponse)
+        async def create_testdrive(payload: CreateProjectPayload,
+                                   service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
+                                   settings: Settings = Depends(get_settings)):
+
+            video_path = os.path.join(settings.VIDEO_PATH, payload.video_file_name)
+            csv_path = os.path.join(settings.CSV_PATH, payload.csv_file_name)
+
+            testdrive = TestDriveProjectInfo(
+                test_drive_data_info=TestDriveDataInfo(csv_file_name=payload.csv_file_name,
+                                                       csv_file_full_path=os.path.normpath(csv_path)),
+                test_drive_video_info=TestDriveVideoInfo(video_file_name=payload.video_file_name,
+                                                         video_file_full_path=os.path.normpath(video_path)),
+                test_drive_meta_info=TestDriveMetaData(driver_name=payload.driver_name,
+                                                       vehicle_name=payload.vehicle_name,
+                                                       route_name=payload.route_name)
+            )
             created_testdrive = service.create_testdrive(testdrive)
             return {"testdrive": created_testdrive}
 
-        @self.router.patch("/", response_model=TestDriveResponse)
-        async def update_testdrive(testdrive: TestDriveData,
+        @self.router.patch("/update", response_model=TestDriveResponse)
+        async def update_testdrive(testdrive: TestDriveProjectInfo,
                                    service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
             created_testdrive = service.update_testdrive(testdrive)
             return {"testdrive": created_testdrive}
 
-        @self.router.delete("/", response_model=TestDriveResponse)
+        @self.router.delete("/delete", response_model=TestDriveResponse)
         async def delete_testdrive(testdrive_id: int,
                                    service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
             created_testdrive = service.delete_testdrive(testdrive_id)
@@ -118,7 +145,7 @@ class ProjectController:
                 raise HTTPException(status_code=404, detail="Active testdrive not found")
             return {"testdrive": active_testdrive}
 
-        @self.router.put("/activate/{testdrive_id}", response_model=TestDriveResponse)
+        @self.router.post("/activate/{testdrive_id}", response_model=TestDriveResponse)
         async def activate_testdrive(testdrive_id: int,
                                      service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
             activated_testdrive = service.activate_testdrive(testdrive_id)
@@ -126,7 +153,7 @@ class ProjectController:
                 raise HTTPException(status_code=404, detail=f"Testdrive with id {testdrive_id} not found")
             return {"testdrive": activated_testdrive}
 
-        @self.router.put("/deactivate", response_model=TestDriveResponse)
+        @self.router.post("/deactivate", response_model=TestDriveResponse)
         async def deactivate_testdrive(service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
             deactivated_testdrive = service.deactivate_testdrive()
             if deactivated_testdrive is None:

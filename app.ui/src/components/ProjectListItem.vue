@@ -14,8 +14,7 @@
 
         <template #footer>
             <div class="d-flex justify-content-between">
-                <BButton v-if="!projectStore.isProjectLoaded" @click="handleLoadProject">Load</BButton>
-                <BButton v-if="projectStore.isProjectLoaded" @click="handleLoadProject">Unload</BButton>
+                <BButton @click="handleLoadProject">Load</BButton>
                 <BButton variant="info">Edit</BButton>
                 <BButton variant="danger" @click="handleDeleteProject">Delete</BButton>
             </div>
@@ -81,11 +80,7 @@ const handleLoadProject = async () => {
     await projectStore.loadProject(props.project.id)
 }
 
-const handleUnloadProject = async () => {
-    console.log('Unloading project:', props.project.id)
-    await projectStore.unloadProject()
 
-}
 
 const handleDeleteProject = async () => {
     console.log('Deleting project:', props.project.id)

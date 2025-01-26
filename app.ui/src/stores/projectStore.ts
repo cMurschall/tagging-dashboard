@@ -34,24 +34,12 @@ export const getProjectStore = defineStore('app', {
       const [error, activeProject] = await safeFetch(() => client.activateTestdriveApiV1ProjectActivateTestdriveIdPut({
         testdriveId: projectId
       }));
-      if (error) {
-        showToast?.({
-          props: {
-            title: 'Error setting project active',
-            body: error.message,
-            value: 2500,
-            variant: 'danger',
-            pos: 'top-end',
-
-          }
-        });
-        console.error('Error loading project', error);
-      } else if (activeProject?.testdrive) {
+      if (activeProject?.testdrive) {
         this.loadedProject = activeProject.testdrive;
         console.info('Project loaded', this.loadedProject);
       }
     },
-   async unloadProject() {
+    async unloadProject() {
 
       const [error, deactivatedProject] = await safeFetch(() => client.deactivateTestdriveApiV1ProjectDeactivatePut());
       if (error) {

@@ -47,14 +47,17 @@
 
         </BModal>
 
-
-
-        <h4 v-if="projectStore.availableProjects.length">Available Projects</h4>
-
-        <div v-for="(project, index) in projectStore.availableProjects" :key="index">
-            <ProjectListItem :project="project" />
+        <div  v-if="projectStore.isProjectLoaded">
+            <BButton v-if="projectStore.isProjectLoaded" @click="handleUnloadProject">Unload</BButton>
         </div>
 
+        <div v-else>
+            <h4 v-if="projectStore.availableProjects.length">Available Projects</h4>
+
+            <div v-for="(project, index) in projectStore.availableProjects" :key="index">
+                <ProjectListItem :project="project" />
+            </div>
+        </div>
 
     </div>
 </template>
@@ -134,6 +137,13 @@ const createNewProject = async () => {
     }
     // reset new Project
     newProject.value = createDefaultTestDriveData()
+
+}
+
+
+const handleUnloadProject = async () => {
+    console.log('Unloading project id:', projectStore.loadedProject?.id)
+    await projectStore.unloadProject()
 
 }
 </script>

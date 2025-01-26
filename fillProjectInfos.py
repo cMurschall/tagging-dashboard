@@ -78,6 +78,13 @@ def generate_ffmpeg_row_sprite_command(video_path, output_path, interval, thumbn
 
 
 if __name__ == "__main__":
+    from app.services.testDriveDataService import TestDriveDataService
+
+    service = TestDriveDataService()
+    test_drive_data = service.get_testdrives()
+    for test_drive in test_drive_data:
+        pass
+
     video_path = "d:\\Praxisprojekt Herms\\2024-04-17 16-10-09 Mapping Trip 01-1.m4v"
     output_path = "sprite_row.png"
     interval = 3  # 2 seconds between each thumbnail

@@ -88,6 +88,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         get_connection_manager().disconnect(websocket)
 
-    # if __name__ == "__main__":
-#     print("Starting server manually")
-#    uvicorn.run(app, host="127.0.0.1", port=5000, log_level="info")
+    if __name__ == "__main__":
+        print("Starting server manually")
+        import uvicorn
+        uvicorn.run(app, host="127.0.0.1", port=8888, log_level="info")

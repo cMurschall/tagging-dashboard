@@ -30,15 +30,47 @@ export const getProjectStore = defineStore('app', {
         (project) => project.id !== projectId
       );
     },
-    loadProject(projectId: number) {
-      this.loadedProject = this.availableProjects.find(
-        (project) => project.id === projectId
-      );
-      if (!this.loadedProject) {
-        console.error('Project not found');
-      } else {
+    async loadProject(projectId: number) {
+      const [error, activeProject] = await safeFetch(() => client.activateTestdriveApiV1ProjectActivateTestdriveIdPut({
+        testdriveId: projectId
+      }));
+      if (error) {
+        showToast?.({
+          props: {
+            title: 'Error setting project active',
+            body: error.message,
+            value: 2500,
+            variant: 'danger',
+            pos: 'top-end',
+
+          }
+        });
+        console.error('Error loading project', error);
+      } else if (activeProject?.testdrive) {
+        this.loadedProject = activeProject.testdrive;
         console.info('Project loaded', this.loadedProject);
       }
+    },
+   async unloadProject() {
+
+      const [error, deactivatedProject] = await safeFetch(() => client.deactivateTestdriveApiV1ProjectDeactivatePut());
+      if (error) {
+        showToast?.({
+          props: {
+            title: 'Error unloading project',
+            body: error.message,
+            value: 2500,
+            variant: 'danger',
+            pos: 'top-end',
+
+          }
+        });
+        console.error('Error unloading project', error);
+      } else {
+        this.loadedProject = undefined;
+        console.info('Project unloaded');
+      }
+
     },
     async initializeStore() {
       this.isLoading = true;
@@ -102,6 +134,27 @@ export const getProjectStore = defineStore('app', {
       else {
         this.availableProjects = allProjectesData?.testdrives || [];
         console.info('All projects fetched', this.availableProjects);
+      }
+
+
+
+      const [activeProjectError, activeProject] = await safeFetch(() => client.getActiveTestdriveApiV1ProjectActiveGet());
+      if (activeProjectError) {
+        showToast?.({
+          props: {
+            title: 'Error loading active project',
+            body: activeProjectError.message,
+            value: 2500,
+            variant: 'danger',
+            pos: 'top-end',
+
+          }
+        });
+        // log error
+        console.error('Error fetching active project', activeProjectError);
+      } else if (activeProject?.testdrive) {
+        this.loadedProject = activeProject.testdrive;
+        console.info('Active project fetched', this.loadedProject);
       }
 
       this.isLoading = false;

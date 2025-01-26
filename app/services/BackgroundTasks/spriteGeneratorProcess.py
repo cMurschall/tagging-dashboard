@@ -44,7 +44,7 @@ def process_videos_in_folder(stop_event: Event):
             if file_name in processed_files:
                 file_metadata = processed_files[file_name]
                 if file_metadata["mod_time"] == video_mod_time:
-                    print(f"Skipping already processed video: {file_name}")
+                    # print(f"Skipping already processed video: {file_name}")
                     continue
 
             # Get video duration only if not already processed

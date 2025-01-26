@@ -7,13 +7,13 @@
                 <BFormGroup label="CSV file:" label-for="input-csv-file"
                     description="Please select the corresponding csv file">
                     <b-form-select id="input-csv-file" v-model="newProject.rawDataPath"
-                        :options="store.availableCsvValues"></b-form-select>
+                        :options="projectStore.availableCsvValues"></b-form-select>
                 </BFormGroup>
 
                 <BFormGroup label="Video file:" label-for="input-video-file"
                     description="Please select the corresponding video file">
                     <b-form-select id="input-video-file" v-model="newProject.videoPath"
-                        :options="store.availableVideoValues"></b-form-select>
+                        :options="projectStore.availableVideoValues"></b-form-select>
                 </BFormGroup>
 
 
@@ -49,9 +49,9 @@
 
 
 
-        <h4 v-if="store.availableProjects.length">Available Projects</h4>
+        <h4 v-if="projectStore.availableProjects.length">Available Projects</h4>
 
-        <div v-for="(project, index) in store.availableProjects" :key="index">
+        <div v-for="(project, index) in projectStore.availableProjects" :key="index">
             <ProjectListItem :project="project" />
         </div>
 
@@ -64,7 +64,7 @@ import ProjectListItem from './ProjectListItem.vue';
 
 
 import { ref } from 'vue'
-import { getProjectStore } from './../stores/appStore';
+import { getProjectStore } from './../stores/projectStore';
 import { useToastController } from 'bootstrap-vue-next'
 
 const { show: showToast } = useToastController()
@@ -97,7 +97,7 @@ const newProject = ref<TestDriveDataOutput>(createDefaultTestDriveData())
 
 
 
-const store = getProjectStore()
+const projectStore = getProjectStore()
 
 
 const createNewProject = async () => {
@@ -130,7 +130,7 @@ const createNewProject = async () => {
 
             }
         });
-        store.addProject(data.testdrive)
+        projectStore.addProject(data.testdrive)
     }
     // reset new Project
     newProject.value = createDefaultTestDriveData()

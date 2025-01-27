@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.openapi.utils import get_openapi
+from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -72,6 +73,11 @@ app.include_router(global_router, prefix="/api")
 
 # Include API routers
 app.include_router(v1_router, prefix="/api/v1")
+
+for route in app.routes:
+    if isinstance(route, APIRoute):
+        pass
+        # route.operation_id = route.name  # in this case, 'read_items'
 
 # Serve static files
 # Note: We must mount the static files at last, because otherwise it overrides all / routes

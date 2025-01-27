@@ -6,26 +6,26 @@
             <div>
                 <BFormGroup label="CSV file:" label-for="input-csv-file"
                     description="Please select the corresponding csv file">
-                    <b-form-select id="input-csv-file" v-model="newProject.rawDataPath"
+                    <b-form-select id="input-csv-file" v-model="newProjectPayload.csvFileName"
                         :options="projectStore.availableCsvValues"></b-form-select>
                 </BFormGroup>
 
                 <BFormGroup label="Video file:" label-for="input-video-file"
                     description="Please select the corresponding video file">
-                    <b-form-select id="input-video-file" v-model="newProject.videoPath"
+                    <b-form-select id="input-video-file" v-model="newProjectPayload.videoFileName"
                         :options="projectStore.availableVideoValues"></b-form-select>
                 </BFormGroup>
 
 
                 <!-- Driver Name -->
                 <BFormGroup label="Driver Name" label-for="driver-name">
-                    <b-form-input id="driver-name" v-if="newProject.metaData" v-model="newProject.metaData.driverName"
+                    <b-form-input id="driver-name" v-model="newProjectPayload.driverName"
                         required placeholder="Enter driver's name"></b-form-input>
                 </BFormGroup>
 
                 <!-- Vehicle ID -->
                 <BFormGroup label="Vehicle ID" label-for="vehicle-id">
-                    <b-form-input id="vehicle-id" v-if="newProject.metaData" v-model="newProject.metaData.vehicleId"
+                    <b-form-input id="vehicle-id"  v-model="newProjectPayload.vehicleName"
                         required placeholder="Enter vehicle ID"></b-form-input>
                 </BFormGroup>
 
@@ -33,13 +33,13 @@
 
                 <!-- Route Name -->
                 <BFormGroup label="Route Name" label-for="route-name">
-                    <b-form-input id="route-name" v-if="newProject.metaData" v-model="newProject.metaData.routeName"
+                    <b-form-input id="route-name"  v-model="newProjectPayload.routeName"
                         required placeholder="Enter route name"></b-form-input>
                 </BFormGroup>
 
                 <!-- Notes -->
                 <BFormGroup label="Notes" label-for="notes">
-                    <b-form-textarea id="notes" v-if="newProject.metaData" v-model="newProject.metaData.notes"
+                    <b-form-textarea id="notes"  v-model="newProjectPayload.notes"
                         placeholder="Enter additional notes (optional)"></b-form-textarea>
                 </BFormGroup>
             </div>
@@ -47,7 +47,7 @@
 
         </BModal>
 
-        <div  v-if="projectStore.isProjectLoaded">
+        <div v-if="projectStore.isProjectLoaded">
             <BButton v-if="projectStore.isProjectLoaded" @click="handleUnloadProject">Unload</BButton>
         </div>
 
@@ -65,51 +65,42 @@
 <script setup lang="ts">
 import ProjectListItem from './ProjectListItem.vue';
 
-
 import { ref } from 'vue'
 import { getProjectStore } from './../stores/projectStore';
 import { useToastController } from 'bootstrap-vue-next'
+import { CreateProjectPayload } from '../services/Utilities';
+
+import { safeFetch, ApiClient as client } from './../services/Utilities';
+import { BFormGroup } from 'bootstrap-vue-next';
+
+
 
 const { show: showToast } = useToastController()
-
+const projectStore = getProjectStore()
 
 
 // Create a factory function to provide default values
-function createDefaultTestDriveData(): TestDriveDataOutput {
+function createDefaultProjectPayload(): CreateProjectPayload {
     return {
-        id: -1,
-        rawDataPath: '',
-        videoPath: '',
-        tags: [],
-        metaData: {
-            driverName: '',
-            routeName: '',
-            vehicleId: '',
-            notes: ''
-        }
+        csvFileName: '',
+        videoFileName: '',
+        driverName: '',
+        routeName: '',
+        vehicleName: '',
     };
 }
 
 
 const showNewProjectModal = ref(false)
-
-import { safeFetch, ApiClient as client, TestDriveDataOutput } from './../services/Utilities';
-import { BFormGroup } from 'bootstrap-vue-next';
-
-const newProject = ref<TestDriveDataOutput>(createDefaultTestDriveData())
-
-
-
-const projectStore = getProjectStore()
-
+const newProjectPayload = ref<CreateProjectPayload>(createDefaultProjectPayload())
 
 const createNewProject = async () => {
     // Add your project creation logic here
-    console.log('Creating new project:', newProject.value)
+    console.log('Creating new project:', newProjectPayload.value)
 
 
-    const [error, data] = await safeFetch(() => client.createTestdriveApiV1ProjectPost({
-        testDriveDataInput: newProject.value
+    const [error, data] = await safeFetch(() => client.createTestdriveApiV1ProjectCreatePost({
+        createProjectPayload: newProjectPayload.value
     }))
     if (error) {
         showToast?.({
@@ -136,7 +127,7 @@ const createNewProject = async () => {
         projectStore.addProject(data.testdrive)
     }
     // reset new Project
-    newProject.value = createDefaultTestDriveData()
+    newProjectPayload.value = createDefaultProjectPayload()
 
 }
 

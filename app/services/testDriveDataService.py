@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from app.models.tags import Tag
 from app.models.testDriveProjectInfo import TestDriveProjectInfo
+from app.settings import settings
 
 
 class TestDriveDataService:
@@ -113,53 +114,6 @@ class TestDriveDataService:
         self._save_data()
         return self.current_id - 1
 
-    def add_tag(self, testdrive_id: int, tag: Tag):
-        """
-        Add a tag to a test drive.
-        :param testdrive_id:
-        :param tag:
-        :return:
-        """
-        if testdrive_id not in self.test_drive_data_store:
-            return None
-        self.test_drive_data_store[testdrive_id].tags.append(tag)
-        self._save_data()
-        return tag
-
-    def delete_tag(self, testdrive_id: int, tag_index: int):
-        """
-        Delete a tag from a test drive.
-        :param testdrive_id:
-        :param tag_index:
-        :return:
-        """
-        if testdrive_id not in self.test_drive_data_store:
-            return None
-        if tag_index < 0 or tag_index >= len(self.test_drive_data_store[testdrive_id].tags):
-            return None
-        tag = self.test_drive_data_store[testdrive_id].tags[tag_index]
-        del self.test_drive_data_store[testdrive_id].tags[tag_index]
-        self._save_data()
-        return tag
-
-    def list_csv_files(self, folder_path: str) -> List[str]:
-        """
-        List all CSV files in the specified folder.
-        """
-        if not os.path.exists(folder_path) or not os.path.isdir(folder_path):
-            raise FileNotFoundError(f"The folder {folder_path} does not exist or is not a directory.")
-
-        return [f for f in os.listdir(folder_path) if f.endswith(".csv")]
-
-    def list_video_files(self, folder_path: str) -> List[str]:
-        """
-        List all MP4 video files in the specified folder.
-        """
-        if not os.path.exists(folder_path) or not os.path.isdir(folder_path):
-            raise FileNotFoundError(f"The folder {folder_path} does not exist or is not a directory.")
-
-        return [f for f in os.listdir(folder_path) if f.endswith(".m4v")]
-
     def get_active_testdrive(self) -> TestDriveProjectInfo | None:
         """
         Get the active test drive.
@@ -187,3 +141,35 @@ class TestDriveDataService:
         testdrive = self.get_active_testdrive()
         self.active_testdrive_id = None
         return testdrive
+
+    def add_tag(self, testdrive_id: int, tag: Tag):
+        """
+        Add a tag to a test drive.
+        :param testdrive_id:
+        :param tag:
+        :return:
+        """
+        if testdrive_id not in self.test_drive_data_store:
+            # todo: we might be live here - so we will store in separate file
+            return None
+
+        self.test_drive_data_store[testdrive_id].tags.append(tag)
+        self._save_data()
+        return tag
+
+    def delete_tag(self, testdrive_id: int, tag_index: int):
+        """
+        Delete a tag from a test drive.
+        :param testdrive_id:
+        :param tag_index:
+        :return:
+        """
+        if testdrive_id not in self.test_drive_data_store:
+            # todo: we might be live here - so we will store in separate file
+            return None
+        if tag_index < 0 or tag_index >= len(self.test_drive_data_store[testdrive_id].tags):
+            return None
+        tag = self.test_drive_data_store[testdrive_id].tags[tag_index]
+        del self.test_drive_data_store[testdrive_id].tags[tag_index]
+        self._save_data()
+        return tag

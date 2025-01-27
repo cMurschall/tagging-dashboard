@@ -15,24 +15,14 @@
 
 <script setup lang="ts">
 import { defineProps, ref, watch, onMounted, onBeforeUnmount } from 'vue';
-import { ApiPath } from '../services/Utilities';
+import { ApiPath, TestDriveVideoInfo } from '../services/Utilities';
 import videojs from "video.js";
 import "videojs-sprite-thumbnails";
 
 
 interface VideoPlayerProps {
-  videoSource: string | undefined;
-  thumbnailSource: string | undefined;
+  videoInfo : TestDriveVideoInfo
 }
-
-interface SpriteInfo {
-  baseName: string;
-  columns: number;
-  rows: number;
-  interval: number;
-  width: number;
-  height: number;
-};
 
 
 const props = defineProps<VideoPlayerProps>()
@@ -60,32 +50,14 @@ let lastProcessedSecond = -1;
 const error = ref<string | undefined>(undefined)
 
 
-const parseSpriteFileName = (fileName: string): SpriteInfo | null => {
-  // Define the updated regex pattern
-  const regex = /^(.*)_sprite_(\d+)x(\d+)_int(\d+)_w(\d+)_h(\d+)\.png$/;
-
-  // Match the file name with the regex
-  const match = fileName.match(regex);
-
-  if (!match) {
-    console.error(`Filename "${fileName}" does not match the expected pattern.`);
-    return null;
+const loadVideo = (videoInfo: TestDriveVideoInfo) => {
+  if(!videoInfo.videoFileName) {
+    error.value = "Video file name is missing.";
+    return;
   }
 
-  const [, baseName, columns, rows, interval, width, height] = match;
 
-  return {
-    baseName,
-    columns: parseInt(columns, 10),
-    rows: parseInt(rows, 10),
-    interval: parseInt(interval, 10),
-    width: parseInt(width, 10),
-    height: parseInt(height, 10),
-  };
-}
-
-const loadVideo = (filename: string) => {
-  const encodedFileName = encodeURIComponent(filename);
+  const encodedFileName = encodeURIComponent(videoInfo.videoFileName);
   const videoUrl = `${ApiPath}/player/video/${encodedFileName}`;
   error.value = undefined;
 
@@ -93,29 +65,33 @@ const loadVideo = (filename: string) => {
     src: videoUrl,
     type: "video/mp4",
   }];
+  console.log('videoOptions:', videoOptions.value);
+
+  // videoOptions.aspectRatio  = `${videoInfo.videoWidth}:${videoInfo.videoHeight}`;
+
 
   if (videoPlayer.value) {
     videoPlayer.value.src(videoOptions.value.sources);
+    // videoPlayer.value.options(videoOptions.value);
   }
 
-  if (videoPlayer.value && props.thumbnailSource) {
-    const spriteInfo = parseSpriteFileName(props.thumbnailSource);
-    if (!spriteInfo) {
-      return;
-    }
+  if (videoPlayer.value) {
 
-    const encodedFileName = encodeURIComponent(props.thumbnailSource);
+    const encodedFileName = encodeURIComponent(videoInfo.videoSpriteInfo?.spriteFileName ?? '');
     const thumbnailUrl = `${ApiPath}/player/thumbnail/${encodedFileName}`;
-
+    
     // setup sprite thumbnails
-    videoPlayer.value.spriteThumbnails({
-      interval: spriteInfo.interval,
+    const spriteThumbnailsOptions = {
+      interval:videoInfo.videoSpriteInfo?.spriteInterval,
       url: thumbnailUrl,
-      columns: spriteInfo.columns,
-      rows: spriteInfo.rows,
-      width: spriteInfo.width,
-      height: spriteInfo.height,
-    });
+      columns: videoInfo.videoSpriteInfo?.spriteColumns,
+      rows: videoInfo.videoSpriteInfo?.spriteRows,
+      width:videoInfo.videoSpriteInfo?.thumbnailWidth,
+      height: videoInfo.videoSpriteInfo?.thumbnailHeight,
+    }
+    
+    videoPlayer.value.spriteThumbnails(spriteThumbnailsOptions);
+    console.log('spriteThumbnailsOptions:', spriteThumbnailsOptions);
   }
 }
 
@@ -124,11 +100,11 @@ const handleError = () => {
 }
 
 // Updated watch to avoid calling `loadVideo` prematurely
-watch(() => props.videoSource, (newValue) => {
+watch(() => props.videoInfo.videoFileName, (newValue) => {
   console.log('watched value:', newValue);
   // Call loadVideo only if the video player is initialized
   if (newValue && videoPlayer.value) {
-    loadVideo(newValue);
+    loadVideo(props.videoInfo);
   }
 },
   { immediate: false } // Remove immediate to avoid preemptive execution
@@ -157,8 +133,8 @@ onMounted(() => {
 
 
     // Ensure loadVideo is called only after the video player is ready
-    if (props.videoSource) {
-      loadVideo(props.videoSource);
+    if (props.videoInfo) {
+      loadVideo(props.videoInfo);
     }
   });
 
@@ -174,7 +150,7 @@ onBeforeUnmount(() => {
 
 
 const synchronizeData = (currentSecond: number) => {
-  console.log('synchronizeData:', currentSecond)
+  //console.log('synchronizeData:', currentSecond)
 }
 </script>
 

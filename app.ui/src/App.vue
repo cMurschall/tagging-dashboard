@@ -18,9 +18,8 @@
                 <main class="col-md-8 col-sm-6 p-3 d-flex flex-column">
                     <h2>Is Project loaded; {{ projectStore.isProjectLoaded }}</h2>
                     <VideoPlayer
-                     v-if="projectStore.isProjectLoaded"
-                     :videoSource="projectStore.loadedProject?.videoPath" 
-                     :thumbnailSource="projectStore.loadedProject?.videoSpritePath"/>
+                     v-if="projectStore.isProjectLoaded && projectStore.loadedProject?.testDriveVideoInfo"
+                     :videoInfo="projectStore.loadedProject.testDriveVideoInfo"/>
 
                 </main>
 

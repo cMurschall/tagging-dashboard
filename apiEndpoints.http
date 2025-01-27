@@ -18,6 +18,8 @@ GET http://127.0.0.1:8888/openapi.json
 ### Load csv files
 GET http://127.0.0.1:8888/api/v1/project/files/csv
 
+### Load video files
+GET http://127.0.0.1:8888/api/v1/project/files/video
 
 ### Create new project 1
 POST http://127.0.0.1:8888/api/v1/project/create
@@ -42,6 +44,9 @@ Content-Type: application/json
   "vehicle_name": "Ferrari F1 2000",
   "route_name": "Monaco"
 }
+
+### Get all Projects
+GET http://127.0.0.1:8888/api/v1/project/all
 
 
 

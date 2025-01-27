@@ -1,7 +1,7 @@
 // src/stores/appStore.ts
 import { defineStore } from 'pinia';
 
-import { safeFetch, ApiClient as client, TestDriveDataOutput } from './../services/Utilities';
+import { safeFetch, ApiClient as client, TestDriveProjectInfo } from './../services/Utilities';
 import { useToastController } from 'bootstrap-vue-next'
 
 const { show: showToast } = useToastController()
@@ -12,8 +12,8 @@ export const getProjectStore = defineStore('app', {
   state: () => ({
     availableCsvValues: [] as string[],
     availableVideoValues: [] as string[],
-    availableProjects: [] as TestDriveDataOutput[],
-    loadedProject: undefined as TestDriveDataOutput | undefined,
+    availableProjects: [] as TestDriveProjectInfo[],
+    loadedProject: undefined as TestDriveProjectInfo | undefined,
 
     isLoading: false
 
@@ -22,7 +22,7 @@ export const getProjectStore = defineStore('app', {
     isProjectLoaded: (state) => !!state.loadedProject,
   },
   actions: {
-    addProject(project: TestDriveDataOutput) {
+    addProject(project: TestDriveProjectInfo) {
       this.availableProjects.push(project);
     },
     removeProject(projectId: number) {
@@ -31,7 +31,7 @@ export const getProjectStore = defineStore('app', {
       );
     },
     async loadProject(projectId: number) {
-      const [error, activeProject] = await safeFetch(() => client.activateTestdriveApiV1ProjectActivateTestdriveIdPut({
+      const [error, activeProject] = await safeFetch(() => client.activateTestdriveApiV1ProjectActivateTestdriveIdPost({
         testdriveId: projectId
       }));
       if (activeProject?.testdrive) {
@@ -41,7 +41,7 @@ export const getProjectStore = defineStore('app', {
     },
     async unloadProject() {
 
-      const [error, deactivatedProject] = await safeFetch(() => client.deactivateTestdriveApiV1ProjectDeactivatePut());
+      const [error, deactivatedProject] = await safeFetch(() => client.deactivateTestdriveApiV1ProjectDeactivatePost());
       if (error) {
         showToast?.({
           props: {

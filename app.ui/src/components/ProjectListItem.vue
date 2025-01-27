@@ -1,13 +1,13 @@
 <template>
     <BCard bg-variant="light" text-variant="dark" class="mb-2"
-        :header-bg-variant="isProjectLoaded ? 'warning' : 'light'" :header="props.project.metaData?.routeName">
+        :header-bg-variant="isProjectLoaded ? 'warning' : 'light'" :header="props.project.testDriveMetaInfo?.routeName">
 
 
 
         <BCardText>
             <div>
                 <p>Date: {{ dateTime }}</p>
-                <p>Driver: {{ props.project.metaData?.driverName }}</p>
+                <p>Driver: {{ props.project.testDriveMetaInfo?.driverName }}</p>
             </div>
         </BCardText>
 
@@ -30,7 +30,7 @@
 import { computed, defineProps } from 'vue'
 import { getProjectStore } from './../stores/projectStore';
 
-import { safeFetch, ApiClient as client, TestDriveDataOutput } from '../services/Utilities'
+import { safeFetch, ApiClient as client, TestDriveProjectInfo } from '../services/Utilities'
 
 import { useToastController } from 'bootstrap-vue-next'
 
@@ -39,7 +39,7 @@ const { show: showToast } = useToastController()
 const projectStore = getProjectStore();
 
 interface ProjectListItemProps {
-    project: TestDriveDataOutput
+    project: TestDriveProjectInfo
 }
 
 const props = defineProps<ProjectListItemProps>()
@@ -51,7 +51,7 @@ const isProjectLoaded = computed(() => {
 
 const dateTime = computed(() => {
     // Parse the date string into a Date object
-    const date = props.project.metaData?.testDate
+    const date = props.project.creationDate
     if (!date) {
         return ' - '
     }
@@ -76,6 +76,14 @@ const dateTime = computed(() => {
 })
 
 const handleLoadProject = async () => {
+    if (!props.project.id) {
+        console.error('Project ID is missing')
+        return
+    }
+    if (isProjectLoaded.value) {
+        console.log('Project already loaded:', props.project.id)
+        await projectStore.unloadProject()
+    }
     console.log('Loading project:', props.project.id)
     await projectStore.loadProject(props.project.id)
 }
@@ -83,11 +91,17 @@ const handleLoadProject = async () => {
 
 
 const handleDeleteProject = async () => {
-    console.log('Deleting project:', props.project.id)
 
+    const { id } = props.project;
+    console.log('Deleting project:', id)
 
-    const [error, data] = await safeFetch(() => client.deleteTestdriveApiV1ProjectDelete({
-        testdriveId: props.project.id
+    if (!id) {
+        console.error('Project ID is missing')
+        return
+    }
+
+    const [error, data] = await safeFetch(() => client.deleteTestdriveApiV1ProjectDeleteDelete({
+        testdriveId: id
     }))
     if (error) {
         showToast?.({
@@ -111,10 +125,10 @@ const handleDeleteProject = async () => {
                 pos: 'top-end',
             }
         });
-
-        projectStore.removeProject(props.project.id)
     }
-
+    if (data?.testdrive.id) {
+        projectStore.removeProject(data?.testdrive.id)
+    }
 }
 
 

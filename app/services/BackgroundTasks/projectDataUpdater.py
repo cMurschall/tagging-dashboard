@@ -20,8 +20,6 @@ def process_projects(stop_event: Event):
             if updated_video or updated_data:
                 service.update_testdrive(test_drive)
                 print(f"Time to update project: {end - start}")
-            else:
-                print("No updates needed")
 
         sleep_with_event(stop_event, 10)
 

@@ -10,4 +10,7 @@ export default defineConfig({
         resolvers: [BootstrapVueNextResolver()],
     }),
     ],
+    build: {
+        sourcemap: true,
+    },
 });

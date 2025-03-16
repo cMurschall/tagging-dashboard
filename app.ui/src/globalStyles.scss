@@ -1,1 +1,10 @@
 @import "./../node_modules/video.js/dist/video-js.css";
+@import './../node_modules/gridstack/dist/gridstack.css';
+
+
+body, html { /* Make body and html the flex container */
+    height: 100%; /* Ensure they take full viewport height */
+    margin: 0; /* Remove default margins */
+    display: flex;
+    flex-direction: column;
+}

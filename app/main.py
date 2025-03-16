@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import sys
 
 from threading import Thread, Event as ThreadingEvent
@@ -13,6 +14,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api import router as global_router
 from .api.v1 import router as v1_router
 from .dependencies import get_player, get_connection_manager, get_testdata_manager, get_settings
+
+logger = logging.getLogger('uvicorn.error')
 
 
 def start_background_tasks(background_threads, stop_event):
@@ -33,7 +36,7 @@ async def lifespan(fastapi_app: FastAPI):
     stop_event = ThreadingEvent()
     background_threads = []
     start_background_tasks(background_threads, stop_event)
-    print(f"Starting {len(background_threads)} background tasks.")
+    logger.info(f"Starting {len(background_threads)} background tasks.")
     yield
     stop_event.set()
     for thread in background_threads:

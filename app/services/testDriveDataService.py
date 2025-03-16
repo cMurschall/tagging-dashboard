@@ -1,12 +1,15 @@
 import json
+import logging
 import os
+from pathlib import Path
 from typing import Dict, List
 
 from pydantic import ValidationError
+import pandas as pd
 
 from app.models.tags import Tag
+from app.models.testDriveDataInfo import TestDriveDataInfo
 from app.models.testDriveProjectInfo import TestDriveProjectInfo
-from app.settings import settings
 
 
 class TestDriveDataService:
@@ -15,8 +18,45 @@ class TestDriveDataService:
         self.test_drive_data_store: Dict[int, TestDriveProjectInfo] = {}
         self.current_id = 1
         self.active_testdrive_id = None
+        self.active_testdrive_df = None
 
+        self.logger = logging.getLogger('uvicorn.error')
         self._load_data()
+
+    def load_csv_data(self, data_info: TestDriveDataInfo):
+        file_path = Path(data_info.csv_file_full_path)
+        if not file_path.exists():
+            self.logger.warning(f"CSV file does not exist: {file_path}")
+            return
+
+        self.active_testdrive_df = pd.read_csv(data_info.csv_file_full_path, skiprows=[1])
+
+    def get_csv_data_columns(self):
+        if self.active_testdrive_df is None:
+            return []
+        return self.active_testdrive_df.dtypes.items()
+
+    def get_csv_data(self, columns: List[str]) -> pd.DataFrame:
+        # Column selection
+        if not columns:
+            self.logger.warning("No columns specified for data selection, returning empty DataFrame")
+            return pd.DataFrame()
+
+        if 'timestamp' not in columns:
+            columns.append('timestamp')  # always include timestamp
+
+            # Get set of columns in the DataFrame
+        valid_columns_set = set(self.active_testdrive_df.columns)
+        # Filter out invalid columns
+        valid_columns_list = [col for col in columns if col in valid_columns_set]
+
+        # If no valid columns remain, return an empty dataframe or handle otherwise
+        if not valid_columns_list:
+            self.logger.warning("No valid columns specified for data selection, returning empty DataFrame")
+            return pd.DataFrame()
+
+        df = self.active_testdrive_df[valid_columns_list]
+        return df
 
     def _load_data(self):
         """
@@ -33,9 +73,11 @@ class TestDriveDataService:
                     }
                     self.current_id = max(self.test_drive_data_store.keys(), default=0) + 1
                 except ValidationError as e:
-                    print(f"Failed to parse data: {e}")
+                    self.logger.error(f"Failed to parse data: {e}")
                 except json.JSONDecodeError as e:
-                    print(f"Failed to load JSON: {e}")
+                    self.logger.error(f"Failed to load JSON: {e}")
+
+        self.logger.info(f"Loaded {len(self.test_drive_data_store)} test drives")
 
     def _save_data(self):
         """
@@ -53,9 +95,9 @@ class TestDriveDataService:
         Get all test drives.
         :return:
         """
-        return self.test_drive_data_store.values()
+        return list(self.test_drive_data_store.values())
 
-    def get_testdrive(self, testdrive_id: int) -> TestDriveProjectInfo:
+    def get_testdrive(self, testdrive_id: int) -> TestDriveProjectInfo | None:
         """
         Get a test drive by ID.
         :param testdrive_id:
@@ -77,7 +119,7 @@ class TestDriveDataService:
         self._save_data()
         return testdrive
 
-    def update_testdrive(self, testdrive):
+    def update_testdrive(self, testdrive) -> TestDriveProjectInfo | None:
         """
         Update a test drive.
         :param testdrive:
@@ -89,7 +131,7 @@ class TestDriveDataService:
         self._save_data()
         return testdrive
 
-    def delete_testdrive(self, testdrive_id: int) -> TestDriveProjectInfo:
+    def delete_testdrive(self, testdrive_id: int) -> TestDriveProjectInfo | None:
         """
         Delete a test drive.
         :param testdrive_id:
@@ -101,18 +143,6 @@ class TestDriveDataService:
         del self.test_drive_data_store[testdrive_id]
         self._save_data()
         return testdrive
-
-    def create_testdrive_from_live_data(self, live_data_stream):
-        test_drive_data = TestDriveProjectInfo(raw_data={})
-        for data_point in live_data_stream:
-            for key, value in data_point.items():
-                if key not in test_drive_data.raw_data:
-                    test_drive_data.raw_data[key] = []
-                test_drive_data.raw_data[key].append(value)
-        self.test_drive_data_store[self.current_id] = test_drive_data
-        self.current_id += 1
-        self._save_data()
-        return self.current_id - 1
 
     def get_active_testdrive(self) -> TestDriveProjectInfo | None:
         """
@@ -141,35 +171,3 @@ class TestDriveDataService:
         testdrive = self.get_active_testdrive()
         self.active_testdrive_id = None
         return testdrive
-
-    def add_tag(self, testdrive_id: int, tag: Tag):
-        """
-        Add a tag to a test drive.
-        :param testdrive_id:
-        :param tag:
-        :return:
-        """
-        if testdrive_id not in self.test_drive_data_store:
-            # todo: we might be live here - so we will store in separate file
-            return None
-
-        self.test_drive_data_store[testdrive_id].tags.append(tag)
-        self._save_data()
-        return tag
-
-    def delete_tag(self, testdrive_id: int, tag_index: int):
-        """
-        Delete a tag from a test drive.
-        :param testdrive_id:
-        :param tag_index:
-        :return:
-        """
-        if testdrive_id not in self.test_drive_data_store:
-            # todo: we might be live here - so we will store in separate file
-            return None
-        if tag_index < 0 or tag_index >= len(self.test_drive_data_store[testdrive_id].tags):
-            return None
-        tag = self.test_drive_data_store[testdrive_id].tags[tag_index]
-        del self.test_drive_data_store[testdrive_id].tags[tag_index]
-        self._save_data()
-        return tag

@@ -1,9 +1,12 @@
 import time
+import logging
 from threading import Event
 from app.services.backgroundTasks.videoAnalyzer import analyze_video
 from app.services.backgroundTasks.dataAnalyzer import analyze_data
 
 from ...dependencies import get_testdata_manager
+
+logger = logging.getLogger(__name__)
 
 
 def process_projects(stop_event: Event):

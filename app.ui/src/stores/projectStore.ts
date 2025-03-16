@@ -144,6 +144,9 @@ export const getProjectStore = defineStore('app', {
         this.loadedProject = activeProject.testdrive;
         console.info('Active project fetched', this.loadedProject);
       }
+      else {
+        console.info('No active project found');
+      }
 
       this.isLoading = false;
     }

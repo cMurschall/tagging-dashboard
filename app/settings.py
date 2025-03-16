@@ -16,7 +16,3 @@ class Settings(BaseSettings):
     CSV_PATH: str = Field("data", env="CSV_PATH")
     VIDEO_PATH: str = Field("videos", env="VIDEO_PATH")
     SPRITE_FOLDER: str = Field("./sprites", env="SPRITE_FOLDER")
-
-
-# Create a singleton instance of Settings to be reused across the app
-settings = Settings()

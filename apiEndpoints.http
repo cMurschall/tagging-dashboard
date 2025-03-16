@@ -59,14 +59,20 @@ POST http://127.0.0.1:8888/api/v1/project/activate/2
 ### Deactiveate  Project
 POST http://127.0.0.1:8888/api/v1/project/deactivate
 
+### Get CSV file column names
+GET http://127.0.0.1:8888/api/v1/player/columns
 
-### Load CSV File
-POST http://127.0.0.1:8888/api/v1/player/load_csv
-Content-Type: application/json
 
-{
-  "file_name": "recording_2024_04_24__12_05_33_mapping_trip_02.csv"
-}
+### Get CSV file data as json
+GET http://127.0.0.1:8888/api/v1/player/data/json?
+    columns=timestamp,car0_1shift_down,car0_1shift_up,car0_brake_position,car0_caliper0_quat
+
+
+### Get CSV file data as feather
+GET http://127.0.0.1:8888/api/v1/player/data/feather?
+    columns=timestamp,car0_1shift_down,car0_1shift_up,car0_brake_position,car0_caliper0_quat
+
+
 
 ### Play Stream
 POST http://127.0.0.1:8888/api/v1/player/play

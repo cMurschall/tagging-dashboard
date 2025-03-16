@@ -1,12 +1,11 @@
+import logging
 import os
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
-from sympy.abc import lamda
 
 from app.dependencies import get_testdata_manager, get_settings
-from app.models.tags import SingleTimeTag, TimeRangeTag
 from app.models.testDriveDataInfo import TestDriveDataInfo
 from app.models.testDriveMetaData import TestDriveMetaData
 from app.models.testDriveProjectInfo import TestDriveProjectInfo
@@ -51,18 +50,15 @@ class TestDriveResponse(BaseModel):
     testdrive: TestDriveProjectInfo
 
 
-class AddTimeTagResponse(BaseModel):
-    message: str
-
-
-class DeleteTimeTagResponse(BaseModel):
-    message: str
+class OptionalTestDriveResponse(BaseModel):
+    testdrive: Optional[TestDriveProjectInfo]
 
 
 class ProjectController:
     def __init__(self):
         self.router = APIRouter()
         self.playback = None
+        self.logger = logging.getLogger("uvicorn.error")
         self._define_routes()
 
     def _define_routes(self):
@@ -121,25 +117,20 @@ class ProjectController:
             created_testdrive = service.delete_testdrive(testdrive_id)
             return {"testdrive": created_testdrive}
 
-        @self.router.delete("/{testdrive_id}/tag/{tag_index}", response_model=DeleteTimeTagResponse)
-        async def delete_tag(testdrive_id: int, tag_index: int,
-                             service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
-            service.delete_tag(testdrive_id, tag_index)
-            return {"message": "Tag deleted"}
-
-        @self.router.get("/active", response_model=TestDriveResponse)
+        @self.router.get("/active", response_model=OptionalTestDriveResponse)
         async def get_active_testdrive(service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
             active_testdrive = service.get_active_testdrive()
-            if active_testdrive is None:
-                raise HTTPException(status_code=404, detail="Active testdrive not found")
             return {"testdrive": active_testdrive}
 
         @self.router.post("/activate/{testdrive_id}", response_model=TestDriveResponse)
         async def activate_testdrive(testdrive_id: int,
+                                     background_tasks: BackgroundTasks,
                                      service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
             activated_testdrive = service.activate_testdrive(testdrive_id)
             if activated_testdrive is None:
                 raise HTTPException(status_code=404, detail=f"Testdrive with id {testdrive_id} not found")
+
+            background_tasks.add_task(service.load_csv_data(activated_testdrive.test_drive_data_info))
             return {"testdrive": activated_testdrive}
 
         @self.router.post("/deactivate", response_model=TestDriveResponse)
@@ -148,19 +139,3 @@ class ProjectController:
             if deactivated_testdrive is None:
                 raise HTTPException(status_code=404, detail="No active testdrive found")
             return {"testdrive": deactivated_testdrive}
-
-        # @self.router.post("/{testdrive_id}/tag/single", response_model=AddTimeTagResponse) @ self.router.put(
-        #     "/{testdrive_id}/tag/single", response_model=AddTimeTagResponse)
-        # async def add_single_time_tag(testdrive_id: int, tag: SingleTimeTagModel,
-        #                               service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
-        #     new_tag = SingleTimeTag(timestamp=tag.timestamp, notes=tag.notes)
-        #     service.add_tag(testdrive_id, new_tag)
-        #     return {"message": "Single time tag added"}
-        #
-        # @self.router.put("/{testdrive_id}/tag/range", response_model=AddTimeTagResponse)
-        # async def add_time_range_tag(testdrive_id: int, tag: TimeRangeTagModel,
-        #                              service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
-        #     new_tag = TimeRangeTag(start_timestamp=tag.start_timestamp, end_timestamp=tag.end_timestamp,
-        #                            notes=tag.notes)
-        #     service.add_tag(testdrive_id, new_tag)
-        #     return {"message": "Time range tag added"}

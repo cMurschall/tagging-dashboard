@@ -1,15 +1,18 @@
+import logging
 import subprocess
 from pathlib import Path
+from typing import List, Optional, Dict, Union, Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse, FileResponse
 
 from pydantic import BaseModel
 
-from ...dependencies import get_player, get_settings
+from ...dependencies import get_player, get_settings, get_testdata_manager
 from ...services.dataSources.csvDataSource import CSVDataSource
 from ...services.dataSources.simulatedNetworkDataSource import SimulatedNetworkStreamDataSource
 from ...services.player import Player
+from ...services.testDriveDataService import TestDriveDataService
 from ...settings import Settings
 
 router = APIRouter()
@@ -27,10 +30,29 @@ class ThumbnailsResponse(BaseModel):
     thumbnails: list[str]
 
 
+class ColumnInfo(BaseModel):
+    name: str
+    type: str
+
+
+class ColumnsResponse(BaseModel):
+    columns: List[ColumnInfo]
+
+
+class JsonResponseModel(BaseModel):
+    data: List[Dict[str, Any]]
+
+
+class FeatherResponseModel(BaseModel):
+    detail: str
+
+
 class PlayerController:
     def __init__(self):
         self.router = APIRouter()
         self.playback = None
+        self.logger = logging.getLogger('uvicorn.error')
+
         self._define_routes()
 
     def _define_routes(self):
@@ -49,43 +71,40 @@ class PlayerController:
 
             return StreamingResponse(video_streamer(), media_type="video/mp4")
 
-        @self.router.get("/thumbnail/{filename}")
-        def get_thumbnail(filename: str, settings: Settings = Depends(get_settings)) -> FileResponse:
-            file_path = Path(settings.SPRITE_FOLDER) / filename
-            if not file_path.exists():
-                raise HTTPException(status_code=404, detail="Thumbnail not found")
-            return FileResponse(file_path, media_type="image/png")
+        @self.router.get("/columns")
+        async def get_data(service: TestDriveDataService = Depends(get_testdata_manager)) -> ColumnsResponse:
+            columns_info = [
+                {"name": col, "type": str(dtype)} for col, dtype in service.get_csv_data_columns()
+            ]
 
-        # @self.router.post("/load_csv")
-        # async def load_csv(payload: LoadCsvPayload, player: Player = Depends(get_player), settings: Settings = Depends(get_settings)):
-        #     file_name = payload.file_name
-        #
-        #     csv_file_folder = settings.CSV_PATH;
-        #     file_path = Path(f"{csv_file_folder}/{file_name}")
-        #     if file_path.is_file() is False:
-        #         raise HTTPException(status_code=404, detail="File not found")
-        #
-        #     data_source = CSVDataSource(file_path.name)
-        #     player.set_data_source(data_source)
-        #     return {"message": f"CSV data source initialized from {file_path}"}
-        #
-        # @self.router.post("/load_stream")
-        # async def load_stream(player: Player = Depends(get_player)):
-        #     data_source = SimulatedNetworkStreamDataSource()
-        #     player.set_data_source(data_source)
-        #     return {"message": "Network stream data source initialized"}
-        #
-        # @self.router.post("/play")
-        # async def play(player: Player = Depends(get_player)):
-        #     player.play()
-        #     return {"message": "Playback started"}
-        #
-        # @self.router.post("/pause")
-        # async def pause(player: Player = Depends(get_player)):
-        #     player.pause()
-        #     return {"message": "Playback paused"}
-        #
-        # @self.router.post("/jump_to_timestamp")
-        # async def jump_to_timestamp(payload: JumpToTimestampPayload, player: Player = Depends(get_player)):
-        #     await player.jump_to_timestamp(payload.timestamp)
-        #     return {"message": f"Jumped to timestamp {payload.timestamp}"}
+            return {"columns": columns_info}
+
+        @self.router.get("/data/json", summary="Get data as JSON",
+                         description="Retrieve the selected data as a JSON response.")
+        async def get_data_as_json(
+                columns: str = Query(None, description="Comma-separated list of columns to include"),
+                service: TestDriveDataService = Depends(get_testdata_manager)) -> JsonResponseModel:
+            # Parse the columns
+            column_list = columns.split(",") if columns else []
+            data = service.get_csv_data(column_list)
+            return {"data": data.to_dict(orient="records")}
+
+        @self.router.get("/data/feather", summary="Get data as Feather",
+                         description="Retrieve the selected data as a Feather file download.")
+        async def get_data_as_feather(
+                columns: str = Query(None, description="Comma-separated list of columns to include"),
+                service: TestDriveDataService = Depends(get_testdata_manager)) -> FeatherResponseModel:
+            # Parse the columns
+            column_list = columns.split(",") if columns else []
+            data = service.get_csv_data(column_list)
+
+            # Save to a Feather file
+            feather_file = "data.feather"
+            data.reset_index().to_feather(feather_file)  # Feather requires no index issues
+
+            # Return the Feather file as a response
+            return FileResponse(
+                feather_file,
+                media_type="application/octet-stream",
+                filename="data.feather"
+            )

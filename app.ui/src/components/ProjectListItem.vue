@@ -29,14 +29,16 @@
 <script setup lang="ts">
 import { computed, defineProps } from 'vue'
 import { getProjectStore } from './../stores/projectStore';
+import { useGridStore } from './../stores/gridStore';
 
-import { safeFetch, ApiClient as client, TestDriveProjectInfo } from '../services/Utilities'
+import { safeFetch, ApiClient as client, TestDriveProjectInfo, TestDriveVideoInfo } from '../services/Utilities'
 
 import { useToastController } from 'bootstrap-vue-next'
 
 const { show: showToast } = useToastController()
 
 const projectStore = getProjectStore();
+const gridStore = useGridStore();
 
 interface ProjectListItemProps {
     project: TestDriveProjectInfo

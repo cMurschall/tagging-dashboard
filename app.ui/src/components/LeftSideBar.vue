@@ -67,6 +67,8 @@ import ProjectListItem from './ProjectListItem.vue';
 
 import { ref } from 'vue'
 import { getProjectStore } from './../stores/projectStore';
+import { useGridStore } from './../stores/gridStore';
+
 import { useToastController } from 'bootstrap-vue-next'
 import { CreateProjectPayload } from '../services/Utilities';
 
@@ -77,6 +79,7 @@ import { BFormGroup } from 'bootstrap-vue-next';
 
 const { show: showToast } = useToastController()
 const projectStore = getProjectStore()
+const gridStore = useGridStore()
 
 
 // Create a factory function to provide default values
@@ -135,7 +138,6 @@ const createNewProject = async () => {
 const handleUnloadProject = async () => {
     console.log('Unloading project id:', projectStore.loadedProject?.id)
     await projectStore.unloadProject()
-
 }
 </script>
 

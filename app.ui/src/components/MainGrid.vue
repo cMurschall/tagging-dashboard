@@ -53,7 +53,7 @@ export default defineComponent({
                 const widget = w as GridItem;
 
 
-                console.log('renderCB', widget);
+                console.log('Grid render CB', widget);
                 // The store's component map (component name -> definition)
                 const compName = widget.component as string;
                 const compDef = gridStore.componentMap[compName];
@@ -146,8 +146,11 @@ export default defineComponent({
 
 <style scoped>
 .grid-stack {
-    background: #fafafa;
+    /* background: #fafafa; */
+    background: lime;
+    /* height is full height of the parent */
     height: 100%;
+    
 }
 
 .grid-stack-item-content {

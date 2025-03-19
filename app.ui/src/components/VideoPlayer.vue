@@ -1,14 +1,11 @@
 <template>
-  <div class="card" style="width: 100%; max-width: 800px; margin: 0 auto;">
-    <div class="card-body">
-      <h5 class="card-title">Video Player</h5>
-      <div class="card-img-top">
-        <video-js ref="videoPlayer" class="vjs-default-skin" :options="videoOptions" @error="handleError"></video-js>
-        <div id="thumbnail-preview"></div>
-      </div>
-      <div v-if="error" class="alert alert-danger mt-3">
-        {{ error }}
-      </div>
+  <div>
+    <div>
+      <video ref="videoPlayer" class="video-js" :options="videoOptions" @error="handleError"></video>
+      <div id="thumbnail-preview"></div>
+    </div>
+    <div v-if="error" class="alert alert-danger mt-3">
+      {{ error }}
     </div>
   </div>
 </template>
@@ -21,7 +18,7 @@ import "videojs-sprite-thumbnails";
 
 
 interface VideoPlayerProps {
-  videoInfo : TestDriveVideoInfo
+  videoInfo: TestDriveVideoInfo
 }
 
 
@@ -51,7 +48,7 @@ const error = ref<string | undefined>(undefined)
 
 
 const loadVideo = (videoInfo: TestDriveVideoInfo) => {
-  if(!videoInfo.videoFileName) {
+  if (!videoInfo.videoFileName) {
     error.value = "Video file name is missing.";
     return;
   }
@@ -79,17 +76,17 @@ const loadVideo = (videoInfo: TestDriveVideoInfo) => {
 
     const encodedFileName = encodeURIComponent(videoInfo.videoSpriteInfo?.spriteFileName ?? '');
     const thumbnailUrl = `${ApiPath}/player/thumbnail/${encodedFileName}`;
-    
+
     // setup sprite thumbnails
     const spriteThumbnailsOptions = {
-      interval:videoInfo.videoSpriteInfo?.spriteInterval,
+      interval: videoInfo.videoSpriteInfo?.spriteInterval,
       url: thumbnailUrl,
       columns: videoInfo.videoSpriteInfo?.spriteColumns,
       rows: videoInfo.videoSpriteInfo?.spriteRows,
-      width:videoInfo.videoSpriteInfo?.thumbnailWidth,
+      width: videoInfo.videoSpriteInfo?.thumbnailWidth,
       height: videoInfo.videoSpriteInfo?.thumbnailHeight,
     }
-    
+
     videoPlayer.value.spriteThumbnails(spriteThumbnailsOptions);
     console.log('spriteThumbnailsOptions:', spriteThumbnailsOptions);
   }
@@ -150,10 +147,8 @@ onBeforeUnmount(() => {
 
 
 const synchronizeData = (currentSecond: number) => {
-  //console.log('synchronizeData:', currentSecond)
+  // console.log('synchronizeData:', currentSecond)
 }
 </script>
 
-<style lang="scss"  scoped>
-
-</style>
+<style lang="scss" scoped></style>

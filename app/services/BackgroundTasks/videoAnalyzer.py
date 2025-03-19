@@ -2,6 +2,8 @@ import json
 import math
 import os
 import subprocess
+import tempfile
+from pathlib import Path
 
 import cv2
 import easyocr
@@ -11,6 +13,12 @@ from app.dependencies import get_settings
 
 
 def analyze_video(video_info: TestDriveVideoInfo) -> bool:
+    faststart_location = find_moov_atom_location(Path(video_info.video_file_full_path))
+
+    if faststart_location != "start":
+        print(f"Video {video_info.video_file_name} is not fast start enabled. Processing...")
+        move_moov_atom(video_info.video_file_full_path)
+
     has_duration = video_info.video_duration_s > 0
     if not has_duration:
         info = extract_video_info(video_info.video_file_full_path)
@@ -220,3 +228,63 @@ def process_last_n_frames(video_path, frames=20):
 
     cap.release()
     return total_seconds
+
+
+def find_moov_atom_location(file_path: Path, tolerance: int = 32) -> str:
+    """Checks if the 'moov' atom is at the start or end of an MP4 file."""
+    import struct
+
+    with open(file_path, "rb") as f:
+        file_size = file_path.stat().st_size
+        offset = 0
+
+        while offset < file_size:
+            # Read atom size (4 bytes) and type (4 bytes)
+            atom_header = f.read(8)
+            if len(atom_header) < 8:
+                break  # Reached end of file or invalid atom
+
+            atom_size, atom_type = struct.unpack(">I4s", atom_header)
+            atom_type = atom_type.decode("utf-8")
+
+            if atom_type == "moov":
+                if offset <= tolerance:
+                    return "start"
+                elif offset + atom_size + tolerance >= file_size:
+                    return "end"
+                else:
+                    return "middle"  # Moov atom is neither at the start nor end
+
+            # Move to the next atom
+            offset += atom_size
+            f.seek(offset)
+
+    return "moov atom not found"
+
+
+def move_moov_atom(input_file):
+    """
+    Uses ffmpeg to repackage the file with the moov atom moved to the beginning.
+    The conversion is written to a temporary file, which then overwrites the original file.
+    """
+    # Create a temporary file in the same directory as the input file
+    dir_name = os.path.dirname(input_file)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=dir_name) as tmp:
+        temp_file = tmp.name
+
+    # Run ffmpeg to convert the file and output to the temporary file
+    cmd = [
+        "ffmpeg",
+        "-y",  # Add -y to automatically overwrite existing files
+        "-i", input_file,
+        "-c", "copy",
+        "-movflags", "+faststart",
+        temp_file
+    ]
+    subprocess.run(cmd, check=True)
+
+    # Replace the original file with the temporary file
+    os.replace(temp_file, input_file)
+    if os.path.exists(temp_file):
+        os.remove(temp_file)  # remove the temp file if it still exists.
+    print(f"Overwritten the original file with faststart enabled version: {input_file}")

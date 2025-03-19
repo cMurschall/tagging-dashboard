@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "node-version": "nvm use 21.6.1"
   },
   "dependencies": {
     "bootstrap": "^5.3.3",

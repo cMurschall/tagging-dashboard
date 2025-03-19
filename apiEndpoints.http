@@ -73,6 +73,11 @@ GET http://127.0.0.1:8888/api/v1/player/data/feather?
     columns=timestamp,car0_1shift_down,car0_1shift_up,car0_brake_position,car0_caliper0_quat
 
 
+### Get Thumbnail
+GET http://localhost:8888/api/v1/player/thumbnail/paul_timing_cw2_sprite.png
+
+
+
 
 ### Play Stream
 POST http://127.0.0.1:8888/api/v1/player/play

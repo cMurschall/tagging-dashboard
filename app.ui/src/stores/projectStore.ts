@@ -104,7 +104,7 @@ export const getProjectStore = defineStore('app', {
       }
 
 
-      const [allProjectsError, allProjectesData] = await safeFetch(() => client.getAllTestdrivesApiV1ProjectAllGet());
+      const [allProjectsError, allProjectsData] = await safeFetch(() => client.getAllTestdrivesApiV1ProjectAllGet());
       if (allProjectsError) {
         showToast?.({
           props: {
@@ -120,7 +120,7 @@ export const getProjectStore = defineStore('app', {
         console.error('Error fetching all projects', allProjectsError);
       }
       else {
-        this.availableProjects = allProjectesData?.testdrives || [];
+        this.availableProjects = allProjectsData?.testdrives || [];
         console.info('All projects fetched', this.availableProjects);
       }
 

@@ -1,7 +1,7 @@
 import { Observable } from "../observable";
 
 
-export interface IChartDataManager {
+export interface IDataManager {
   // An observable that emits the current measurement (e.g. a number)
   measurement$: Observable<number>;
 

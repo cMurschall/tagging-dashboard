@@ -19,10 +19,12 @@
 
                     <!-- Toolbar -->
                     <div class="toolbar d-flex align-items-center justify-content-start p-2 bg-light border-bottom">
-                        <BButton variant="primary" class="mx-1" :disabled="!projectStore.hasData"
+                        <BButton variant="primary" class="mx-1"
                             @click="handleAddGauge">Add Gauge</BButton>
                         <BButton variant="primary" class="mx-1" disabled>Add Chart</BButton>
 
+
+                        <BButton variant="primary" class="mx-1" @click="handleAddTestGridItem">Add Test</BButton>
                     </div>
 
                     <!-- Main Grid -->
@@ -136,6 +138,8 @@ import MainGrid from './components/MainGrid.vue';
 import { TestDriveVideoInfo } from './services/Utilities';
 import { Observable } from './observable';
 import Gauge from './components/Gauge.vue';
+import TestGridItem from './components/TestGridItem.vue';
+import { RandomDataManager } from './managers/randomDataManager';
 
 // Initialize the store
 const projectStore = useProjectStore();
@@ -144,6 +148,7 @@ const gridStore = useGridStore();
 gridStore.setComponentMap({
     VideoPlayer: markRaw(VideoPlayer),
     Gauge: markRaw(Gauge),
+    TestGridItem: markRaw(TestGridItem)
 });
 
 
@@ -163,10 +168,9 @@ onMounted(async () => {
 });
 
 const handleAddGauge = () => {
-    if (!projectStore.loadedProject) {
-        console.error('No project loaded.');
-        return;
-    }
+
+    const randomStartSpeed = Math.floor(Math.random() * 100);
+    const dataManager = new RandomDataManager(randomStartSpeed, 10, 100);
 
     gridStore.addNewItem({
         component: 'Gauge',
@@ -174,17 +178,35 @@ const handleAddGauge = () => {
         y: 0,
         w: 2,
         h: 2,
-        id: 'gauge-1',
+        id: 'gauge-1' + crypto.randomUUID(),
         title: 'Gauge',
         props: {
-            dataManager: projectStore.loadedProject?.dataManager || {},
             min: 0,
             max: 100,
             label: 'Speed',
             color: '#007bff'
+        },
+        dependencies: {
+            dataManager
         }
     });
 
+    console.log('Added gauge', dataManager.measurement$.getValue());
+
+};
+
+const handleAddTestGridItem = () => {
+    gridStore.addNewItem({
+        component: 'TestGridItem',
+        x: 0,
+        y: 0,
+        w: 2,
+        h: 2,
+        id: 'test-grid-item' + crypto.randomUUID(),
+        title: 'Test Grid Item',
+        props: {
+        }
+    });
 };
 
 

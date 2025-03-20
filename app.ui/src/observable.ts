@@ -5,14 +5,8 @@ export interface Subscription {
 
 
 
-export interface IObserver<T> {
-  next: (value: T) => void;
-  subscribe(observer: (value: T) => void): Subscription;
-  getValue(): T | undefined;
-}
 
-
-export class Observable<T> implements IObserver<T> {
+export class Observable<T> {
   private observers: ((value: T) => void)[] = [];
   private currentValue: T | undefined;
 

@@ -19,27 +19,27 @@
 
                 <!-- Driver Name -->
                 <BFormGroup label="Driver Name" label-for="driver-name">
-                    <b-form-input id="driver-name" v-model="newProjectPayload.driverName"
-                        required placeholder="Enter driver's name"></b-form-input>
+                    <b-form-input id="driver-name" v-model="newProjectPayload.driverName" required
+                        placeholder="Enter driver's name"></b-form-input>
                 </BFormGroup>
 
                 <!-- Vehicle ID -->
                 <BFormGroup label="Vehicle ID" label-for="vehicle-id">
-                    <b-form-input id="vehicle-id"  v-model="newProjectPayload.vehicleName"
-                        required placeholder="Enter vehicle ID"></b-form-input>
+                    <b-form-input id="vehicle-id" v-model="newProjectPayload.vehicleName" required
+                        placeholder="Enter vehicle ID"></b-form-input>
                 </BFormGroup>
 
 
 
                 <!-- Route Name -->
                 <BFormGroup label="Route Name" label-for="route-name">
-                    <b-form-input id="route-name"  v-model="newProjectPayload.routeName"
-                        required placeholder="Enter route name"></b-form-input>
+                    <b-form-input id="route-name" v-model="newProjectPayload.routeName" required
+                        placeholder="Enter route name"></b-form-input>
                 </BFormGroup>
 
                 <!-- Notes -->
                 <BFormGroup label="Notes" label-for="notes">
-                    <b-form-textarea id="notes"  v-model="newProjectPayload.notes"
+                    <b-form-textarea id="notes" v-model="newProjectPayload.notes"
                         placeholder="Enter additional notes (optional)"></b-form-textarea>
                 </BFormGroup>
             </div>
@@ -48,7 +48,53 @@
         </BModal>
 
         <div v-if="projectStore.isProjectLoaded">
-            <BButton v-if="projectStore.isProjectLoaded" @click="handleUnloadProject">Unload</BButton>
+            <BCard class="my-3">
+                <BCardHeader class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Loaded Project</h4>
+                    <BButton variant="danger" size="sm" @click="handleUnloadProject">
+                        <i class="bi bi-x-circle me-1"></i> Unload
+                    </BButton>
+                </BCardHeader>
+                <BCardBody>
+                    <BListGroup flush>
+                        <BListGroupItem>
+                            <strong>Project ID:</strong><br>
+                            {{ projectStore.loadedProject?.id }}
+                        </BListGroupItem>
+                        <BListGroupItem>
+                            <strong>Driver:</strong><br>
+                            {{ projectStore.loadedProject?.testDriveMetaInfo?.driverName }}
+                        </BListGroupItem>
+                        <BListGroupItem>
+                            <strong>Route:</strong><br>
+                            {{ projectStore.loadedProject?.testDriveMetaInfo?.routeName }}
+                        </BListGroupItem>
+                        <BListGroupItem>
+                            <strong>Vehicle:</strong><br>
+                            {{ projectStore.loadedProject?.testDriveMetaInfo?.vehicleName }}
+                        </BListGroupItem>
+                        <BListGroupItem>
+                            <strong>Avg. Speed:</strong><br>
+                            {{ (projectStore.loadedProject?.testDriveDataInfo?.averageSpeedMS ?? 0 * 3.6).toFixed(2) }}
+                            km/h
+                        </BListGroupItem>
+                        <BListGroupItem>
+                            <strong>Top Speed:</strong><br>
+                            {{ (projectStore.loadedProject?.testDriveDataInfo?.maxSpeedMS ?? 0 * 3.6).toFixed(2) }} km/h
+                        </BListGroupItem>
+                        <BListGroupItem>
+                            <strong>Distance:</strong><br>
+                            {{ (projectStore.loadedProject?.testDriveDataInfo?.drivenDistanceM ?? 0 / 1000).toFixed(1)
+                            }} km
+                        </BListGroupItem>
+                    </BListGroup>
+
+                </BCardBody>
+                <!-- <BCardFooter class="text-end">
+             
+                </BCardFooter> -->
+            </BCard>
+
         </div>
 
         <div v-else>

@@ -1,5 +1,5 @@
 // ApiDataManager.ts
-import { IChartDataManager } from "./IChartDataManager";
+import { IDataManager } from "./iDataManager";
 import { Observable } from "./../observable";
 
 export interface TimeseriesDataPoint {
@@ -8,7 +8,7 @@ export interface TimeseriesDataPoint {
   [key: string]: any;
 }
 
-export class ApiDataManager implements IChartDataManager {
+export class ApiDataManager implements IDataManager {
   timeseriesData: TimeseriesDataPoint[] = [];
   measurement$: Observable<number>;
 

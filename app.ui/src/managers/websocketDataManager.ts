@@ -1,5 +1,5 @@
 
-import { IChartDataManager } from "./IChartDataManager";
+import { IDataManager } from "./iDataManager";
 import { Observable } from "./../observable";
 
 export interface TimeseriesDataPoint {
@@ -7,7 +7,7 @@ export interface TimeseriesDataPoint {
   [key: string]: any;
 }
 
-export class WebsocketDataManager implements IChartDataManager {
+export class WebsocketDataManager implements IDataManager {
   timeseriesData: TimeseriesDataPoint[] = [];
   measurement$: Observable<number>;
   ws: WebSocket;

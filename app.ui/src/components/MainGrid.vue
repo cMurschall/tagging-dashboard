@@ -11,7 +11,10 @@ import {
     onBeforeUnmount,
     watch,
     createApp,
-    h
+    h,
+    provide,
+    readonly,
+    markRaw
 } from 'vue';
 import { GridStack, GridStackNode } from 'gridstack';
 import { GridItem, useGridStore } from '../stores/gridStore';
@@ -76,6 +79,22 @@ export default defineComponent({
                             // Spread any custom props from our widget props
                             ...(widget.props || {})
                         });
+
+
+
+
+                        // Iterate over dependencies and provide each one:
+                        const gridStoreItem = gridStore.gridItems.find(item => item.id === widget.id);
+                        if (gridStoreItem) {
+                            for (const key in gridStoreItem.dependencies) {
+
+                                const d = gridStoreItem.dependencies[key];
+                                console.log('Providing', key, d.measurement$.getValue());
+                                provide(key, readonly(markRaw(gridStoreItem.dependencies[key])));
+                            }
+                        }
+
+
 
                         // Wrap that child in our CardWrapper
                         return () =>
@@ -150,7 +169,7 @@ export default defineComponent({
     /* background: lime; */
     /* height is full height of the parent */
     height: 100%;
-    
+
 }
 
 .grid-stack-item-content {

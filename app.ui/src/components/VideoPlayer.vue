@@ -11,13 +11,14 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { defineProps, ref, watch, onMounted, onBeforeUnmount, inject } from 'vue';
 import { ApiPath, TestDriveVideoInfo } from '../services/Utilities';
 import videojs from "video.js";
 import "videojs-sprite-thumbnails";
 import { Observable } from './../observable';
 
-
+// Inject the function from the parent
+const setCardTitle = inject('setCardTitle') as (title: string) => void;
 
 interface VideoPlayerProps {
   videoInfo: TestDriveVideoInfo,
@@ -93,6 +94,10 @@ const loadVideo = (videoInfo: TestDriveVideoInfo) => {
     videoPlayer.value.spriteThumbnails(spriteThumbnailsOptions);
     console.log('spriteThumbnailsOptions:', spriteThumbnailsOptions);
   }
+
+  if (videoPlayer.value) {
+    setCardTitle(`Player: ${videoInfo.videoFileName}`);
+  }
 }
 
 const handleError = () => {
@@ -162,9 +167,19 @@ const synchronizeData = (currentSecond: number, simulationStart: number) => {
   //   simulationTime,
   //   formattedTime: `${simulationMinutes}:${simulationSeconds}`
   // })
+  Object.setPrototypeOf(props.simulationTimeObservable, Observable.prototype);
   props.simulationTimeObservable.next(simulationTime);
 
 }
+
+
+
+
+
+
+
+
+
 </script>
 
 <style lang="scss" scoped></style>

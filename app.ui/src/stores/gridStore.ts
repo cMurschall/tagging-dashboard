@@ -13,6 +13,9 @@ export interface GridItem<T = Record<string, any>> {
   // Let props be a generic Record, so each widget can have different fields
   // props?: Record<string, any>;
   props?: T;  // This enforces type safety per component
+
+  // Dependencies to inject
+  dependencies?: Record<string, any> | undefined;
 }
 
 export const useGridStore = defineStore('gridStore', {
@@ -36,6 +39,20 @@ export const useGridStore = defineStore('gridStore', {
     addNewItem<T extends Record<string, any>>(item: Omit<GridItem<T>, 'props'> & { props: T }) {
       // Mark the props object as raw to prevent Vue from stripping prototype
       // item.props = markRaw(item.props);
+      // check the id if it already exists
+      if (this.gridItems.find((i) => i.id === item.id)) {
+        console.error(`Error: item with id ${item.id} already exists`);
+        return;
+      }
+
+      if (item.dependencies) {
+        // // Iterate over each dependency and mark it as raw
+        // for (const key in item.dependencies) {
+        //   item.dependencies[key] = markRaw(item.dependencies[key]);
+        // }
+        item.dependencies = markRaw(item.dependencies);
+      }
+
       this.gridItems.push(item);
     },
 

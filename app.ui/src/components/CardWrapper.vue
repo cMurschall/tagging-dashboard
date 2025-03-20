@@ -11,7 +11,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, provide } from 'vue';
+import { defineComponent, ref, provide, watch } from 'vue';
 
 export default defineComponent({
   name: 'CardWrapper',
@@ -23,6 +23,11 @@ export default defineComponent({
   },
   setup(props) {
     const cardTitle = ref(props.title);
+
+    // Watch for prop updates (in case title changes dynamically)
+    watch(() => props.title, (newTitle) => {
+      cardTitle.value = newTitle;
+    });
 
     // Provide the function to allow children to change the title
     provide('setCardTitle', (newTitle: string) => {

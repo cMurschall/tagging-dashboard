@@ -15,17 +15,20 @@ import { defineProps, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { ApiPath, TestDriveVideoInfo } from '../services/Utilities';
 import videojs from "video.js";
 import "videojs-sprite-thumbnails";
+import { Observable } from './../observable';
+
 
 
 interface VideoPlayerProps {
-  videoInfo: TestDriveVideoInfo
+  videoInfo: TestDriveVideoInfo,
+  simulationTimeObservable: Observable<number>
 }
 
-
+type PlayerOptions = typeof videojs.options;
 const props = defineProps<VideoPlayerProps>()
 
 const videoPlayer = ref<videojs.Player | undefined>(undefined)
-const videoOptions = ref<videojs.PlayerOptions>({
+const videoOptions = ref<PlayerOptions>({
   controls: true,
   autoplay: true,
   preload: 'auto',
@@ -124,7 +127,7 @@ onMounted(() => {
         lastProcessedSecond = currentSecond;
 
         // Example: Synchronize data to the current timestamp
-        synchronizeData(currentSecond);
+        synchronizeData(currentSecond, props.videoInfo.videoSimulationTimeStartS ?? 0);
       }
     });
 
@@ -146,8 +149,21 @@ onBeforeUnmount(() => {
 
 
 
-const synchronizeData = (currentSecond: number) => {
-  // console.log('synchronizeData:', currentSecond)
+const synchronizeData = (currentSecond: number, simulationStart: number) => {
+
+  const simulationTime = simulationStart + currentSecond
+  //const simulationMinutes = Math.floor(simulationTime / 60);
+  //const simulationSeconds = simulationTime - simulationMinutes * 60;
+
+
+  // console.log('synchronizeData:', {
+  //   currentSecond,
+  //   simulationStart,
+  //   simulationTime,
+  //   formattedTime: `${simulationMinutes}:${simulationSeconds}`
+  // })
+  props.simulationTimeObservable.next(simulationTime);
+
 }
 </script>
 

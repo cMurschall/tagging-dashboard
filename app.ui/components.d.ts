@@ -19,6 +19,7 @@ declare module 'vue' {
     BToastOrchestrator: typeof import('bootstrap-vue-next/components/BToast')['BToastOrchestrator']
     CardWrapper: typeof import('./src/components/CardWrapper.vue')['default']
     Dashboard: typeof import('./src/components/Dashboard.vue')['default']
+    Gauge: typeof import('./src/components/Gauge.vue')['default']
     LeftSideBar: typeof import('./src/components/LeftSideBar.vue')['default']
     MainGrid: typeof import('./src/components/MainGrid.vue')['default']
     PluginUI: typeof import('./src/components/PluginUI.vue')['default']

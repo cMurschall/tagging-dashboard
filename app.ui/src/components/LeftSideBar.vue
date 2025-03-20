@@ -66,7 +66,7 @@
 import ProjectListItem from './ProjectListItem.vue';
 
 import { ref } from 'vue'
-import { getProjectStore } from './../stores/projectStore';
+import { useProjectStore } from './../stores/projectStore';
 import { useGridStore } from './../stores/gridStore';
 
 import { useToastController } from 'bootstrap-vue-next'
@@ -78,7 +78,7 @@ import { BFormGroup } from 'bootstrap-vue-next';
 
 
 const { show: showToast } = useToastController()
-const projectStore = getProjectStore()
+const projectStore = useProjectStore()
 const gridStore = useGridStore()
 
 

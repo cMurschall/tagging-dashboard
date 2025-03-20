@@ -8,18 +8,24 @@ const { show: showToast } = useToastController()
 
 
 
-export const getProjectStore = defineStore('app', {
+export const useProjectStore = defineStore('app', {
   state: () => ({
     availableCsvValues: [] as string[],
     availableVideoValues: [] as string[],
     availableProjects: [] as TestDriveProjectInfo[],
     loadedProject: undefined as TestDriveProjectInfo | undefined,
 
-    isLoading: false
+
+    isLoading: false,
+
+    currentSimulationTime: 0,
 
   }),
   getters: {
     isProjectLoaded: (state) => !!state.loadedProject,
+    hasData(): boolean {
+      return this.isProjectLoaded
+    }
   },
   actions: {
     addProject(project: TestDriveProjectInfo) {
@@ -39,8 +45,10 @@ export const getProjectStore = defineStore('app', {
         console.info('Project loaded', this.loadedProject);
       }
     },
+    updateSimulationTime(time: number) {
+      this.currentSimulationTime = time;
+    },
     async unloadProject() {
-
       const [error, deactivatedProject] = await safeFetch(() => client.deactivateTestdriveApiV1ProjectDeactivatePost());
       if (error) {
         showToast?.({

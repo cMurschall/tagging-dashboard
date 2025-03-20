@@ -16,9 +16,17 @@
 
                 <!-- Main Content -->
                 <main class="col-8  d-flex flex-column">
-                    <MainGrid />
 
+                    <!-- Toolbar -->
+                    <div class="toolbar d-flex align-items-center justify-content-start p-2 bg-light border-bottom">
+                        <BButton variant="primary" class="mx-1" :disabled="!projectStore.hasData"
+                            @click="handleAddGauge">Add Gauge</BButton>
+                        <BButton variant="primary" class="mx-1" disabled>Add Chart</BButton>
 
+                    </div>
+
+                    <!-- Main Grid -->
+                    <MainGrid class="flex-grow-1" />
                 </main>
 
                 <!-- Right Sidebar -->
@@ -119,21 +127,24 @@
 
 <script setup lang="ts">
 import { onMounted, markRaw, watch } from 'vue';
-import { getProjectStore } from './stores/projectStore';
+import { useProjectStore } from './stores/projectStore';
 import { useGridStore } from './stores/gridStore';
 
 import LeftSideBar from './components/LeftSideBar.vue';
 import VideoPlayer from './components/VideoPlayer.vue';
 import MainGrid from './components/MainGrid.vue';
 import { TestDriveVideoInfo } from './services/Utilities';
+import { Observable } from './observable';
+import Gauge from './components/Gauge.vue';
 
 // Initialize the store
-const projectStore = getProjectStore();
+const projectStore = useProjectStore();
 const gridStore = useGridStore();
 
 gridStore.setComponentMap({
-        VideoPlayer: markRaw(VideoPlayer),
-    });
+    VideoPlayer: markRaw(VideoPlayer),
+    Gauge: markRaw(Gauge),
+});
 
 
 
@@ -151,13 +162,49 @@ onMounted(async () => {
     // });
 });
 
+const handleAddGauge = () => {
+    if (!projectStore.loadedProject) {
+        console.error('No project loaded.');
+        return;
+    }
+
+    gridStore.addNewItem({
+        component: 'Gauge',
+        x: 0,
+        y: 0,
+        w: 2,
+        h: 2,
+        id: 'gauge-1',
+        title: 'Gauge',
+        props: {
+            dataManager: projectStore.loadedProject?.dataManager || {},
+            min: 0,
+            max: 100,
+            label: 'Speed',
+            color: '#007bff'
+        }
+    });
+
+};
+
 
 watch(
     () => projectStore.loadedProject,
     (newProject, oldProject) => {
         console.log('loadedProject changed from', oldProject, 'to', newProject);
         if (newProject) {
-            gridStore.addNewItem<{ videoInfo: TestDriveVideoInfo }>({
+
+            const simulationTimeObservable = new Observable<number>(0);
+
+            simulationTimeObservable.subscribe((time) => {
+                console.log('Simulation time:', time);
+                projectStore.updateSimulationTime(time);
+            });
+
+            gridStore.addNewItem<{
+                videoInfo: TestDriveVideoInfo,
+                simulationTimeObservable: Observable<number>
+            }>({
                 component: 'VideoPlayer',
                 x: 3,
                 y: 0,
@@ -166,7 +213,8 @@ watch(
                 id: 'video-player',
                 title: 'Video Player',
                 props: {
-                    videoInfo: projectStore.loadedProject?.testDriveVideoInfo || {}
+                    videoInfo: projectStore.loadedProject?.testDriveVideoInfo || {},
+                    simulationTimeObservable
                 }
             });
         } else {

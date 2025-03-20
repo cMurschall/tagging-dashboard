@@ -1,6 +1,6 @@
 <template>
     <!-- The container for our GridStack layout -->
-    <div ref="gridContainer" class="grid-stack mt-3"></div>
+    <div ref="gridContainer" class="grid-stack mt-3 mb-1"></div>
 </template>
 
 <script lang="ts">
@@ -146,8 +146,8 @@ export default defineComponent({
 
 <style scoped>
 .grid-stack {
-    /* background: #fafafa; */
-    background: lime;
+    background: #fafafa;
+    /* background: lime; */
     /* height is full height of the parent */
     height: 100%;
     

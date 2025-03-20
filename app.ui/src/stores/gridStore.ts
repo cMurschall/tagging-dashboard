@@ -1,5 +1,6 @@
 // src/stores/gridStore.ts
 import { defineStore } from 'pinia';
+import { markRaw } from 'vue';
 
 export interface GridItem<T = Record<string, any>> {
   id: string;
@@ -27,8 +28,14 @@ export const useGridStore = defineStore('gridStore', {
       this.componentMap = map;
     },
 
-    addNewItem<T extends Record<string, any>>(item: GridItem<T>) {
-      // A simple push to the array
+    // addNewItem<T extends Record<string, any>>(item: GridItem<T>) {
+    //   // A simple push to the array
+    //   this.gridItems.push(item);
+    // },
+
+    addNewItem<T extends Record<string, any>>(item: Omit<GridItem<T>, 'props'> & { props: T }) {
+      // Mark the props object as raw to prevent Vue from stripping prototype
+      // item.props = markRaw(item.props);
       this.gridItems.push(item);
     },
 

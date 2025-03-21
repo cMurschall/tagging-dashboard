@@ -33,10 +33,23 @@
       <BRow>
         <BCol cols="12">
           <BFormGroup label="Select Columns:">
-            <BFormSelect v-model="selectedColumns" :options="filteredColumns" multiple select-size="6" />
+            <BFormSelect v-model="selectedColumn" :options="filteredColumns" select-size="3" />
           </BFormGroup>
         </BCol>
       </BRow>
+      <BRow>
+        <BCol cols="6">
+          <BFormGroup label="Minimum Value:">
+            <BFormInput v-model="gaugeOption.series[0].min" type="number" />
+          </BFormGroup>
+        </BCol>
+        <BCol cols="6">
+          <BFormGroup label="Maximum Value:">
+            <BFormInput v-model="gaugeOption.series[0].max" type="number" />
+          </BFormGroup>
+        </BCol>
+      </BRow>
+
     </BCollapse>
     <VChart ref="chartRef" :option="gaugeOption" :style="{ width: '100%', height: '100%' }" />
   </div>
@@ -56,6 +69,12 @@ import { BCol, BCollapse, BFormGroup, BFormSelect, BRow, BFormInput } from "boot
 import { ColumnInfo } from "../../services/restclient";
 
 use([GaugeChart, SVGRenderer]);
+
+
+
+// Inject the function from the parent
+const setCardTitle = inject('setCardTitle') as (title: string) => void;
+
 
 
 interface GaugeProps {
@@ -92,12 +111,12 @@ const gaugeOption = ref({
         },
       },
       detail: {
-        color: "#fff",
+        // color: "#fff",
         valueAnimation: false,
         formatter: (x: number) => x.toFixed(2),
         fontSize: 10
       },
-      data: [{ value: 0, name: props.label ?? "Gauge" }],
+      data: [{ value: -1, name: props.label ?? "" }],
     },
   ],
 });
@@ -111,7 +130,7 @@ const chartRef = ref<typeof VChart | null>(null);
 
 const showColumns = ref(false);
 const searchQuery = ref('');
-const selectedColumns = ref<ColumnInfo[]>([]);
+const selectedColumn = ref<ColumnInfo | null>(null);
 const availableColumns = ref<BFormSelectColumnInfo[]>([]);
 
 
@@ -129,12 +148,13 @@ const filteredColumns = computed(() => {
 });
 
 
-watch(selectedColumns, async (newVal) => {
-  console.log('Selected columns:', newVal);
-  await dataManager.initialize(newVal.map((c) => c.name));
-
-  // update gauge options todo
-
+watch(selectedColumn, async (newVal) => {
+  console.log('Selected column:', newVal);
+  if (newVal) {
+    await dataManager.initialize([newVal.name]);
+    // gaugeOption.value.series[0].data[0].name = newVal.name;
+    setCardTitle(newVal.name);
+  }
 });
 
 onMounted(async () => {
@@ -158,35 +178,12 @@ onMounted(async () => {
 
   subscription = dataManager.measurement$.subscribe((measurements: TimeseriesDataPoint) => {
 
-    // Get the keys from the measurements object.
-    const keys = Object.keys(measurements.values);
-    const gaugeData = keys.map((key, index) => {
-
-      let position = 0;
-      if (keys.length > 1) {
-        position = (index / (keys.length - 1) - 0.5) * 80;  // Spread between -40% and 40%
-      }
-
-      const value = measurements.values[key];
-      let name = key;
-      // if (name.length > 10) {
-      //   name = name.substring(0, 10) + "..."
-      // }
-      return {
-        value: value,
-        name: name,
-        title: {
-          offsetCenter: [`${position}%`, '80%']  // Distribute titles
-        },
-        detail: {
-          offsetCenter: [`${position}%`, '95%'] // Distribute details
-        }
-      };
-    });
-
-    // Use the generated gauge data.
-    gaugeOption.value.series[0].data = gaugeData;
-
+    // check if measurements has our selected column name
+    if (!selectedColumn.value || !measurements.values[selectedColumn.value.name]) {
+      return;
+    }
+    // Use the gauge data.
+    gaugeOption.value.series[0].data[0].value = measurements.values[selectedColumn.value?.name ?? '']
 
   });
 });
@@ -209,9 +206,17 @@ const loadColumns = async () => {
 
     const numericColumns = response.columns.filter((c: any) => c.type.includes('int') || c.type.includes('float'));
 
-    console.log('Numeric Columns loaded', numericColumns);
+    // console.log('Numeric Columns loaded', numericColumns);
     availableColumns.value = numericColumns.map(x => ({ text: x.name, value: x }));
-    selectedColumns.value = numericColumns.slice(0, 1);
+
+    const preSelectedColumn = numericColumns.filter(c => c.name == 'car0_velocity_vehicle')
+    if (preSelectedColumn.length > 0) {
+
+      selectedColumn.value = preSelectedColumn[0];
+    }
+  }
+  if (error) {
+    console.error('Error loading columns:', error);
   }
 }
 

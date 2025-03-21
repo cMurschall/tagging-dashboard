@@ -21,7 +21,8 @@
                     <div class="toolbar d-flex align-items-center justify-content-start p-2 bg-light border-bottom">
                         <BButton variant="primary" class="mx-1"
                             @click="handleAddGauge">Add Gauge</BButton>
-                        <BButton variant="primary" class="mx-1" disabled>Add Chart</BButton>
+                        <BButton variant="primary" class="mx-1"
+                        @click="handleAddScatter">Add Chart</BButton>
 
 
                         <BButton variant="primary" class="mx-1" @click="handleAddTestGridItem">Add Test</BButton>
@@ -138,9 +139,11 @@ import MainGrid from './components/MainGrid.vue';
 import { TestDriveVideoInfo } from './services/Utilities';
 import { Observable } from './observable';
 import Gauge from './components/Gauge.vue';
+import ScatterPlot from './components/ScatterPlot.vue';
 import TestGridItem from './components/TestGridItem.vue';
 import { RandomDataManager } from './managers/randomDataManager';
 import { ApiDataManager } from './managers/apiDataManager';
+
 
 // Initialize the store
 const projectStore = useProjectStore();
@@ -149,6 +152,9 @@ const gridStore = useGridStore();
 gridStore.setComponentMap({
     VideoPlayer: () => markRaw(VideoPlayer),
     Gauge:() =>  markRaw(Gauge),
+    ScatterPlot:() =>  markRaw(ScatterPlot),
+
+
     TestGridItem:() =>  markRaw(TestGridItem)
 });
 
@@ -174,10 +180,8 @@ watch(() => projectStore.currentSimulationTime, (newTime) => {
 });
 
 const handleAddGauge = () => {
-
     const dataManager = new ApiDataManager();
     dataManager.subscribeToTimestamp(simulationTimeObservable);
-
     gridStore.addNewItem({
         component: 'Gauge',
         x: 0,
@@ -196,9 +200,28 @@ const handleAddGauge = () => {
             dataManager
         }
     });
-
-    console.log('Added gauge', dataManager.measurement$.getValue());
-
+};
+const handleAddScatter = () => {
+    const dataManager = new ApiDataManager();
+    dataManager.subscribeToTimestamp(simulationTimeObservable);
+    gridStore.addNewItem({
+        component: 'ScatterPlot',
+        x: 0,
+        y: 0,
+        w: 7,
+        h: 4,
+        id: 'scatter-' + crypto.randomUUID(),
+        title: '',
+        props: {
+            // min: 0,
+            // max: 100,
+            // label: 'Speed',
+            color: '#007bff'
+        },
+        dependencies: {
+            dataManager
+        }
+    });
 };
 
 const handleAddTestGridItem = () => {

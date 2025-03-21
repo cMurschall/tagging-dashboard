@@ -1,7 +1,7 @@
 <template>
   <div class="card h-100">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">{{ title }}</h5>
+    <div class="card-header d-flex justify-content-between align-items-center smaller-header">
+      <h6 class="mb-0">{{ title }}</h6>
       <button class="btn btn-sm btn-danger" @click="$emit('remove')">X</button>
     </div>
     <div class="card-body no-scrollbar">
@@ -52,5 +52,10 @@ export default defineComponent({
 .no-scrollbar::-webkit-scrollbar {
   display: none;
   /* For Chrome, Safari, and Opera */
+}
+
+.smaller-header {
+  padding: 0.5rem 1rem;
+  margin: 0;
 }
 </style>

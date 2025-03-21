@@ -75,16 +75,16 @@
                         </BListGroupItem>
                         <BListGroupItem>
                             <strong>Avg. Speed:</strong><br>
-                            {{ (projectStore.loadedProject?.testDriveDataInfo?.averageSpeedMS ?? 0 * 3.6).toFixed(2) }}
+                            {{ ((projectStore.loadedProject?.testDriveDataInfo?.averageSpeedMS ?? 0)* 3.6).toFixed(2) }}
                             km/h
                         </BListGroupItem>
                         <BListGroupItem>
                             <strong>Top Speed:</strong><br>
-                            {{ (projectStore.loadedProject?.testDriveDataInfo?.maxSpeedMS ?? 0 * 3.6).toFixed(2) }} km/h
+                            {{ ((projectStore.loadedProject?.testDriveDataInfo?.maxSpeedMS ?? 0) * 3.6).toFixed(2) }} km/h
                         </BListGroupItem>
                         <BListGroupItem>
                             <strong>Distance:</strong><br>
-                            {{ (projectStore.loadedProject?.testDriveDataInfo?.drivenDistanceM ?? 0 / 1000).toFixed(1)
+                            {{ ((projectStore.loadedProject?.testDriveDataInfo?.drivenDistanceM ?? 0) / 1000 ).toFixed(2)
                             }} km
                         </BListGroupItem>
                     </BListGroup>

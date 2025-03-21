@@ -1,61 +1,52 @@
 // ApiDataManager.ts
-import { IDataManager } from "./iDataManager";
+import { findNearestDataPoint, IDataManager, TimeseriesDataPoint } from "./iDataManager";
 import { Observable } from "./../observable";
+import { safeFetch, PlayerApiClient as client } from "../services/Utilities";
 
-export interface TimeseriesDataPoint {
-  timestamp: number;
-  [key: string]: any;
-}
 
 export class ApiDataManager implements IDataManager {
   timeseriesData: TimeseriesDataPoint[] = [];
-  measurement$: Observable<Record<string, number>> = new Observable();
+  measurement$: Observable<TimeseriesDataPoint> = new Observable();
 
-  private apiUrl: string = "";
-  private measurementKeys: string[] = [];
 
   async initialize(measurementKeys: string[]): Promise<void> {
-    this.measurementKeys = measurementKeys;
-    // Assume apiUrl is passed earlier or hardcoded
-    await this.fetchData(measurementKeys);
-  }
+    const columns = measurementKeys.join(',');
+    const [error, response] = await safeFetch(() => client.getDataAsJsonApiV1PlayerDataJsonGet({ columns }));
+    if (response) {
+      this.timeseriesData = response.data.map((data: any) => {
+        const result: TimeseriesDataPoint = { timestamp: data.timestamp, values: {} };
 
-  private async fetchData(measurementKeys: string[]): Promise<void> {
-    try {
+        for (const key of measurementKeys) {
+          result.values[key] = data[key];
+        }
 
-      
-
-      const response = await fetch(this.apiUrl);
-      const jsonData = await response.json();
-      this.timeseriesData = jsonData.data;
-    } catch (error) {
-      console.error("Error fetching timeseries data:", error);
+        return result;
+      });
+      console.log('Data fetched:', this.timeseriesData);
+    }
+    else {
+      console.error('Error fetching measurement data:', error);
     }
   }
+
+
 
   subscribeToTimestamp(ts$: Observable<number>): void {
     ts$.subscribe((timestamp: number) => {
       if (this.timeseriesData.length === 0) return;
 
-      const nearest = this.timeseriesData.reduce((prev, curr) =>
-        Math.abs(curr.timestamp - timestamp) <
-        Math.abs(prev.timestamp - timestamp)
-          ? curr
-          : prev
-      );
+      const nearest = findNearestDataPoint(this.timeseriesData, timestamp);
+      if (!nearest) return;
 
-      const result: Record<string, number> = {};
-      for (const key of this.measurementKeys) {
-        const raw = nearest[key];
-        result[key] = typeof raw === "number" ? raw : Number(raw);
-      }
-
-      this.measurement$.next(result);
+      this.measurement$.next(nearest);
     });
   }
 
-  constructor(apiUrl: string) {
-    this.apiUrl = apiUrl;
+
+
+
+  getAllMeasurements(): TimeseriesDataPoint[] {
+    return this.timeseriesData;
   }
 }
 

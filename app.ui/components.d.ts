@@ -33,6 +33,7 @@ declare module 'vue' {
     MainGrid: typeof import('./src/components/MainGrid.vue')['default']
     PluginUI: typeof import('./src/components/PluginUI.vue')['default']
     ProjectListItem: typeof import('./src/components/ProjectListItem.vue')['default']
+    ScatterPlot: typeof import('./src/components/ScatterPlot.vue')['default']
     TestGridItem: typeof import('./src/components/TestGridItem.vue')['default']
     VideoJsPlayer: typeof import('./src/components/VideoJsPlayer.vue')['default']
     VideoPlayer: typeof import('./src/components/VideoPlayer.vue')['default']

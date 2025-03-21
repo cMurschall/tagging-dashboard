@@ -1,15 +1,10 @@
 
-import { IDataManager } from "./iDataManager";
+import { findNearestDataPoint, IDataManager, TimeseriesDataPoint } from "./iDataManager";
 import { Observable } from "./../observable";
-
-export interface TimeseriesDataPoint {
-  timestamp: number;
-  [key: string]: any;
-}
 
 export class WebsocketDataManager implements IDataManager {
   timeseriesData: TimeseriesDataPoint[] = [];
-  measurement$: Observable<Record<string, number>>;
+  measurement$: Observable<TimeseriesDataPoint>;
   ws: WebSocket;
   measurementKeys: string[] = [];
 
@@ -36,6 +31,14 @@ export class WebsocketDataManager implements IDataManager {
       console.error("WebSocket error:", error);
     };
   }
+
+
+  getAllMeasurements(): TimeseriesDataPoint[] {
+    return this.timeseriesData;
+  }
+
+
+
   initialize(measurementKeys: string[]): Promise<void> {
     this.measurementKeys = measurementKeys;
     return Promise.resolve();
@@ -44,19 +47,10 @@ export class WebsocketDataManager implements IDataManager {
   subscribeToTimestamp(ts$: Observable<number>): void {
     ts$.subscribe((timestamp: number) => {
       if (this.timeseriesData.length === 0) return;
-      const nearest = this.timeseriesData.reduce((prev, curr) =>
-        Math.abs(curr.timestamp - timestamp) <
-          Math.abs(prev.timestamp - timestamp)
-          ? curr
-          : prev
-      );
-      // Build the measurement object for all keys
-      const measurement: Record<string, number> = {};
-      for (const key of this.measurementKeys) {
-        const value = nearest[key];
-        measurement[key] = typeof value === "number" ? value : Number(value);
-      }
-      this.measurement$.next(measurement);
+      const nearest = findNearestDataPoint(this.timeseriesData, timestamp);
+      if (!nearest) return;
+
+      this.measurement$.next(nearest);
     });
   }
 }

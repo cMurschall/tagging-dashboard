@@ -140,6 +140,7 @@ import { Observable } from './observable';
 import Gauge from './components/Gauge.vue';
 import TestGridItem from './components/TestGridItem.vue';
 import { RandomDataManager } from './managers/randomDataManager';
+import { ApiDataManager } from './managers/apiDataManager';
 
 // Initialize the store
 const projectStore = useProjectStore();
@@ -174,8 +175,7 @@ watch(() => projectStore.currentSimulationTime, (newTime) => {
 
 const handleAddGauge = () => {
 
-    const randomStartSpeed = Math.floor(Math.random() * 100);
-    const dataManager = new RandomDataManager(randomStartSpeed, 10, 100);
+    const dataManager = new ApiDataManager();
     dataManager.subscribeToTimestamp(simulationTimeObservable);
 
     gridStore.addNewItem({
@@ -225,7 +225,7 @@ watch(
             const simulationTimeObservable = new Observable<number>(0);
 
             simulationTimeObservable.subscribe((time) => {
-                console.log('Simulation time:', time);
+                // console.log('Simulation time:', time);
                 projectStore.updateSimulationTime(time);
             });
 

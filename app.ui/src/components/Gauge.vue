@@ -26,14 +26,14 @@
           <div rule=group>
             <label for="column-filter-query">"Search Columns:"</label>
             <BFormInput onfocus="this.value=''" id="column-filter-query" v-model="searchQuery" type="text"
-              placeholder="Search columns..." />
+              autocomplete="off" placeholder="Search columns..." />
           </div>
         </BCol>
       </BRow>
       <BRow>
         <BCol cols="12">
           <BFormGroup label="Select Columns:">
-            <BFormSelect v-model="selectedColumns" :options="filteredColumns" multiple />
+            <BFormSelect v-model="selectedColumns" :options="filteredColumns" multiple select-size="6" />
           </BFormGroup>
         </BCol>
       </BRow>
@@ -49,7 +49,7 @@ import VChart from "vue-echarts";
 import { use } from "echarts/core";
 import { GaugeChart } from "echarts/charts";
 import { SVGRenderer } from "echarts/renderers";
-import { IDataManager } from "./../managers/iDataManager";
+import { IDataManager, TimeseriesDataPoint } from "./../managers/iDataManager";
 import { Subscription } from "./../observable";
 import { safeFetch, PlayerApiClient as client } from "./../services/Utilities";
 import { BCol, BCollapse, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
@@ -91,7 +91,12 @@ const gaugeOption = ref({
           color: [[1, props.color ?? "#007bff"]],
         },
       },
-      detail: { valueAnimation: false, formatter: (x:number) => x.toFixed(2) , fontSize: 10 },
+      detail: {
+        color: "#fff",
+        valueAnimation: false,
+        formatter: (x: number) => x.toFixed(2),
+        fontSize: 10
+      },
       data: [{ value: 0, name: props.label ?? "Gauge" }],
     },
   ],
@@ -124,14 +129,20 @@ const filteredColumns = computed(() => {
 });
 
 
-watch(selectedColumns, (newVal) => {
+watch(selectedColumns, async (newVal) => {
   console.log('Selected columns:', newVal);
-  dataManager.initialize(newVal.map((c) => c.name));
+  await dataManager.initialize(newVal.map((c) => c.name));
+
+  // update gauge options todo
+
 });
 
 onMounted(async () => {
 
   await loadColumns();
+
+
+
   // Listen to resize events
   // Create a ResizeObserver to watch the container element
   if (containerRef.value) {
@@ -145,17 +156,37 @@ onMounted(async () => {
   }
 
 
-  subscription = dataManager.measurement$.subscribe((measurements: Record<string, number>) => {
-    console.log("New gauge measurement:", measurements);
+  subscription = dataManager.measurement$.subscribe((measurements: TimeseriesDataPoint) => {
 
-    for (const key in measurements) {
-      if (measurements.hasOwnProperty(key)) { // Important for safety!
-        const value: number = measurements[key];
-        console.log(`Measurement: ${key}, Value: ${value}`);
+    // Get the keys from the measurements object.
+    const keys = Object.keys(measurements.values);
+    const gaugeData = keys.map((key, index) => {
 
-        gaugeOption.value.series[0].data[0].value = value
+      let position = 0;
+      if (keys.length > 1) {
+        position = (index / (keys.length - 1) - 0.5) * 80;  // Spread between -40% and 40%
       }
-    }
+
+      const value = measurements.values[key];
+      let name = key;
+      // if (name.length > 10) {
+      //   name = name.substring(0, 10) + "..."
+      // }
+      return {
+        value: value,
+        name: name,
+        title: {
+          offsetCenter: [`${position}%`, '80%']  // Distribute titles
+        },
+        detail: {
+          offsetCenter: [`${position}%`, '95%'] // Distribute details
+        }
+      };
+    });
+
+    // Use the generated gauge data.
+    gaugeOption.value.series[0].data = gaugeData;
+
 
   });
 });
@@ -172,21 +203,15 @@ onUnmounted(() => {
 
 
 
-
-
-
 const loadColumns = async () => {
   const [error, response] = await safeFetch(() => client.getDataApiV1PlayerColumnsGet());
   if (response) {
-
 
     const numericColumns = response.columns.filter((c: any) => c.type.includes('int') || c.type.includes('float'));
 
     console.log('Numeric Columns loaded', numericColumns);
     availableColumns.value = numericColumns.map(x => ({ text: x.name, value: x }));
-
-
-    // dataManager.initialize(response.columns.map((c: any) => c.name));
+    selectedColumns.value = numericColumns.slice(0, 1);
   }
 }
 

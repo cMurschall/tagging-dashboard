@@ -1,11 +1,14 @@
 <template>
   <div>
     <div>
-      <video ref="videoPlayer" class="video-js" :options="videoOptions" @error="handleError"></video>
+      <video ref="videoElement" class="video-js" :options="videoOptions" @error="handleError"></video>
       <div id="thumbnail-preview"></div>
     </div>
     <div v-if="error" class="alert alert-danger mt-3">
       {{ error }}
+    </div>
+    <div>
+{{ currentSimulationTimeString }}
     </div>
   </div>
 </template>
@@ -13,9 +16,10 @@
 <script setup lang="ts">
 import { defineProps, ref, watch, onMounted, onBeforeUnmount, inject } from 'vue';
 import { ApiPath, TestDriveVideoInfo } from '../services/Utilities';
+import { Observable } from './../observable';
 import videojs from "video.js";
 import "videojs-sprite-thumbnails";
-import { Observable } from './../observable';
+import Player from 'video.js/dist/types/player';
 
 // Inject the function from the parent
 const setCardTitle = inject('setCardTitle') as (title: string) => void;
@@ -25,10 +29,18 @@ interface VideoPlayerProps {
   simulationTimeObservable: Observable<number>
 }
 
+interface VideoPlayer extends Player {
+  spriteThumbnails: (options: any) => void;
+}
+
 type PlayerOptions = typeof videojs.options;
 const props = defineProps<VideoPlayerProps>()
 
-const videoPlayer = ref<videojs.Player | undefined>(undefined)
+const videoElement = ref<HTMLVideoElement | null>(null); // Reference to the html video element
+const videoPlayer = ref<VideoPlayer | undefined>(undefined); // Reference to the video player instance
+
+
+
 const videoOptions = ref<PlayerOptions>({
   controls: true,
   autoplay: true,
@@ -49,6 +61,7 @@ let lastProcessedSecond = -1;
 
 
 const error = ref<string | undefined>(undefined)
+const currentSimulationTimeString = ref<string>('');
 
 
 const loadVideo = (videoInfo: TestDriveVideoInfo) => {
@@ -66,14 +79,10 @@ const loadVideo = (videoInfo: TestDriveVideoInfo) => {
     src: videoUrl,
     type: "video/mp4",
   }];
-  console.log('videoOptions:', videoOptions.value);
-
-  // videoOptions.aspectRatio  = `${videoInfo.videoWidth}:${videoInfo.videoHeight}`;
 
 
   if (videoPlayer.value) {
     videoPlayer.value.src(videoOptions.value.sources);
-    // videoPlayer.value.options(videoOptions.value);
   }
 
   if (videoPlayer.value) {
@@ -106,7 +115,6 @@ const handleError = () => {
 
 // Updated watch to avoid calling `loadVideo` prematurely
 watch(() => props.videoInfo.videoFileName, (newValue) => {
-  console.log('watched value:', newValue);
   // Call loadVideo only if the video player is initialized
   if (newValue && videoPlayer.value) {
     loadVideo(props.videoInfo);
@@ -117,16 +125,21 @@ watch(() => props.videoInfo.videoFileName, (newValue) => {
 
 
 onMounted(() => {
-  videoPlayer.value = videojs(videoPlayer.value, videoOptions.value, function () {
+  if (!videoElement.value) {
+    console.error('Video element not found');
+    return;
+  }
+
+  videoPlayer.value = videojs(videoElement.value, videoOptions.value, function () {
     console.log('Video player is ready');
     console.log('Video.js plugins:', videojs.getPlugins());
     console.log('Video.js player:', videoPlayer.value);
 
     const roundingPrecisionMs = 300; // Define the rounding precision in milliseconds
 
-    videoPlayer.value.on('timeupdate', () => {
-        const currentTime = videoPlayer.value.currentTime();
-        const roundedTime = Math.floor(currentTime * (1000 / roundingPrecisionMs)) / (1000 / roundingPrecisionMs); // round to specified precision
+    videoPlayer.value?.on('timeupdate', () => {
+      const currentTime = videoPlayer.value?.currentTime() ?? 0;
+      const roundedTime = Math.floor(currentTime * (1000 / roundingPrecisionMs)) / (1000 / roundingPrecisionMs); // round to specified precision
 
       // Get the current time in seconds (rounded down to the nearest second)
 
@@ -144,7 +157,7 @@ onMounted(() => {
     if (props.videoInfo) {
       loadVideo(props.videoInfo);
     }
-  });
+  }) as VideoPlayer; // Cast the player to the custom VideoPlayer type
 
 
 })
@@ -159,29 +172,17 @@ onBeforeUnmount(() => {
 
 const synchronizeData = (currentSecond: number, simulationStart: number) => {
 
+
   const simulationTime = simulationStart + currentSecond
-  //const simulationMinutes = Math.floor(simulationTime / 60);
-  //const simulationSeconds = simulationTime - simulationMinutes * 60;
 
+  currentSimulationTimeString.value = `Simulation time from video: ${new Date(simulationTime * 1000).toISOString().substring(11, 23)} - ${simulationTime.toFixed(3)}s`;
 
-  // console.log('synchronizeData:', {
-  //   currentSecond,
-  //   simulationStart,
-  //   simulationTime,
-  //   formattedTime: `${simulationMinutes}:${simulationSeconds}`
-  // })
-  Object.setPrototypeOf(props.simulationTimeObservable, Observable.prototype);
+  if (!props.simulationTimeObservable.next) {
+    Object.setPrototypeOf(props.simulationTimeObservable, Observable.prototype);
+  }
   props.simulationTimeObservable.next(simulationTime);
 
 }
-
-
-
-
-
-
-
-
 
 </script>
 

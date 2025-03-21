@@ -1,10 +1,10 @@
 // RandomSpeedDataManager.ts
 
 import { Observable } from "./../observable";
-import type { IDataManager } from "./iDataManager";
+import type { IDataManager, TimeseriesDataPoint } from "./iDataManager";
 
 export class RandomDataManager implements IDataManager {
-    measurement$: Observable<Record<string, number>>;
+    measurement$: Observable<TimeseriesDataPoint>;
     private currentSpeed: number;
     private minSpeed: number;
     private maxSpeed: number;
@@ -30,6 +30,21 @@ export class RandomDataManager implements IDataManager {
         this.accelerationFactor = accelerationFactor;
         this.measurement$ = new Observable();
     }
+
+
+    getAllMeasurements(): TimeseriesDataPoint[] {
+        const measurements: TimeseriesDataPoint[] = [];
+        for (let i = 0; i < 10; i++) {
+            const measurement: TimeseriesDataPoint = { timestamp: i, values: {} };
+            this.measurementKeys.forEach(key => {
+                measurement.values[key] = Math.random() * (this.maxSpeed - this.minSpeed) + this.minSpeed;
+            });
+            measurements.push(measurement);
+        }
+        return measurements;
+    }
+
+
     initialize(measurementKeys: string[]): Promise<void> {
         this.measurementKeys = measurementKeys;
         return Promise.resolve();
@@ -49,7 +64,9 @@ export class RandomDataManager implements IDataManager {
             this.currentSpeed = newSpeed;
 
             this.measurement$.next({
-                speed: newSpeed
+                timestamp: 1, values: {
+                    speed: this.currentSpeed
+                }
             });
         });
     }

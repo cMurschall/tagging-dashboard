@@ -2,13 +2,19 @@ import { Observable } from "../observable";
 
 
 export interface IDataManager {
-  // An observable that emits the current measurement (e.g. a number)
-  measurement$: Observable<number>;
+  /**
+   * Emits values for all user-specified measurement keys.
+   * Example: { car0_speed: 123.4, car0_rpm: 2500 }
+   */
+  measurement$: Observable<Record<string, number>>;
 
   /**
-   * Subscribes to an external timestamp observable.
-   * When a new timestamp is emitted, the manager finds the nearest datapoint and
-   * emits the corresponding measurement via its measurement$ observable.
+   * User defines which measurements they're interested in.
+   */
+  initialize(measurementKeys: string[]): Promise<void>
+
+  /**
+   * Emits the closest values to each incoming timestamp.
    */
   subscribeToTimestamp(ts$: Observable<number>): void;
 }

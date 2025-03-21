@@ -14,7 +14,8 @@ import {
     h,
     provide,
     readonly,
-    markRaw
+    markRaw,
+    computed
 } from 'vue';
 import { GridStack, GridStackNode } from 'gridstack';
 import { GridItem, useGridStore } from '../stores/gridStore';
@@ -46,7 +47,8 @@ export default defineComponent({
                 {
                     float: true,
                     cellHeight: 70,
-                    minRow: 1
+                    minRow: 1,
+                    margin: 2,
                 },
                 gridContainer.value as HTMLElement
             );
@@ -59,7 +61,7 @@ export default defineComponent({
                 console.log('Grid render CB', widget);
                 // The store's component map (component name -> definition)
                 const compName = widget.component as string;
-                const compDef = gridStore.componentMap[compName];
+                const compDef = gridStore.componentMap[compName]();
                 if (!compDef) {
                     contentEl.textContent = `Unknown component: ${compName}`;
                     return;
@@ -133,17 +135,95 @@ export default defineComponent({
             grid.load(gridStore.gridItems);
         });
 
+        let renderedItems: GridItem[] = [];
         // 5) Whenever the store's gridItems change, reload GridStack
         watch(
             () => gridStore.gridItems,
             newItems => {
                 if (!grid) return;
                 // removeAll(false) => do not destroy the entire DOM/callback
+
+
                 grid.removeAll(false);
                 grid.load(newItems);
+
+                renderedItems = newItems
             },
             { deep: true }
         );
+
+
+        // const itemIds = computed(() => {
+        //     return gridStore.gridItems.map(item => item.id);
+        // });
+
+        // watch(
+        //     () => gridStore.gridItems,
+        //     (newItems, oldItems) => {
+        //         if (!grid) return;
+
+        //         // **Crucial Change: Create a shallow copy of oldItems**
+        //         const oldItemsCopy = oldItems ? [...oldItems] : [];
+
+        //         // Calculate the difference between old and new items
+        //         const addedItems = newItems.filter(item => !oldItemsCopy.some(oldItem => oldItem.id === item.id));
+        //         const removedItems = oldItemsCopy.filter(item => !newItems.some(newItem => newItem.id === item.id));
+        //         const changedItems = newItems.filter(newItem => {
+        //             const oldItem = oldItemsCopy.find(oldItem => oldItem.id === newItem.id);
+        //             // Use JSON.stringify for a deep comparison of the object properties.
+        //             return oldItem && JSON.stringify(newItem) !== JSON.stringify(oldItem);
+        //         });
+
+        //         console.log('Grid items changed', addedItems, removedItems, changedItems);
+
+
+        //     },
+        //     { deep: true }
+        // );
+
+        // const addedItems = new Set<string>();
+
+        // watch(() => itemIds, (newItems, oldItems) => {
+        //     if (!grid) return;
+
+        //     console.log('Grid items changed', newItems, oldItems);
+
+        //     // Get the IDs of currently rendered widgets from the shadowDom Map.
+        //     const existingIds = addedItems;
+        //     // Get the IDs from the new grid items.
+        //     const newIds = new Set(newItems.map(item => item.id.toString()));
+
+        //     // Determine which items are new (present in newItems, not in existingIds)
+        //     const itemsToAdd = newItems.filter(item => !existingIds.has(item.id.toString()));
+
+        //     // Determine which items have been removed (present in shadowDom, not in newIds)
+        //     const itemsToRemove = Array.from(existingIds).filter(id => !newIds.has(id));
+
+        //     // Add new widgets
+        //     itemsToAdd.forEach(item => {
+
+        //         const hasNode = addedItems.has(item.id.toString());
+        //         if (!hasNode) {
+        //             addedItems.add(item.id.toString());
+        //             console.log(`Adding new item: ${item.title}-${item.id}. Has node: ${hasNode}`);
+        //             const node = grid.addWidget(item);
+        //             grid?.makeWidget(node);
+        //         }
+        //     });
+
+        //     // Remove widgets that are no longer present
+        //     itemsToRemove.forEach(id => {
+        //         // Find the corresponding node in GridStack
+        //         const node = grid.engine.nodes.find(n => n.id.toString() == id);
+        //         if (node) {
+        //             console.log(`Removing old item: ${node.id}`);
+        //             grid.removeWidget(node.el, true);
+        //             addedItems.delete(id);
+        //         }
+        //     });
+        // },
+        //     { deep: true }
+        // );
 
         // 6) Cleanup on unmount
         onBeforeUnmount(() => {

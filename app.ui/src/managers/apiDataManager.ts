@@ -4,25 +4,27 @@ import { Observable } from "./../observable";
 
 export interface TimeseriesDataPoint {
   timestamp: number;
-  // additional measurement keys, e.g.:
   [key: string]: any;
 }
 
 export class ApiDataManager implements IDataManager {
   timeseriesData: TimeseriesDataPoint[] = [];
-  measurement$: Observable<number>;
+  measurement$: Observable<Record<string, number>> = new Observable();
 
-  constructor(
-    public apiUrl: string,
-    // The key to lookup the measurement (e.g. "car0_brake_position")
-    public measurementKey: string
-  ) {
-    this.measurement$ = new Observable<number>();
-    this.fetchData();
+  private apiUrl: string = "";
+  private measurementKeys: string[] = [];
+
+  async initialize(measurementKeys: string[]): Promise<void> {
+    this.measurementKeys = measurementKeys;
+    // Assume apiUrl is passed earlier or hardcoded
+    await this.fetchData(measurementKeys);
   }
 
-  async fetchData(): Promise<void> {
+  private async fetchData(measurementKeys: string[]): Promise<void> {
     try {
+
+      
+
       const response = await fetch(this.apiUrl);
       const jsonData = await response.json();
       this.timeseriesData = jsonData.data;
@@ -34,14 +36,27 @@ export class ApiDataManager implements IDataManager {
   subscribeToTimestamp(ts$: Observable<number>): void {
     ts$.subscribe((timestamp: number) => {
       if (this.timeseriesData.length === 0) return;
+
       const nearest = this.timeseriesData.reduce((prev, curr) =>
         Math.abs(curr.timestamp - timestamp) <
         Math.abs(prev.timestamp - timestamp)
           ? curr
           : prev
       );
-      const measurement = Number(nearest[this.measurementKey]);
-      this.measurement$.next(measurement);
+
+      const result: Record<string, number> = {};
+      for (const key of this.measurementKeys) {
+        const raw = nearest[key];
+        result[key] = typeof raw === "number" ? raw : Number(raw);
+      }
+
+      this.measurement$.next(result);
     });
   }
+
+  constructor(apiUrl: string) {
+    this.apiUrl = apiUrl;
+  }
 }
+
+

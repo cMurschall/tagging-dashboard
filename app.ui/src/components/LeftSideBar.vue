@@ -118,7 +118,7 @@ import { useGridStore } from './../stores/gridStore';
 import { useToastController } from 'bootstrap-vue-next'
 import { CreateProjectPayload } from '../services/Utilities';
 
-import { safeFetch, ApiClient as client } from './../services/Utilities';
+import { safeFetch, ProjectApiClient as client } from './../services/Utilities';
 import { BFormGroup } from 'bootstrap-vue-next';
 
 

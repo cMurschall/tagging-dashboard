@@ -146,9 +146,9 @@ const projectStore = useProjectStore();
 const gridStore = useGridStore();
 
 gridStore.setComponentMap({
-    VideoPlayer: markRaw(VideoPlayer),
-    Gauge: markRaw(Gauge),
-    TestGridItem: markRaw(TestGridItem)
+    VideoPlayer: () => markRaw(VideoPlayer),
+    Gauge:() =>  markRaw(Gauge),
+    TestGridItem:() =>  markRaw(TestGridItem)
 });
 
 
@@ -167,23 +167,29 @@ onMounted(async () => {
     // });
 });
 
+const simulationTimeObservable = new Observable<number>(0);
+watch(() => projectStore.currentSimulationTime, (newTime) => {
+    simulationTimeObservable.next(newTime);
+});
+
 const handleAddGauge = () => {
 
     const randomStartSpeed = Math.floor(Math.random() * 100);
     const dataManager = new RandomDataManager(randomStartSpeed, 10, 100);
+    dataManager.subscribeToTimestamp(simulationTimeObservable);
 
     gridStore.addNewItem({
         component: 'Gauge',
         x: 0,
         y: 0,
-        w: 2,
-        h: 2,
-        id: 'gauge-1' + crypto.randomUUID(),
-        title: 'Gauge',
+        w: 3,
+        h: 5,
+        id: 'gauge-' + crypto.randomUUID(),
+        title: '',
         props: {
-            min: 0,
-            max: 100,
-            label: 'Speed',
+            // min: 0,
+            // max: 100,
+            // label: 'Speed',
             color: '#007bff'
         },
         dependencies: {

@@ -31,7 +31,7 @@ import { computed, defineProps } from 'vue'
 import { useProjectStore } from './../stores/projectStore';
 import { useGridStore } from './../stores/gridStore';
 
-import { safeFetch, ApiClient as client, TestDriveProjectInfo, TestDriveVideoInfo } from '../services/Utilities'
+import { safeFetch, ProjectApiClient as client, TestDriveProjectInfo, TestDriveVideoInfo } from '../services/Utilities'
 
 import { useToastController } from 'bootstrap-vue-next'
 

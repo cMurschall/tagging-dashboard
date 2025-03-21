@@ -3,7 +3,11 @@ import math
 import os
 import subprocess
 import tempfile
+import struct
+
+from enum import Enum
 from pathlib import Path
+from typing import BinaryIO, Any
 
 import cv2
 import easyocr
@@ -15,7 +19,7 @@ from app.dependencies import get_settings
 def analyze_video(video_info: TestDriveVideoInfo) -> bool:
     faststart_location = find_moov_atom_location(Path(video_info.video_file_full_path))
 
-    if faststart_location != "start":
+    if faststart_location != MoovPosition.Start:
         print(f"Video {video_info.video_file_name} is not fast start enabled. Processing...")
         move_moov_atom(video_info.video_file_full_path)
 
@@ -230,9 +234,14 @@ def process_last_n_frames(video_path, frames=20):
     return total_seconds
 
 
-def find_moov_atom_location(file_path: Path, tolerance: int = 32) -> str:
+class MoovPosition(Enum):
+    Start = 1
+    Middle = 2
+    End = 3
+
+
+def find_moov_atom_location(file_path: Path, tolerance: int = 32) -> MoovPosition:
     """Checks if the 'moov' atom is at the start or end of an MP4 file."""
-    import struct
 
     with open(file_path, "rb") as f:
         file_size = file_path.stat().st_size
@@ -249,11 +258,11 @@ def find_moov_atom_location(file_path: Path, tolerance: int = 32) -> str:
 
             if atom_type == "moov":
                 if offset <= tolerance:
-                    return "start"
+                    return MoovPosition.Start
                 elif offset + atom_size + tolerance >= file_size:
-                    return "end"
+                    return MoovPosition.End
                 else:
-                    return "middle"  # Moov atom is neither at the start nor end
+                    return MoovPosition.Middle  # Moov atom is neither at the start nor end
 
             # Move to the next atom
             offset += atom_size
@@ -288,3 +297,36 @@ def move_moov_atom(input_file):
     if os.path.exists(temp_file):
         os.remove(temp_file)  # remove the temp file if it still exists.
     print(f"Overwritten the original file with faststart enabled version: {input_file}")
+
+
+def read_atom(file: BinaryIO) -> tuple[None, None, None] | tuple[int, int, str]:
+    pos = file.tell()
+    atom_header = file.read(8)
+
+    if len(atom_header) < 8:
+        return None, None, None  # EOF or invalid atom
+
+    # ">I4s" = Big-endian unsigned int followed by 4 bytes string
+    size, atom_type = struct.unpack(">I4s", atom_header)
+
+    # check if the atom size is valid
+    file_size = os.fstat(file.fileno()).st_size
+    if size < 8 or pos + size > file_size:
+        # invalid atom
+        return None, None, None
+
+    return pos, size, atom_type.decode("utf-8")
+
+
+def parse_mp4(filename: str):
+    with open(filename, "rb") as file:
+        while True:
+            pos, size, atom_type = read_atom(file)
+            if not atom_type:
+                break  # End of file or invalid atom
+
+            print(f"Position: {pos}, Atom: {atom_type}, Größe: {size} Bytes")
+
+            # Skip the rest of the file minus 8 bytes (size and type)
+            if size > 8:
+                file.seek(size - 8, 1)

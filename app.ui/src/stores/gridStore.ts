@@ -21,16 +21,22 @@ export interface GridItem<T = Record<string, any>> {
 export const useGridStore = defineStore('gridStore', {
   state: () => ({
     gridItems: [] as GridItem[],
-    componentMap: {} as Record<string, any>
+    componentMap: {} as Record<string, () => any>
   }),
   actions: {
     // Because we don't want to provide any initial items, we won't have a "setGridItems" on mount.
     // We'll just add items on-demand.
 
-    setComponentMap(map: Record<string, any>) {
+    setComponentMap(map: Record<string, () => any>) {
       this.componentMap = map;
     },
 
+    registerComponent(key: string, componentFactory: () => any) {
+      if (this.componentMap[key]) {
+        console.warn(`Warning: Component with key "${key}" is already registered.`);
+      }
+      this.componentMap[key] = componentFactory;
+    },
     // addNewItem<T extends Record<string, any>>(item: GridItem<T>) {
     //   // A simple push to the array
     //   this.gridItems.push(item);

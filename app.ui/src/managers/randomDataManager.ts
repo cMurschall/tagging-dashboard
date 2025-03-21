@@ -4,11 +4,13 @@ import { Observable } from "./../observable";
 import type { IDataManager } from "./iDataManager";
 
 export class RandomDataManager implements IDataManager {
-    measurement$: Observable<number>;
+    measurement$: Observable<Record<string, number>>;
     private currentSpeed: number;
     private minSpeed: number;
     private maxSpeed: number;
     private accelerationFactor: number;
+
+    private measurementKeys: string[] = [];
 
     /**
      * @param initialSpeed - starting speed (default 0)
@@ -26,7 +28,11 @@ export class RandomDataManager implements IDataManager {
         this.minSpeed = minSpeed;
         this.maxSpeed = maxSpeed;
         this.accelerationFactor = accelerationFactor;
-        this.measurement$ = new Observable<number>(initialSpeed);
+        this.measurement$ = new Observable();
+    }
+    initialize(measurementKeys: string[]): Promise<void> {
+        this.measurementKeys = measurementKeys;
+        return Promise.resolve();
     }
 
     /**
@@ -41,7 +47,10 @@ export class RandomDataManager implements IDataManager {
             // Clamp the new speed between minSpeed and maxSpeed
             newSpeed = Math.max(this.minSpeed, Math.min(this.maxSpeed, newSpeed));
             this.currentSpeed = newSpeed;
-            this.measurement$.next(newSpeed);
+
+            this.measurement$.next({
+                speed: newSpeed
+            });
         });
     }
 }

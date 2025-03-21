@@ -1,7 +1,7 @@
 // src/stores/appStore.ts
 import { defineStore } from 'pinia';
 
-import { safeFetch, ApiClient as client, TestDriveProjectInfo } from './../services/Utilities';
+import { safeFetch, ProjectApiClient as client, TestDriveProjectInfo } from './../services/Utilities';
 import { useToastController } from 'bootstrap-vue-next'
 
 const { show: showToast } = useToastController()
@@ -14,7 +14,6 @@ export const useProjectStore = defineStore('app', {
     availableVideoValues: [] as string[],
     availableProjects: [] as TestDriveProjectInfo[],
     loadedProject: undefined as TestDriveProjectInfo | undefined,
-
 
     isLoading: false,
 

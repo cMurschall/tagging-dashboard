@@ -9,14 +9,14 @@ export interface TimeseriesDataPoint {
 
 export class WebsocketDataManager implements IDataManager {
   timeseriesData: TimeseriesDataPoint[] = [];
-  measurement$: Observable<number>;
+  measurement$: Observable<Record<string, number>>;
   ws: WebSocket;
+  measurementKeys: string[] = [];
 
   constructor(
     public wsUrl: string,
-    public measurementKey: string
   ) {
-    this.measurement$ = new Observable<number>();
+    this.measurement$ = new Observable();
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onmessage = (event: MessageEvent) => {
@@ -36,17 +36,26 @@ export class WebsocketDataManager implements IDataManager {
       console.error("WebSocket error:", error);
     };
   }
+  initialize(measurementKeys: string[]): Promise<void> {
+    this.measurementKeys = measurementKeys;
+    return Promise.resolve();
+  }
 
   subscribeToTimestamp(ts$: Observable<number>): void {
     ts$.subscribe((timestamp: number) => {
       if (this.timeseriesData.length === 0) return;
       const nearest = this.timeseriesData.reduce((prev, curr) =>
         Math.abs(curr.timestamp - timestamp) <
-        Math.abs(prev.timestamp - timestamp)
+          Math.abs(prev.timestamp - timestamp)
           ? curr
           : prev
       );
-      const measurement = Number(nearest[this.measurementKey]);
+      // Build the measurement object for all keys
+      const measurement: Record<string, number> = {};
+      for (const key of this.measurementKeys) {
+        const value = nearest[key];
+        measurement[key] = typeof value === "number" ? value : Number(value);
+      }
       this.measurement$.next(measurement);
     });
   }

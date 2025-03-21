@@ -37,10 +37,17 @@ export const BasePath = 'http://localhost:8888';
 export const ApiPath = BasePath + '/api/v1';
 
 
-export const ApiClient = new RestClient.ProjectEndpointApi(new RestClient.Configuration({
+export const ProjectApiClient = new RestClient.ProjectEndpointApi(new RestClient.Configuration({
   basePath: BasePath,
 }));
 
+export const PlayerApiClient = new RestClient.PlayerEndpointApi(new RestClient.Configuration({
+  basePath: BasePath,
+}));
+
+export const HealthApiClient = new RestClient.HealthcheckApi(new RestClient.Configuration({
+  basePath: BasePath,
+}));
 
 
 export type { TestDriveProjectInfoOutput as TestDriveProjectInfo, CreateProjectPayload, TestDriveVideoInfo };

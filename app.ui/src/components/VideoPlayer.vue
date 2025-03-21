@@ -122,17 +122,20 @@ onMounted(() => {
     console.log('Video.js plugins:', videojs.getPlugins());
     console.log('Video.js player:', videoPlayer.value);
 
+    const roundingPrecisionMs = 300; // Define the rounding precision in milliseconds
 
     videoPlayer.value.on('timeupdate', () => {
+        const currentTime = videoPlayer.value.currentTime();
+        const roundedTime = Math.floor(currentTime * (1000 / roundingPrecisionMs)) / (1000 / roundingPrecisionMs); // round to specified precision
+
       // Get the current time in seconds (rounded down to the nearest second)
-      const currentSecond = Math.floor(videoPlayer.value.currentTime());
 
       // Check if the current second is different from the last processed second
-      if (currentSecond !== lastProcessedSecond) {
-        lastProcessedSecond = currentSecond;
+      if (roundedTime !== lastProcessedSecond) {
+        lastProcessedSecond = roundedTime;
 
         // Example: Synchronize data to the current timestamp
-        synchronizeData(currentSecond, props.videoInfo.videoSimulationTimeStartS ?? 0);
+        synchronizeData(roundedTime, props.videoInfo.videoSimulationTimeStartS ?? 0);
       }
     });
 

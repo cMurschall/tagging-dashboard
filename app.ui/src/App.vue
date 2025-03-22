@@ -21,13 +21,15 @@
                     <div class="toolbar d-flex align-items-center justify-content-start p-2 bg-light border-bottom">
                         <BButton variant="primary" class="mx-1" @click="handleAddGauge">Add Gauge</BButton>
                         <BButton variant="primary" class="mx-1" @click="handleAddScatter">Add Chart</BButton>
+                        <BButton variant="primary" class="mx-1" @click="handleAddList">Add List</BButton>
 
 
                         <BButton variant="primary" class="mx-1" @click="handleAddTestGridItem">Add Test</BButton>
+                        <BButton variant="primary" class="mx-1" @click="handleSaveLayout">Save Layout</BButton>
                     </div>
 
                     <!-- Main Grid -->
-                    <MainGrid class="flex-grow-1" />
+                    <MainGrid  ref="mainGrid" class="flex-grow-1" />
                 </main>
 
                 <!-- Right Sidebar -->
@@ -127,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, markRaw, watch } from 'vue';
+import { onMounted, markRaw, watch, ref } from 'vue';
 import { useProjectStore } from './stores/projectStore';
 
 import LeftSideBar from './components/LeftSideBar.vue';
@@ -136,11 +138,16 @@ import { TestDriveVideoInfo } from './services/Utilities';
 import { Observable } from './observable';
 
 import VideoPlayer from './components/plugins/VideoPlayer.vue';
+import ListView from './components/plugins/ListView.vue';
 import Gauge from './components/plugins/Gauge.vue';
 import ScatterPlot from './components/plugins/ScatterPlot.vue';
-import TestGridItem from './components/plugins/TestGridItem.vue';
+import TestGridItem from './components/TestGridItem.vue';
 import { ApiDataManager } from './managers/apiDataManager';
 import * as gridItemManager from './managers/gridItemManager';
+
+
+
+const mainGrid = ref<typeof MainGrid | null>(null);
 
 
 // Initialize the store
@@ -151,6 +158,7 @@ const projectStore = useProjectStore();
 
 
 gridItemManager.setComponentMap({
+    ListView: () => markRaw(ListView),
     VideoPlayer: () => markRaw(VideoPlayer),
     Gauge: () => markRaw(Gauge),
     ScatterPlot: () => markRaw(ScatterPlot),
@@ -190,6 +198,27 @@ const handleAddGauge = () => {
         }
     });
 };
+
+const handleAddList = () => {
+    const dataManager = new ApiDataManager();
+    dataManager.subscribeToTimestamp(simulationTimeObservable);
+    gridItemManager.addNewItem({
+        component: 'ListView',
+        x: 0,
+        y: 0,
+        w: 3,
+        h: 5,
+        id: 'list-' + crypto.randomUUID(),
+        title: '',
+        props: {
+        },
+        dependencies: {
+            dataManager
+        }
+    });
+};
+
+
 const handleAddScatter = () => {
     const dataManager = new ApiDataManager();
     dataManager.subscribeToTimestamp(simulationTimeObservable);
@@ -225,6 +254,11 @@ const handleAddTestGridItem = () => {
         props: {
         }
     });
+};
+
+const handleSaveLayout = () => {
+    const currentLayout = mainGrid.value?.getCurrentLayout();
+    console.log('Current layout:', currentLayout);
 };
 
 

@@ -22,10 +22,11 @@ declare module 'vue' {
     CardWrapper: typeof import('./src/components/CardWrapper.vue')['default']
     Gauge: typeof import('./src/components/plugins/Gauge.vue')['default']
     LeftSideBar: typeof import('./src/components/LeftSideBar.vue')['default']
+    ListView: typeof import('./src/components/plugins/ListView.vue')['default']
     MainGrid: typeof import('./src/components/MainGrid.vue')['default']
     ProjectListItem: typeof import('./src/components/ProjectListItem.vue')['default']
     ScatterPlot: typeof import('./src/components/plugins/ScatterPlot.vue')['default']
-    TestGridItem: typeof import('./src/components/plugins/TestGridItem.vue')['default']
+    TestGridItem: typeof import('./src/components/TestGridItem.vue')['default']
     VideoPlayer: typeof import('./src/components/plugins/VideoPlayer.vue')['default']
     WindowManager: typeof import('./src/components/WindowManager.vue')['default']
   }

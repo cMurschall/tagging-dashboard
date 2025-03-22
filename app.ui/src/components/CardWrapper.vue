@@ -2,7 +2,14 @@
   <div class="card h-100">
     <div class="card-header d-flex justify-content-between align-items-center smaller-header">
       <h6 class="mb-0">{{ title }}</h6>
-      <button class="btn btn-sm btn-danger" @click="$emit('remove')">X</button>
+      <button class="btn btn-sm btn-danger" @click="$emit('remove')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="feather feather-x">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+      </button>
     </div>
     <div class="card-body no-scrollbar">
       <slot />

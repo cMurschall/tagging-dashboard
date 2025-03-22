@@ -1,8 +1,5 @@
 <template>
   <div ref="containerRef" style="width: 100%; height: 100%;">
-    <!-- <BButton @click="showColumns = !showColumns" variant="primary">
-      {{ showColumns ? 'Hide Columns' : 'Show Columns' }}
-    </BButton> -->
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <div @click="showColumns = !showColumns" style="cursor: pointer;">
         <svg v-if="!showColumns" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"

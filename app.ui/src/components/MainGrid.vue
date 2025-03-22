@@ -29,6 +29,14 @@ export default defineComponent({
         const shadowDom = new Map<string, any>();
         let renderedItems: gridManager.GridItem[] = [];
 
+
+
+        const getCurrentLayout = () => {
+            if (!grid) return;
+            const layoutData = grid.save();
+            return layoutData;
+        };
+
         onMounted(() => {
             if (!gridContainer.value) {
                 console.error('Grid container not found');
@@ -154,7 +162,9 @@ export default defineComponent({
             }
         });
 
-        return {};
+        return {
+            getCurrentLayout
+        };
     }
 });
 </script>

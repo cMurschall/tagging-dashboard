@@ -62,11 +62,11 @@ import VChart from "vue-echarts";
 import { use } from "echarts/core";
 import { GaugeChart } from "echarts/charts";
 import { SVGRenderer } from "echarts/renderers";
-import { IDataManager, TimeseriesDataPoint } from "./../managers/iDataManager";
-import { Subscription } from "./../observable";
-import { safeFetch, PlayerApiClient as client } from "./../services/Utilities";
+import { IDataManager, TimeseriesDataPoint } from "../../managers/iDataManager";
+import { Subscription } from "../../observable";
+import { safeFetch, PlayerApiClient as client } from "../../services/Utilities";
 import { BCol, BCollapse, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
-import { ColumnInfo } from "../../services/restclient";
+import { ColumnInfo } from "../../../services/restclient";
 
 use([GaugeChart, SVGRenderer]);
 

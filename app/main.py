@@ -99,6 +99,8 @@ async def websocket_endpoint(websocket: WebSocket):
         get_connection_manager().disconnect(websocket)
 
 
+# or from commandline:
+# python.exe -m uvicorn app.main:app --reload --port 8888 --log-level debug
 if __name__ == "__main__":
     print("Starting server manually")
     import uvicorn

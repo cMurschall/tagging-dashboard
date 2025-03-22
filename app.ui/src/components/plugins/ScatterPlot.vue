@@ -53,11 +53,11 @@
   import { ScatterChart } from "echarts/charts";
   import { CanvasRenderer } from "echarts/renderers";
   import { GridComponent } from 'echarts/components';
-  import { IDataManager, TimeseriesDataPoint } from "./../managers/iDataManager";
-  import { Subscription } from "./../observable";
-  import { safeFetch, PlayerApiClient as client } from "./../services/Utilities";
+  import { IDataManager, TimeseriesDataPoint } from "../../managers/iDataManager";
+  import { Subscription } from "../../observable";
+  import { safeFetch, PlayerApiClient as client } from "../../services/Utilities";
   import { BCol, BCollapse, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
-  import { ColumnInfo } from "../../services/restclient";
+  import { ColumnInfo } from "../../../services/restclient";
 
   import * as math from 'mathjs'
   
@@ -147,15 +147,14 @@
   });
   
   const updateChartData = (measurements: TimeseriesDataPoint[]) => {
-    if (!selectedYColumn.value) {
-      return;
-    }
-  
-    const data = measurements
-    .filter(m => m.timestamp > 0)
-    .map(m => [m.timestamp, transformValue( m.values[selectedYColumn.value!.name], yAxisExpression.value  )]);
+  if (!selectedYColumn.value) {
+    return;
+  }
 
-    
+  const data = measurements
+    .filter((m) => m.timestamp > 0)
+    .map((m) => [m.timestamp, m.values[selectedYColumn.value!.name]]);
+
   // Data sampling
   const maxDataPoints = 2000; // Maximum number of points to display
   let sampledData = data;
@@ -166,10 +165,14 @@
       sampledData.push(data[i]);
     }
   }
-    chartOption.value.series[0].data = sampledData;
-    chartOption.value.series[1].data = [];
+  const transformed = sampledData.map((d) => [
+    d[0],
+    transformValue(d[1], yAxisExpression.value),
+  ]);
+  chartOption.value.series[0].data = transformed;
+  chartOption.value.series[1].data = [];
+};
 
-  };
 
 
   const transformValue = (value: number, expression: string) => {

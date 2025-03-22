@@ -1,5 +1,4 @@
 <template>
-    <!-- The container for our GridStack layout -->
     <div ref="gridContainer" class="grid-stack mt-3 mb-1"></div>
 </template>
 
@@ -9,32 +8,26 @@ import {
     defineComponent,
     onMounted,
     onBeforeUnmount,
-    watch,
     createApp,
     h,
     provide,
     readonly,
     markRaw,
-    computed
 } from 'vue';
 import { GridStack, GridStackNode } from 'gridstack';
-import { GridItem, useGridStore } from '../stores/gridStore';
 import CardWrapper from './CardWrapper.vue';
 import { pinia, bootstrap } from "./../plugins/AppPlugins";
-
-
+import * as gridManager from './../managers/gridItemManager';
 
 export default defineComponent({
     name: 'GenericGridStack',
     setup() {
-        // Access the store
-        const gridStore = useGridStore();
-
-        const gridContainer = useTemplateRef('gridContainer')
+        const gridContainer = useTemplateRef('gridContainer');
         let grid: GridStack | null = null;
 
         // Keep track of Vue sub-apps so we can unmount them on removal
         const shadowDom = new Map<string, any>();
+        let renderedItems: gridManager.GridItem[] = [];
 
         onMounted(() => {
             if (!gridContainer.value) {
@@ -55,25 +48,23 @@ export default defineComponent({
 
             // 2) GridStack's render callback:
             GridStack.renderCB = (contentEl: HTMLElement, w: GridStackNode) => {
-                const widget = w as GridItem;
-
+                const widget = w as gridManager.GridItem;
 
                 console.log('Grid render CB', widget);
                 // The store's component map (component name -> definition)
                 const compName = widget.component as string;
-                const compDef = gridStore.componentMap[compName]();
+                const compDef = gridManager.getComponentMap()[compName]();
                 if (!compDef) {
                     contentEl.textContent = `Unknown component: ${compName}`;
                     return;
                 }
 
                 // Create a sub-app that wraps the child component in CardWrapper
-
                 const subApp = createApp({
                     setup() {
                         // If user clicks remove in the card header, remove from store
                         const handleRemove = () => {
-                            if (widget.id) gridStore.removeItemById(widget.id.toString());
+                            if (widget.id) gridManager.removeItemById(widget.id.toString());
                         };
 
                         // Build the child that goes in the slot:
@@ -82,21 +73,15 @@ export default defineComponent({
                             ...(widget.props || {})
                         });
 
-
-
-
                         // Iterate over dependencies and provide each one:
-                        const gridStoreItem = gridStore.gridItems.find(item => item.id === widget.id);
+                        const gridStoreItem = gridManager.getGridItems().find(item => item.id === widget.id);
                         if (gridStoreItem) {
                             for (const key in gridStoreItem.dependencies) {
-
                                 const d = gridStoreItem.dependencies[key];
                                 console.log('Providing', key, d.measurement$.getValue());
                                 provide(key, readonly(markRaw(gridStoreItem.dependencies[key])));
                             }
                         }
-
-
 
                         // Wrap that child in our CardWrapper
                         return () =>
@@ -118,112 +103,43 @@ export default defineComponent({
                 shadowDom.set(widget.id, { app: subApp, vm });
             };
 
-            // 3) When GridStack removes widgets (drag out or removeWidget?), unmount the child apps
-            grid.on('removed', (_event, removedItems: GridStackNode[]) => {
-                removedItems.forEach(item => {
-                    const id = item.id as string;
-                    const stored = shadowDom.get(id);
-                    if (stored) {
-
-                        stored.app.unmount();
-                        shadowDom.delete(id);
-                    }
-                });
-            });
-
             // 4) Load the store items initially
-            grid.load(gridStore.gridItems);
+            grid.load(gridManager.getGridItems());
+
         });
 
-        let renderedItems: GridItem[] = [];
-        // 5) Whenever the store's gridItems change, reload GridStack
-        watch(
-            () => gridStore.gridItems,
-            newItems => {
-                if (!grid) return;
-                // removeAll(false) => do not destroy the entire DOM/callback
+        gridManager.newItemObservable.subscribe((newItem) => {
+            console.log('New item added', newItem);
+            const hasNode = renderedItems.some(item => item.id === newItem.id);
+            if (!hasNode) {
+                console.log(`Adding new item: ${newItem.title}-${newItem.id}. Has node: ${hasNode}`);
+                const node = grid?.addWidget(newItem);
+                if (node) {
+                    renderedItems.push(newItem);
+                }
+            }
+        });
 
+        gridManager.removeItemObservable.subscribe((id) => {
+            console.log('Removing item', id);
+            const node = grid?.engine.nodes.find(n => n.id?.toString() === id.toString());
+            if (node && node.el) {
+                const actualId = node.id?.toString();
+                grid?.removeWidget(node.el, false);
+                renderedItems = renderedItems.filter(item => item.id !== id);
 
-                grid.removeAll(false);
-                grid.load(newItems);
-
-                renderedItems = newItems
-            },
-            { deep: true }
-        );
-
-
-        // const itemIds = computed(() => {
-        //     return gridStore.gridItems.map(item => item.id);
-        // });
-
-        // watch(
-        //     () => gridStore.gridItems,
-        //     (newItems, oldItems) => {
-        //         if (!grid) return;
-
-        //         // **Crucial Change: Create a shallow copy of oldItems**
-        //         const oldItemsCopy = oldItems ? [...oldItems] : [];
-
-        //         // Calculate the difference between old and new items
-        //         const addedItems = newItems.filter(item => !oldItemsCopy.some(oldItem => oldItem.id === item.id));
-        //         const removedItems = oldItemsCopy.filter(item => !newItems.some(newItem => newItem.id === item.id));
-        //         const changedItems = newItems.filter(newItem => {
-        //             const oldItem = oldItemsCopy.find(oldItem => oldItem.id === newItem.id);
-        //             // Use JSON.stringify for a deep comparison of the object properties.
-        //             return oldItem && JSON.stringify(newItem) !== JSON.stringify(oldItem);
-        //         });
-
-        //         console.log('Grid items changed', addedItems, removedItems, changedItems);
-
-
-        //     },
-        //     { deep: true }
-        // );
-
-        // const addedItems = new Set<string>();
-
-        // watch(() => itemIds, (newItems, oldItems) => {
-        //     if (!grid) return;
-
-        //     console.log('Grid items changed', newItems, oldItems);
-
-        //     // Get the IDs of currently rendered widgets from the shadowDom Map.
-        //     const existingIds = addedItems;
-        //     // Get the IDs from the new grid items.
-        //     const newIds = new Set(newItems.map(item => item.id.toString()));
-
-        //     // Determine which items are new (present in newItems, not in existingIds)
-        //     const itemsToAdd = newItems.filter(item => !existingIds.has(item.id.toString()));
-
-        //     // Determine which items have been removed (present in shadowDom, not in newIds)
-        //     const itemsToRemove = Array.from(existingIds).filter(id => !newIds.has(id));
-
-        //     // Add new widgets
-        //     itemsToAdd.forEach(item => {
-
-        //         const hasNode = addedItems.has(item.id.toString());
-        //         if (!hasNode) {
-        //             addedItems.add(item.id.toString());
-        //             console.log(`Adding new item: ${item.title}-${item.id}. Has node: ${hasNode}`);
-        //             const node = grid.addWidget(item);
-        //             grid?.makeWidget(node);
-        //         }
-        //     });
-
-        //     // Remove widgets that are no longer present
-        //     itemsToRemove.forEach(id => {
-        //         // Find the corresponding node in GridStack
-        //         const node = grid.engine.nodes.find(n => n.id.toString() == id);
-        //         if (node) {
-        //             console.log(`Removing old item: ${node.id}`);
-        //             grid.removeWidget(node.el, true);
-        //             addedItems.delete(id);
-        //         }
-        //     });
-        // },
-        //     { deep: true }
-        // );
+                // Unmount Vue sub-app
+                if (actualId) {
+                    const stored = shadowDom.get(actualId);
+                    if (stored) {
+                        stored.app.unmount();
+                        shadowDom.delete(actualId);
+                    } else {
+                        console.log('Could not find shadow dom for', actualId);
+                    }
+                }
+            }
+        });
 
         // 6) Cleanup on unmount
         onBeforeUnmount(() => {
@@ -246,10 +162,7 @@ export default defineComponent({
 <style scoped>
 .grid-stack {
     background: #fafafa;
-    /* background: lime; */
-    /* height is full height of the parent */
     height: 100%;
-
 }
 
 .grid-stack-item-content {

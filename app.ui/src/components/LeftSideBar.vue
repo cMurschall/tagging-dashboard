@@ -113,7 +113,6 @@ import ProjectListItem from './ProjectListItem.vue';
 
 import { ref } from 'vue'
 import { useProjectStore } from './../stores/projectStore';
-import { useGridStore } from './../stores/gridStore';
 
 import { useToastController } from 'bootstrap-vue-next'
 import { CreateProjectPayload } from '../services/Utilities';
@@ -125,7 +124,6 @@ import { BFormGroup } from 'bootstrap-vue-next';
 
 const { show: showToast } = useToastController()
 const projectStore = useProjectStore()
-const gridStore = useGridStore()
 
 
 // Create a factory function to provide default values

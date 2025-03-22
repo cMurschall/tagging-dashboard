@@ -19,10 +19,8 @@
 
                     <!-- Toolbar -->
                     <div class="toolbar d-flex align-items-center justify-content-start p-2 bg-light border-bottom">
-                        <BButton variant="primary" class="mx-1"
-                            @click="handleAddGauge">Add Gauge</BButton>
-                        <BButton variant="primary" class="mx-1"
-                        @click="handleAddScatter">Add Chart</BButton>
+                        <BButton variant="primary" class="mx-1" @click="handleAddGauge">Add Gauge</BButton>
+                        <BButton variant="primary" class="mx-1" @click="handleAddScatter">Add Chart</BButton>
 
 
                         <BButton variant="primary" class="mx-1" @click="handleAddTestGridItem">Add Test</BButton>
@@ -131,47 +129,38 @@
 <script setup lang="ts">
 import { onMounted, markRaw, watch } from 'vue';
 import { useProjectStore } from './stores/projectStore';
-import { useGridStore } from './stores/gridStore';
 
 import LeftSideBar from './components/LeftSideBar.vue';
-import VideoPlayer from './components/VideoPlayer.vue';
 import MainGrid from './components/MainGrid.vue';
 import { TestDriveVideoInfo } from './services/Utilities';
 import { Observable } from './observable';
-import Gauge from './components/Gauge.vue';
-import ScatterPlot from './components/ScatterPlot.vue';
-import TestGridItem from './components/TestGridItem.vue';
-import { RandomDataManager } from './managers/randomDataManager';
+
+import VideoPlayer from './components/plugins/VideoPlayer.vue';
+import Gauge from './components/plugins/Gauge.vue';
+import ScatterPlot from './components/plugins/ScatterPlot.vue';
+import TestGridItem from './components/plugins/TestGridItem.vue';
 import { ApiDataManager } from './managers/apiDataManager';
+import * as gridItemManager from './managers/gridItemManager';
 
 
 // Initialize the store
 const projectStore = useProjectStore();
-const gridStore = useGridStore();
 
-gridStore.setComponentMap({
+
+
+
+
+gridItemManager.setComponentMap({
     VideoPlayer: () => markRaw(VideoPlayer),
-    Gauge:() =>  markRaw(Gauge),
-    ScatterPlot:() =>  markRaw(ScatterPlot),
-
-
-    TestGridItem:() =>  markRaw(TestGridItem)
+    Gauge: () => markRaw(Gauge),
+    ScatterPlot: () => markRaw(ScatterPlot),
+    TestGridItem: () => markRaw(TestGridItem)
 });
 
 
 
 onMounted(async () => {
     await projectStore.initializeStore();
-
-    // gridStore.addNewItem({
-    //     component: 'LeftSideBar',
-    //     x: 0,
-    //     y: 0,
-    //     w: 3,
-    //     h: 12,
-    //     id: 'left-sidebar',
-    //     title: 'Left Sidebar'
-    // });
 });
 
 const simulationTimeObservable = new Observable<number>(0);
@@ -182,7 +171,7 @@ watch(() => projectStore.currentSimulationTime, (newTime) => {
 const handleAddGauge = () => {
     const dataManager = new ApiDataManager();
     dataManager.subscribeToTimestamp(simulationTimeObservable);
-    gridStore.addNewItem({
+    gridItemManager.addNewItem({
         component: 'Gauge',
         x: 0,
         y: 0,
@@ -204,7 +193,7 @@ const handleAddGauge = () => {
 const handleAddScatter = () => {
     const dataManager = new ApiDataManager();
     dataManager.subscribeToTimestamp(simulationTimeObservable);
-    gridStore.addNewItem({
+    gridItemManager.addNewItem({
         component: 'ScatterPlot',
         x: 0,
         y: 0,
@@ -225,7 +214,7 @@ const handleAddScatter = () => {
 };
 
 const handleAddTestGridItem = () => {
-    gridStore.addNewItem({
+    gridItemManager.addNewItem({
         component: 'TestGridItem',
         x: 0,
         y: 0,
@@ -252,7 +241,7 @@ watch(
                 projectStore.updateSimulationTime(time);
             });
 
-            gridStore.addNewItem<{
+            gridItemManager.addNewItem<{
                 videoInfo: TestDriveVideoInfo,
                 simulationTimeObservable: Observable<number>
             }>({
@@ -270,7 +259,7 @@ watch(
             });
         } else {
             console.info('The project was unloaded.');
-            gridStore.removeItemById('video-player')
+            gridItemManager.removeAllItems();
         }
     }
 );

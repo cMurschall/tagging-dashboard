@@ -25,6 +25,12 @@ export default defineComponent({
     return {
       updateTitle: () => setCardTitle('Updated Title from Child ')
     };
+  },
+  mounted() {
+    console.log('Test grid item mounted');
+  },
+  unmounted() {
+    console.log('Test grid item unmounted');
   }
 });
 </script>

@@ -15,8 +15,8 @@
 
 <script setup lang="ts">
 import { defineProps, ref, watch, onMounted, onBeforeUnmount, inject } from 'vue';
-import { ApiPath, TestDriveVideoInfo } from '../services/Utilities';
-import { Observable } from './../observable';
+import { ApiPath, TestDriveVideoInfo } from './../../services/Utilities';
+import { Observable } from './../../observable';
 import videojs from "video.js";
 import "videojs-sprite-thumbnails";
 import Player from 'video.js/dist/types/player';

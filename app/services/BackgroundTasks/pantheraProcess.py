@@ -13,6 +13,9 @@ import csv
 
 def process_panthera(stop_event: Event):
     while not stop_event.is_set():
+        # todo:
+        # 1) get the latest value from the simulator
+        # 2) send the value via websocket to the frontend
         sleep_with_event(stop_event, 1)
 
 

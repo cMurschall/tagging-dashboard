@@ -1,6 +1,22 @@
 <template>
   <div class="card h-100">
     <div class="card-header d-flex justify-content-between align-items-center smaller-header">
+      <div @click="showMenu = !showMenu" style="cursor: pointer;">
+          <svg v-if="!showMenu" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="feather feather-menu">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="feather feather-x">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </div>
+
       <h6 class="mb-0">{{ title }}</h6>
       <button class="btn btn-sm btn-danger" @click="$emit('remove')">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -12,7 +28,7 @@
       </button>
     </div>
     <div class="card-body no-scrollbar">
-      <slot />
+      <slot :showMenu="showMenu" />
     </div>
   </div>
 </template>
@@ -31,6 +47,8 @@ export default defineComponent({
   setup(props) {
     const cardTitle = ref(props.title);
 
+    const showMenu = ref(false);
+
     // Watch for prop updates (in case title changes dynamically)
     watch(() => props.title, (newTitle) => {
       cardTitle.value = newTitle;
@@ -41,7 +59,7 @@ export default defineComponent({
       cardTitle.value = newTitle;
     });
 
-    return { title: cardTitle };
+    return { title: cardTitle, showMenu };
   }
 });
 </script>

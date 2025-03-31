@@ -7,7 +7,7 @@ import struct
 
 from enum import Enum
 from pathlib import Path
-from typing import BinaryIO, Any
+from typing import BinaryIO
 
 import cv2
 import easyocr
@@ -34,8 +34,8 @@ def analyze_video(video_info: TestDriveVideoInfo) -> bool:
         video_info.video_height = info["video_height"]
         video_info.video_frame_rate = info["video_frame_rate"]
 
-        start = process_first_n_frames(video_info.video_file_full_path, 10)
-        stop = process_last_n_frames(video_info.video_file_full_path, 10)
+        start = process_first_n_frames(video_info.video_file_full_path, video_info.video_frame_rate, 10)
+        stop = process_last_n_frames(video_info.video_file_full_path, video_info.video_frame_rate, 10)
 
         video_info.video_simulation_time_start_s = start
         video_info.video_simulation_time_end_s = stop
@@ -156,7 +156,7 @@ def extract_video_info(video_file_path: str):
 
 def extract_timestamp_from_frame(frame, frame_count):
     # Define the region of interest (ROI) for the timestamp (top-left corner)
-    roi = frame[30:130, 20:650]  # Adjust as needed
+    roi = frame[30:130, 20:650]
 
     reader = easyocr.Reader(['en'], gpu=True)
     results = reader.readtext(roi, detail=0)
@@ -181,7 +181,7 @@ def parse_timestamp_to_seconds(timestamp):
     return total_seconds
 
 
-def process_first_n_frames(video_path, frames=20):
+def process_first_n_frames(video_path, frame_rate, frames=20):
     cap = cv2.VideoCapture(video_path)
     frame_count = 0
     total_seconds = 0
@@ -201,34 +201,48 @@ def process_first_n_frames(video_path, frames=20):
             print(f"Frame {frame_count}: No timestamp found")
         frame_count += 1
 
+    seconds_at_frame_0 = total_seconds - (frame_count / frame_rate)
     cap.release()
-    return total_seconds
+    return seconds_at_frame_0
 
 
-def process_last_n_frames(video_path, frames=20):
+def process_last_n_frames(video_path, frame_rate, frames=20):
     cap = cv2.VideoCapture(video_path)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     start_frame = max(total_frames - frames, 0)
 
     cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
     frame_count = 0
-    total_seconds = 0
+    timestamp_found = False
+    extracted_seconds = 0
 
     while cap.isOpened() and frame_count < frames:
         ret, frame = cap.read()
         if not ret:
             break
 
-        # Extract timestamp
-        timestamp = extract_timestamp_from_frame(frame, start_frame + frame_count)
+        current_frame_number = start_frame + frame_count
+        timestamp = extract_timestamp_from_frame(frame, current_frame_number)
         if timestamp:
-            total_seconds = parse_timestamp_to_seconds(timestamp)
-            print(
-                f"Frame {start_frame + frame_count}: Extracted Timestamp: {timestamp}, Total Seconds: {total_seconds}")
+            extracted_seconds = parse_timestamp_to_seconds(timestamp)
+            print(f"Frame {current_frame_number}: Extracted Timestamp: {timestamp}, Total Seconds: {extracted_seconds}")
+            timestamp_found = True
             break
         else:
-            print(f"Frame {start_frame + frame_count}: No timestamp found")
+            print(f"Frame {current_frame_number}: No timestamp found")
         frame_count += 1
+
+    cap.release()
+
+    if timestamp_found:
+        # Estimate timestamp of the last frame based on current frame position and frame rate
+        frames_remaining = (total_frames - 1) - (start_frame + frame_count)
+        estimated_video_end = extracted_seconds + (frames_remaining / frame_rate)
+        print(f"Estimated video end time: {estimated_video_end:.3f} seconds")
+        return estimated_video_end
+    else:
+        print(f"No timestamp found in last N={frames} frames.")
+        return None
 
     cap.release()
     return total_seconds

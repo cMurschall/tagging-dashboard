@@ -97,7 +97,12 @@ export default defineComponent({
                                 title: widget.title,
                                 onRemove: handleRemove
                             }, {
-                                default: () => childNode
+                                default: (slotProps: any) => {
+                                    return h(compDef, {
+                                        ...(widget.props || {}),
+                                        showMenu: slotProps.showMenu
+                                    });
+                                }
                             });
                     }
                 });

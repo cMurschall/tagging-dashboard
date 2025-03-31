@@ -2,6 +2,7 @@
     <div>
         <h4>Example Grid Item</h4>
         <button @click="updateTitle">Change Title</button>
+        <div>Show menu: {{ showMenu }}</div>
     </div>
     
   </template>
@@ -17,6 +18,10 @@ export default defineComponent({
     };
   },
   props: {
+    showMenu: {
+      type: Boolean,
+      default: false
+    },
   },
   setup() {
     const setCardTitle = inject('setCardTitle') as (title: string) => void;

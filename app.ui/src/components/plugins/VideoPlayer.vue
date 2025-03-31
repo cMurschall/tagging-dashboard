@@ -8,14 +8,14 @@
       {{ error }}
     </div>
     <div>
-{{ currentSimulationTimeString }}
+      {{ currentSimulationTimeString }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, watch, onMounted, onBeforeUnmount, inject } from 'vue';
-import { ApiPath, TestDriveVideoInfo } from './../../services/Utilities';
+import { ref, watch, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ApiPath, TestDriveVideoInfo, throttle } from './../../services/Utilities';
 import { Observable } from './../../observable';
 import videojs from "video.js";
 import "videojs-sprite-thumbnails";
@@ -136,21 +136,15 @@ onMounted(() => {
     console.log('Video.js player:', videoPlayer.value);
 
     const roundingPrecisionMs = 300; // Define the rounding precision in milliseconds
-
-    videoPlayer.value?.on('timeupdate', () => {
+    const updateTime = () => {
       const currentTime = videoPlayer.value?.currentTime() ?? 0;
-      const roundedTime = Math.floor(currentTime * (1000 / roundingPrecisionMs)) / (1000 / roundingPrecisionMs); // round to specified precision
+      synchronizeData(currentTime, props.videoInfo.videoSimulationTimeStartS ?? 0);
+    };
 
-      // Get the current time in seconds (rounded down to the nearest second)
 
-      // Check if the current second is different from the last processed second
-      if (roundedTime !== lastProcessedSecond) {
-        lastProcessedSecond = roundedTime;
-
-        // Example: Synchronize data to the current timestamp
-        synchronizeData(roundedTime, props.videoInfo.videoSimulationTimeStartS ?? 0);
-      }
-    });
+    videoPlayer.value?.on('timeupdate', updateTime);
+    videoPlayer.value?.on('seeked', updateTime);
+    videoPlayer.value?.on('pause', updateTime);
 
 
     // Ensure loadVideo is called only after the video player is ready
@@ -173,14 +167,19 @@ onBeforeUnmount(() => {
 const synchronizeData = (currentSecond: number, simulationStart: number) => {
 
 
-  const simulationTime = simulationStart + currentSecond
+  const simulationTimeInSeconds = simulationStart + currentSecond
+  const simulationTime_Minutes = Math.floor(simulationTimeInSeconds / 60);
+  const simulationTime_Seconds = simulationTimeInSeconds % 60;
+  const simulationTime_Milliseconds = simulationTimeInSeconds * 1000 % 1000;
 
-  currentSimulationTimeString.value = `Simulation time from video: ${new Date(simulationTime * 1000).toISOString().substring(11, 23)} - ${simulationTime.toFixed(3)}s`;
+  const timeString = `${simulationTime_Minutes.toFixed(0).padStart(2, '0')}:${simulationTime_Seconds.toFixed(0).padStart(2, '0')}.${simulationTime_Milliseconds.toFixed(0).padStart(3, '0')}`;
+
+  currentSimulationTimeString.value = `Simulation time: ${simulationTimeInSeconds.toFixed(3)}s - from video: ${timeString}`;
 
   if (!props.simulationTimeObservable.next) {
     Object.setPrototypeOf(props.simulationTimeObservable, Observable.prototype);
   }
-  props.simulationTimeObservable.next(simulationTime);
+  props.simulationTimeObservable.next(simulationTimeInSeconds);
 
 }
 

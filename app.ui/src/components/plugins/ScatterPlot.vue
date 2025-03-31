@@ -47,10 +47,16 @@ import { ColumnInfo } from "../../../services/restclient";
 
 import * as math from 'mathjs'
 
+import { useVideoControl } from './../../composables/useVideoControl';
+
+
+
 use([ScatterChart, CanvasRenderer, GridComponent, LineChart, TooltipComponent ]);
 
 // Inject the function from the parent
 const setCardTitle = inject('setCardTitle') as (title: string) => void;
+const { seekTo } = useVideoControl()
+
 
 interface ScatterPlotProps {
   width?: number;
@@ -121,6 +127,8 @@ const chartOption = ref({
 
   const [x, y] = chart.convertFromPixel({ seriesIndex: 0 }, [params.offsetX, params.offsetY]);
   console.log(`Clicked at axis coordinates: X = ${x}, Y = ${y}`);
+
+  seekTo(x); // Call the seekTo function with the x value
   
  }
 

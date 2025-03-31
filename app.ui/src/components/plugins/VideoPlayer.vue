@@ -15,8 +15,9 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, inject } from 'vue';
-import { ApiPath, TestDriveVideoInfo, throttle } from './../../services/Utilities';
+import { ApiPath, TestDriveVideoInfo } from './../../services/Utilities';
 import { Observable } from './../../observable';
+import { useVideoControl } from './../../composables/useVideoControl'
 import videojs from "video.js";
 import "videojs-sprite-thumbnails";
 import Player from 'video.js/dist/types/player';
@@ -29,7 +30,7 @@ interface VideoPlayerProps {
   simulationTimeObservable: Observable<number>
 }
 
-interface VideoPlayer extends Player {
+export interface VideoPlayer extends Player {
   spriteThumbnails: (options: any) => void;
 }
 
@@ -39,7 +40,7 @@ const props = defineProps<VideoPlayerProps>()
 const videoElement = ref<HTMLVideoElement | null>(null); // Reference to the html video element
 const videoPlayer = ref<VideoPlayer | undefined>(undefined); // Reference to the video player instance
 
-
+const { videoRef, setSeekTo } = useVideoControl()
 
 const videoOptions = ref<PlayerOptions>({
   controls: true,
@@ -141,6 +142,14 @@ onMounted(() => {
       synchronizeData(currentTime, props.videoInfo.videoSimulationTimeStartS ?? 0);
     };
 
+    // Define the actual seekTo logic
+    setSeekTo((simulationTime: number) => {
+      if (videoPlayer.value) {
+        const newTime = simulationTime - (props?.videoInfo?.videoSimulationTimeStartS ?? 0)
+        console.log('Seeking to:', newTime, 'seconds');
+        videoPlayer.value.currentTime(newTime);
+      }
+    });
 
     videoPlayer.value?.on('timeupdate', updateTime);
     videoPlayer.value?.on('seeked', updateTime);
@@ -152,6 +161,9 @@ onMounted(() => {
       loadVideo(props.videoInfo);
     }
   }) as VideoPlayer; // Cast the player to the custom VideoPlayer type
+
+
+  videoRef.value = videoPlayer.value; // Set the videoRef to the player instance
 
 
 })

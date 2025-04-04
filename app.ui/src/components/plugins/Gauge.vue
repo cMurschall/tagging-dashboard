@@ -158,7 +158,6 @@ onMounted(async () => {
 
 
   subscription = dataManager.measurement$.subscribe((measurements: TimeseriesDataPoint) => {
-
     // check if measurements has our selected column name
     if (!selectedColumn.value || !measurements.values[selectedColumn.value.name]) {
       return;

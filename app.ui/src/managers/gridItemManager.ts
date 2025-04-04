@@ -1,7 +1,6 @@
 import { Observable } from "../observable";
 
-
-export interface GridItem<T = Record<string, any>> {
+export interface GridManagerItem<T = Record<string, any>> {
     id: string;
     x?: number;
     y?: number;
@@ -10,62 +9,90 @@ export interface GridItem<T = Record<string, any>> {
     component?: string;
     title?: string;
     props?: T;
+    pluginState?: Record<string, any> | undefined;
     dependencies?: Record<string, any> | undefined;
 }
 
-let gridItems: GridItem[] = [];
-let componentMap: Record<string, () => any> = {};
+export class GridManager {
+    private GridManagerItems: GridManagerItem[] = [];
+    private componentMap: Record<string, () => any> = {};
 
-export const newItemObservable = new Observable<GridItem>();
-export const removeItemObservable = new Observable<string>();
+    public static newItemObservable = new Observable<GridManagerItem>();
+    public static removeItemObservable = new Observable<string>();
 
-
-export function getGridItems(): GridItem[] {
-    return gridItems;
-}
-
-export function getComponentMap(): Record<string, () => any> {
-    return componentMap;
-}
-
-export function setComponentMap(map: Record<string, () => any>): void {
-    componentMap = map;
-}
-
-export function registerComponent(key: string, componentFactory: () => any): void {
-    if (componentMap[key]) {
-        console.warn(`Warning: Component with key "${key}" is already registered.`);
-    }
-    componentMap[key] = componentFactory;
-}
-
-export function addNewItem<T extends Record<string, any>>(item: Omit<GridItem<T>, 'props'> & { props: T }): void {
-    if (gridItems.find((i) => i.id === item.id)) {
-        console.error(`Error: item with id ${item.id} already exists`);
-        return;
+    public getGridItems(): GridManagerItem[] {
+        return this.GridManagerItems;
     }
 
-    if (item.dependencies) {
-        item.dependencies = (item.dependencies);
+    public getComponentMap(): Record<string, () => any> {
+        return this.componentMap;
     }
 
-    gridItems.push(item);
-    newItemObservable.next(item);
-}
-
-export function removeItemById(id: string): void {
-    const index = gridItems.findIndex((i) => i.id === id);
-    if (index === -1) {
-        console.error(`Error: item with id ${id} does not exist`);
-        return;
+    public setComponentMap(map: Record<string, () => any>): void {
+        this.componentMap = map;
     }
 
-    const removedItem = gridItems.splice(index, 1)[0];
-    removeItemObservable.next(removedItem.id);
+    public registerComponent(key: string, componentFactory: () => any): void {
+        if (this.componentMap[key]) {
+            console.warn(`Warning: Component with key "${key}" is already registered.`);
+        }
+        this.componentMap[key] = componentFactory;
+    }
+
+    public addNewItem<T extends Record<string, any>>(
+        item: Omit<GridManagerItem<T>, 'props'> & { props: T }
+    ): void {
+        if (this.GridManagerItems.find((i) => i.id === item.id)) {
+            console.error(`Error: item with id ${item.id} already exists`);
+            return;
+        }
+
+        if (item.dependencies) {
+            item.dependencies = (item.dependencies);
+        }
+
+        this.GridManagerItems.push(item);
+        GridManager.newItemObservable.next(item);
+    }
+
+    public updateItemById<T extends Record<string, any>>(id: string, item: Partial<Omit<GridManagerItem<T>, 'props'> & { props: T }>): void {
+        const index = this.GridManagerItems.findIndex((i) => i.id === id);
+        if (index === -1) {
+            console.error(`Error: item with id ${id} does not exist`);
+            return;
+        }
+        const existingItem = this.GridManagerItems[index];
+
+        // Merge the existing item with the new properties
+        this.GridManagerItems[index] = {
+            ...existingItem,
+            ...item,
+            props: { ...existingItem.props, ...item.props },
+        };
+    }
+
+    public getItemById(id: string): GridManagerItem | undefined {
+        return this.GridManagerItems.find((item) => item.id === id);
+    }
+
+    public removeItemById(id: string): void {
+        const index = this.GridManagerItems.findIndex((i) => i.id === id);
+        if (index === -1) {
+            console.error(`Error: item with id ${id} does not exist`);
+            return;
+        }
+
+        const removedItem = this.GridManagerItems.splice(index, 1)[0];
+        GridManager.removeItemObservable.next(removedItem.id);
+    }
+
+    public removeAllItems(): void {
+        const items = [...this.GridManagerItems];
+        this.GridManagerItems = [];
+        items.forEach((item) => GridManager.removeItemObservable.next(item.id));
+    }
 }
 
-export function removeAllItems(): void {
-    const items = [...gridItems];
-    gridItems = [];
-    items.forEach((item) => removeItemObservable.next(item.id));
-}
+const gridManager = new GridManager();
+
+export default gridManager;

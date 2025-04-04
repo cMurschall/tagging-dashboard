@@ -15,7 +15,8 @@
 <script lang="ts">
 import { defineComponent, inject, PropType } from 'vue';
 import { useVideoControl } from './../composables/useVideoControl';
-import { useGridStore } from './../stores/gridStore'
+import gridManager from '../managers/gridItemManager';
+
 
 const { seekTo } = useVideoControl()
 
@@ -75,9 +76,9 @@ export default defineComponent({
   watch: {
     pluginState: {
       handler(newValue) {
-        console.log('Plugin state changed:', newValue);
-        const gridStore = useGridStore()
-        gridStore.updateGridItemState(this.id, newValue);
+        gridManager.updateItemById(this.id, {
+          pluginState: { ...newValue }
+        });
       },
       deep: true
     }

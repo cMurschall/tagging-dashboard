@@ -19,19 +19,7 @@
 
                     <!-- Toolbar -->
                     <div class="toolbar d-flex align-items-center justify-content-start p-2 bg-light border-bottom">
-                        <BButton variant="primary" class="mx-1" @click="handleAddGauge">Add Gauge</BButton>
-                        <BButton variant="primary" class="mx-1" @click="handleAddScatter">Add Chart</BButton>
-                        <BButton variant="primary" class="mx-1" @click="handleAddList">Add List</BButton>
-
-
-                        <BButton variant="primary" class="mx-1" @click="handleAddTestGridItem">Add Test</BButton>
-                        <BButton variant="primary" class="mx-1" @click="handleSaveLayout">Save Layout</BButton>
-                        <BDropdown text="Restore Layout" class="mx-1">
-                            <BDropdownItemButton v-for="(_, layoutName) in gridStore.getAllLayouts" :key="layoutName"
-                                @click="handleRestoreLayout(layoutName)">
-                                {{ layoutName }}
-                            </BDropdownItemButton>
-                        </BDropdown>
+                        <ToolBar />
                     </div>
 
                     <!-- Main Grid -->
@@ -137,8 +125,8 @@
 <script setup lang="ts">
 import { onMounted, markRaw, watch, ref } from 'vue';
 import { useProjectStore } from './stores/projectStore';
-import { useGridStore } from './stores/gridStore';
 
+import ToolBar from './components/menu/ToolBar.vue';
 import LeftSideBar from './components/LeftSideBar.vue';
 import MainGrid from './components/MainGrid.vue';
 import { TestDriveVideoInfo } from './services/Utilities';
@@ -149,8 +137,8 @@ import ListView from './components/plugins/ListView.vue';
 import Gauge from './components/plugins/Gauge.vue';
 import ScatterPlot from './components/plugins/ScatterPlot.vue';
 import TestGridItem from './components/TestGridItem.vue';
-import { ApiDataManager } from './managers/apiDataManager';
-import * as gridItemManager from './managers/gridItemManager';
+import gridItemManager, { GridManagerItem } from './managers/gridItemManager';
+import layoutManager from './managers/layoutManager';
 
 
 
@@ -159,7 +147,7 @@ const mainGrid = ref<typeof MainGrid | null>(null);
 
 // Initialize the store
 const projectStore = useProjectStore();
-const gridStore = useGridStore();
+
 
 
 
@@ -173,148 +161,161 @@ gridItemManager.setComponentMap({
     TestGridItem: () => markRaw(TestGridItem)
 });
 
+const availableLayouts = ref<string[]>([]);
+const layoutsData = ref<Record<string, GridManagerItem[]>>({});
+let subscription: { unsubscribe: () => void } | null = null;
 
 
 onMounted(async () => {
     await projectStore.initializeStore();
+    subscription = layoutManager.layouts$.subscribe((layouts) => {
+        layoutsData.value = layouts;
+        availableLayouts.value = Object.keys(layouts);
+    });
 });
 
-const simulationTimeObservable = new Observable<number>(0);
-watch(() => projectStore.currentSimulationTime, (newTime) => {
-    simulationTimeObservable.next(newTime);
-});
 
-const handleAddGauge = () => {
-    const dataManager = new ApiDataManager();
-    dataManager.subscribeToTimestamp(simulationTimeObservable);
-    gridItemManager.addNewItem({
-        component: 'Gauge',
-        x: 0,
-        y: 0,
-        w: 3,
-        h: 5,
-        id: 'gauge-' + crypto.randomUUID(),
-        title: '',
-        props: {
-            // min: 0,
-            // max: 100,
-            // label: 'Speed',
-            color: '#007bff'
-        },
-        dependencies: {
-            dataManager
-        }
-    });
-};
+// watch(() => projectStore.currentSimulationTime, (newTime) => {
+//     simulationTimeObservable.next(newTime);
+// });
 
-const handleAddList = () => {
-    const dataManager = new ApiDataManager();
-    dataManager.subscribeToTimestamp(simulationTimeObservable);
-    gridItemManager.addNewItem({
-        component: 'ListView',
-        x: 0,
-        y: 0,
-        w: 3,
-        h: 5,
-        id: 'list-' + crypto.randomUUID(),
-        title: '',
-        props: {
-        },
-        dependencies: {
-            dataManager
-        }
-    });
-};
+// const handleAddGauge = () => {
+//     const dataManager = new ApiDataManager();
+//     dataManager.subscribeToTimestamp(simulationTimeObservable);
+//     gridItemManager.addNewItem({
+//         component: 'Gauge',
+//         x: 0,
+//         y: 0,
+//         w: 3,
+//         h: 5,
+//         id: 'gauge-' + crypto.randomUUID(),
+//         title: '',
+//         props: {
+//             // min: 0,
+//             // max: 100,
+//             // label: 'Speed',
+//             color: '#007bff'
+//         },
+//         dependencies: {
+//             dataManager
+//         }
+//     });
+// };
 
-
-const handleAddScatter = () => {
-    const dataManager = new ApiDataManager();
-    dataManager.subscribeToTimestamp(simulationTimeObservable);
-    gridItemManager.addNewItem({
-        component: 'ScatterPlot',
-        x: 0,
-        y: 0,
-        w: 7,
-        h: 4,
-        id: 'scatter-' + crypto.randomUUID(),
-        title: '',
-        props: {
-            // min: 0,
-            // max: 100,
-            // label: 'Speed',
-            color: '#007bff'
-        },
-        dependencies: {
-            dataManager
-        }
-    });
-};
-
-const handleAddTestGridItem = () => {
-    gridItemManager.addNewItem({
-        component: 'TestGridItem',
-        x: 0,
-        y: 0,
-        w: 2,
-        h: 2,
-        id: 'test-grid-item' + crypto.randomUUID(),
-        title: 'Test Grid Item',
-        props: {
-            pluginState: {
-
-            }
-        }
-    });
-};
-
-const handleSaveLayout = () => {
-    const getNextAvailableLayoutName = (existingNames: string[]): string => {
-        let index = 1;
-        while (existingNames.includes(`Layout ${index}`)) {
-            index++;
-        }
-        return `Layout ${index}`;
-    }
-
-    const existingNames = Object.keys(gridStore.getAllLayouts);
-    const layoutName = getNextAvailableLayoutName(existingNames);
-    gridStore.saveGridItemsAsLayout(layoutName);
-};
+// const handleAddList = () => {
+//     const dataManager = new ApiDataManager();
+//     dataManager.subscribeToTimestamp(simulationTimeObservable);
+//     gridItemManager.addNewItem({
+//         component: 'ListView',
+//         x: 0,
+//         y: 0,
+//         w: 3,
+//         h: 5,
+//         id: 'list-' + crypto.randomUUID(),
+//         title: '',
+//         props: {
+//         },
+//         dependencies: {
+//             dataManager
+//         }
+//     });
+// };
 
 
-const handleRestoreLayout = (layoutName: string) => {
+// const handleAddScatter = () => {
+//     const dataManager = new ApiDataManager();
+//     dataManager.subscribeToTimestamp(simulationTimeObservable);
+//     gridItemManager.addNewItem({
+//         component: 'ScatterPlot',
+//         x: 0,
+//         y: 0,
+//         w: 7,
+//         h: 4,
+//         id: 'scatter-' + crypto.randomUUID(),
+//         title: '',
+//         props: {
+//             // min: 0,
+//             // max: 100,
+//             // label: 'Speed',
+//             color: '#007bff'
+//         },
+//         dependencies: {
+//             dataManager
+//         }
+//     });
+// };
 
-    gridItemManager.removeAllItems();
+// const handleAddTestGridItem = () => {
+//     gridItemManager.addNewItem({
+//         component: 'TestGridItem',
+//         x: 0,
+//         y: 0,
+//         w: 2,
+//         h: 2,
+//         id: 'test-grid-item' + crypto.randomUUID(),
+//         title: 'Test Grid Item',
+//         props: {
+//             pluginState: {
+
+//             }
+//         }
+//     });
+// };
+
+// const handleSaveLayout = () => {
+//     const getNextAvailableLayoutName = (existingNames: string[]): string => {
+//         let index = 1;
+//         while (existingNames.includes(`Layout ${index}`)) {
+//             index++;
+//         }
+//         return `Layout ${index}`;
+//     }
+
+//     const existingNames = Object.keys(layoutManager.getLayoutNames());
+//     const layoutName = getNextAvailableLayoutName(existingNames);
+
+//     const items = gridItemManager.getGridItems().map(item => ({ ...item }));
+//     layoutManager.saveLayout(layoutName, items);
+// };
 
 
-    const layoutToRestore = gridStore.getLayoutByName(layoutName);
-    for (const itemId in layoutToRestore) {
+// const handleRestoreLayout = (layoutName: string) => {
 
-        const item = layoutToRestore[itemId];
-        const dataManager = new ApiDataManager();
-
-        dataManager.subscribeToTimestamp(simulationTimeObservable);
-        gridItemManager.addNewItem({
-            component: item.type,
-            x: item.position.x,
-            y: item.position.y,
-            w: item.size.width,
-            h: item.size.height,
-            id: item.id,
-            title: item.title,
-            props: {
-                // Add any additional props here
-                pluginState: item.state,
-            },
-            dependencies: {
-                dataManager
-            }
-        });
-
-    }
+//     gridItemManager.removeAllItems();
 
 
-};
+//     const layoutToRestore = layoutManager.getLayout(layoutName);
+//     if (!layoutToRestore) {
+//         console.error(`Layout "${layoutName}" not found.`);
+//         return;
+//     }
+
+//     for (const item of layoutToRestore) {
+
+//         const dataManager = new ApiDataManager();
+
+//         dataManager.subscribeToTimestamp(simulationTimeObservable);
+//         gridItemManager.addNewItem({
+//             component: item.component,
+//             x: item.x,
+//             y: item.y,
+//             w: item.w,
+//             h: item.h,
+//             id: item.id,
+//             title: item.title,
+//             props: {
+//                 // Add any additional props here
+//                 pluginState: item.pluginState,
+//             },
+//             dependencies: {
+//                 dataManager
+//             }
+//         });
+
+//     }
+
+
+// };
 
 
 watch(

@@ -17,9 +17,8 @@ import {
 import { GridItemHTMLElement, GridStack, GridStackNode } from 'gridstack';
 import CardWrapper from './CardWrapper.vue';
 import { pinia, bootstrap } from "./../plugins/AppPlugins";
-import * as gridManager from './../managers/gridItemManager';
+import gridManager, { GridManagerItem, GridManager } from './../managers/gridItemManager';
 
-import { useGridStore } from './../stores/gridStore';
 
 export default defineComponent({
     name: 'GenericGridStack',
@@ -29,11 +28,7 @@ export default defineComponent({
 
         // Keep track of Vue sub-apps so we can unmount them on removal
         const shadowDom = new Map<string, any>();
-        let renderedItems: gridManager.GridItem[] = [];
-
-
-        const gridStore = useGridStore();
-
+        let renderedItems: GridManagerItem[] = [];
 
 
         const getCurrentLayout = () => {
@@ -64,9 +59,9 @@ export default defineComponent({
 
                 if (el.gridstackNode && el.gridstackNode.id) {
 
-                    gridStore.updateGridItemSize(el.gridstackNode.id, {            
-                        width: el.gridstackNode.w ?? 0,
-                        height: el.gridstackNode.h ?? 0
+                    gridManager.updateItemById(el.gridstackNode.id.toString(), {
+                        w: el.gridstackNode.w ?? 0,
+                        h: el.gridstackNode.h ?? 0,                
                     });
                 }
             });
@@ -75,51 +70,22 @@ export default defineComponent({
                 console.log('Drag:', { event, node: el.gridstackNode });
 
                 if (el.gridstackNode && el.gridstackNode.id) {
-                    gridStore.updateGridItemPosition(el.gridstackNode.id, {
+                  
+                    gridManager.updateItemById(el.gridstackNode.id.toString(), {
                         x: el.gridstackNode.x ?? 0,
-                        y: el.gridstackNode.y ?? 0
+                        y: el.gridstackNode.y ?? 0,
                     });
                 }
             });
 
-            grid.on('added', (event: Event, nodes: GridStackNode[]) => {
-                console.log('Added:', { event, nodes });
-                nodes.forEach((node) => {
-                    if (node.id) {
-                        gridStore.addGridItem({
-                            id: node.id.toString(),
-                            position: {
-                                x: node.x ?? 0,
-                                y: node.y ?? 0,
-                            },
-                            size: {
-                                width: node.w ?? 0,
-                                height: node.h ?? 0,
-                            },
-                            type: (node as any).component as string,
-                            title: (node as any).title as string,
-                            state: {}
-                        });
-                    }
-                });
-            });
-
-            grid.on('removed', (event: Event, nodes: GridStackNode[]) => {
-                console.log('Removed:', { event, nodes });
-                nodes.forEach((node) => {
-                    if (node.id) {
-                        gridStore.removeGridItem(node.id.toString());
-                    }
-                });
-            });
 
             // 2) GridStack's render callback:
             GridStack.renderCB = (contentEl: HTMLElement, w: GridStackNode) => {
-                const widget = w as gridManager.GridItem;
+                const widget = w as GridManagerItem;
 
                 console.log('Grid render CB', widget);
 
-                
+
                 // The store's component map (component name -> definition)
                 const compName = widget.component as string;
                 const compDef = gridManager.getComponentMap()[compName]();
@@ -177,7 +143,7 @@ export default defineComponent({
 
         });
 
-        gridManager.newItemObservable.subscribe((newItem) => {
+        GridManager.newItemObservable.subscribe((newItem) => {
             console.log('New item added', newItem);
             const hasNode = renderedItems.some(item => item.id === newItem.id);
             if (!hasNode) {
@@ -189,7 +155,7 @@ export default defineComponent({
             }
         });
 
-        gridManager.removeItemObservable.subscribe((id) => {
+        GridManager.removeItemObservable.subscribe((id) => {
             console.log('Removing item', id);
             const node = grid?.engine.nodes.find(n => n.id?.toString() === id.toString());
             if (node && node.el) {

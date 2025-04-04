@@ -4,8 +4,6 @@ export interface Subscription {
 }
 
 
-
-
 export class Observable<T> {
   private observers: ((value: T) => void)[] = [];
   private currentValue: T | undefined;

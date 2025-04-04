@@ -12,6 +12,8 @@ declare module 'vue' {
     BCardBody: typeof import('bootstrap-vue-next/components/BCard')['BCardBody']
     BCardHeader: typeof import('bootstrap-vue-next/components/BCard')['BCardHeader']
     BCardText: typeof import('bootstrap-vue-next/components/BCard')['BCardText']
+    BDropdown: typeof import('bootstrap-vue-next/components/BDropdown')['BDropdown']
+    BDropdownItemButton: typeof import('bootstrap-vue-next/components/BDropdown')['BDropdownItemButton']
     BFormInput: typeof import('bootstrap-vue-next/components/BFormInput')['BFormInput']
     BFormSelect: typeof import('bootstrap-vue-next/components/BFormSelect')['BFormSelect']
     BFormTextarea: typeof import('bootstrap-vue-next/components/BFormTextarea')['BFormTextarea']

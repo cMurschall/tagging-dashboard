@@ -4,7 +4,7 @@ import { VideoPlayer } from '../components/plugins/VideoPlayer.vue'
 
 const videoRef = ref<VideoPlayer | null>(null)
 // Just a plain function reference, not reactive
-let seekTo = (time: number) => { }
+let seekTo = (_: number) => { }
 
 
 export function useVideoControl() {

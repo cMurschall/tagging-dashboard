@@ -14,10 +14,12 @@ import {
     readonly,
     markRaw,
 } from 'vue';
-import { GridStack, GridStackNode } from 'gridstack';
+import { GridItemHTMLElement, GridStack, GridStackNode } from 'gridstack';
 import CardWrapper from './CardWrapper.vue';
 import { pinia, bootstrap } from "./../plugins/AppPlugins";
 import * as gridManager from './../managers/gridItemManager';
+
+import { useGridStore } from './../stores/gridStore';
 
 export default defineComponent({
     name: 'GenericGridStack',
@@ -28,6 +30,9 @@ export default defineComponent({
         // Keep track of Vue sub-apps so we can unmount them on removal
         const shadowDom = new Map<string, any>();
         let renderedItems: gridManager.GridItem[] = [];
+
+
+        const gridStore = useGridStore();
 
 
 
@@ -54,11 +59,67 @@ export default defineComponent({
                 gridContainer.value as HTMLElement
             );
 
+            grid.on('resizestop', (event: Event, el: GridItemHTMLElement) => {
+                console.log('Resizestop:', { event, node: el.gridstackNode });
+
+                if (el.gridstackNode && el.gridstackNode.id) {
+
+                    gridStore.updateGridItemSize(el.gridstackNode.id, {            
+                        width: el.gridstackNode.w ?? 0,
+                        height: el.gridstackNode.h ?? 0
+                    });
+                }
+            });
+
+            grid.on('dragstop', (event: Event, el: GridItemHTMLElement) => {
+                console.log('Drag:', { event, node: el.gridstackNode });
+
+                if (el.gridstackNode && el.gridstackNode.id) {
+                    gridStore.updateGridItemPosition(el.gridstackNode.id, {
+                        x: el.gridstackNode.x ?? 0,
+                        y: el.gridstackNode.y ?? 0
+                    });
+                }
+            });
+
+            grid.on('added', (event: Event, nodes: GridStackNode[]) => {
+                console.log('Added:', { event, nodes });
+                nodes.forEach((node) => {
+                    if (node.id) {
+                        gridStore.addGridItem({
+                            id: node.id.toString(),
+                            position: {
+                                x: node.x ?? 0,
+                                y: node.y ?? 0,
+                            },
+                            size: {
+                                width: node.w ?? 0,
+                                height: node.h ?? 0,
+                            },
+                            type: (node as any).component as string,
+                            title: (node as any).title as string,
+                            state: {}
+                        });
+                    }
+                });
+            });
+
+            grid.on('removed', (event: Event, nodes: GridStackNode[]) => {
+                console.log('Removed:', { event, nodes });
+                nodes.forEach((node) => {
+                    if (node.id) {
+                        gridStore.removeGridItem(node.id.toString());
+                    }
+                });
+            });
+
             // 2) GridStack's render callback:
             GridStack.renderCB = (contentEl: HTMLElement, w: GridStackNode) => {
                 const widget = w as gridManager.GridItem;
 
                 console.log('Grid render CB', widget);
+
+                
                 // The store's component map (component name -> definition)
                 const compName = widget.component as string;
                 const compDef = gridManager.getComponentMap()[compName]();
@@ -74,12 +135,6 @@ export default defineComponent({
                         const handleRemove = () => {
                             if (widget.id) gridManager.removeItemById(widget.id.toString());
                         };
-
-                        // Build the child that goes in the slot:
-                        const childNode = h(compDef, {
-                            // Spread any custom props from our widget props
-                            ...(widget.props || {})
-                        });
 
                         // Iterate over dependencies and provide each one:
                         const gridStoreItem = gridManager.getGridItems().find(item => item.id === widget.id);
@@ -100,7 +155,8 @@ export default defineComponent({
                                 default: (slotProps: any) => {
                                     return h(compDef, {
                                         ...(widget.props || {}),
-                                        showMenu: slotProps.showMenu
+                                        showMenu: slotProps.showMenu,
+                                        id: widget.id,
                                     });
                                 }
                             });

@@ -146,7 +146,7 @@ onMounted(() => {
     setSeekTo((simulationTime: number) => {
       if (videoPlayer.value) {
         const newTime = simulationTime - (props?.videoInfo?.videoSimulationTimeStartS ?? 0)
-        console.log('Seeking to:', newTime, 'seconds');
+        console.log('Seeking video to:', newTime, 'seconds');
         videoPlayer.value.currentTime(newTime);
       }
     });

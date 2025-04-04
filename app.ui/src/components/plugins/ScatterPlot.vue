@@ -27,7 +27,8 @@
           </BCol>
         </BRow>
       </div>
-      <VChart v-else ref="chartRef" :option="chartOption" :style="{ width: '100%', height: '100%' }" @zr:click="handleVChartClick"/>
+      <VChart v-else ref="chartRef" :option="chartOption" :style="{ width: '100%', height: '100%' }"
+        @zr:click="handleVChartClick" />
     </Transition>
   </div>
 </template>
@@ -38,7 +39,7 @@ import { ref, onMounted, onUnmounted, inject, computed, watch } from "vue";
 import { ECElementEvent, ElementEvent, use } from "echarts/core";
 import { ScatterChart, LineChart } from "echarts/charts";
 import { CanvasRenderer } from "echarts/renderers";
-import { GridComponent , TooltipComponent } from 'echarts/components';
+import { GridComponent, TooltipComponent } from 'echarts/components';
 import { IDataManager, TimeseriesDataPoint } from "../../managers/iDataManager";
 import { Subscription } from "../../observable";
 import { safeFetch, PlayerApiClient as client } from "../../services/Utilities";
@@ -51,7 +52,7 @@ import { useVideoControl } from './../../composables/useVideoControl';
 
 
 
-use([ScatterChart, CanvasRenderer, GridComponent, LineChart, TooltipComponent ]);
+use([ScatterChart, CanvasRenderer, GridComponent, LineChart, TooltipComponent]);
 
 // Inject the function from the parent
 const setCardTitle = inject('setCardTitle') as (title: string) => void;
@@ -99,38 +100,36 @@ const chartOption = ref({
       itemStyle: {
         color: 'red', // Highlight color
       },
+
     },
   ],
   tooltip: {
-        trigger: 'axis', // Trigger tooltip on axis pointer move
-        axisPointer: {
-            type: 'line', // Show a line axis pointer
-            lineStyle: {
-                color: 'red',
-                width: 1
-            },
-            z: 100 // Ensure it's on top
-        },
-        formatter: (params: any) => {
-            const xValue = params[0].value[0];
-            const yValue = params[0].value[1];
-            return `Time: ${xValue.toFixed(1)} s<br/>${selectedYColumn.value?.name}: ${yValue}`;
-        }
+    trigger: 'axis', // Trigger tooltip on axis pointer move
+    axisPointer: {
+      type: 'line', // Show a line axis pointer
+      lineStyle: {
+        color: 'red',
+        width: 1
+      },
+      z: 100 // Ensure it's on top
+    },
+    formatter: (params: any) => {
+      const xValue = params[0].value[0];
+      const yValue = params[0].value[1];
+      return `Time: ${xValue.toFixed(1)} s<br/>${selectedYColumn.value?.name}: ${yValue}`;
     }
+  }
 
 });
 
 
- const handleVChartClick = (params: ElementEvent) => {
+const handleVChartClick = (params: ElementEvent) => {
   const chart = chartRef.value;
   if (!chart) return;
 
-  const [x, y] = chart.convertFromPixel({ seriesIndex: 0 }, [params.offsetX, params.offsetY]);
-  console.log(`Clicked at axis coordinates: X = ${x}, Y = ${y}`);
-
+  const [x, _] = chart.convertFromPixel({ seriesIndex: 0 }, [params.offsetX, params.offsetY]);
   seekTo(x); // Call the seekTo function with the x value
-  
- }
+}
 
 defineExpose({ chartOption });
 
@@ -218,11 +217,30 @@ onMounted(async () => {
   }
 
   subscription = dataManager.measurement$.subscribe((measurements: TimeseriesDataPoint) => {
-    chartOption.value.series[1].data = [[
-      measurements.timestamp,
-      transformValue(measurements.values[selectedYColumn.value!.name], yAxisExpression.value)
-    ]];
 
+    // check if new timestamp is in the range of the first series. if yes put point on the first series
+    const firstTimestamp = chartOption.value.series[0].data[0][0];
+    const lastTimestamp = chartOption.value.series[0].data[chartOption.value.series[0].data.length - 1][0];
+    if (measurements.timestamp < firstTimestamp) {
+
+      chartOption.value.series[1].data = [[
+        firstTimestamp,
+        transformValue(measurements.values[selectedYColumn.value!.name], yAxisExpression.value)
+      ]];
+    }
+    else if (measurements.timestamp > lastTimestamp) {
+      chartOption.value.series[1].data = [[
+        lastTimestamp,
+        transformValue(measurements.values[selectedYColumn.value!.name], yAxisExpression.value)
+      ]];
+    }
+    else {
+      chartOption.value.series[1].data = [[
+        measurements.timestamp,
+        transformValue(measurements.values[selectedYColumn.value!.name], yAxisExpression.value)
+      ]];
+
+    }
   });
 });
 

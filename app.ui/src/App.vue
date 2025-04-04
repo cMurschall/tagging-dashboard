@@ -26,10 +26,16 @@
 
                         <BButton variant="primary" class="mx-1" @click="handleAddTestGridItem">Add Test</BButton>
                         <BButton variant="primary" class="mx-1" @click="handleSaveLayout">Save Layout</BButton>
+                        <BDropdown text="Restore Layout" class="mx-1">
+                            <BDropdownItemButton v-for="(_, layoutName) in gridStore.getAllLayouts" :key="layoutName"
+                                @click="handleRestoreLayout(layoutName)">
+                                {{ layoutName }}
+                            </BDropdownItemButton>
+                        </BDropdown>
                     </div>
 
                     <!-- Main Grid -->
-                    <MainGrid  ref="mainGrid" class="flex-grow-1" />
+                    <MainGrid ref="mainGrid" class="flex-grow-1" />
                 </main>
 
                 <!-- Right Sidebar -->
@@ -131,6 +137,7 @@
 <script setup lang="ts">
 import { onMounted, markRaw, watch, ref } from 'vue';
 import { useProjectStore } from './stores/projectStore';
+import { useGridStore } from './stores/gridStore';
 
 import LeftSideBar from './components/LeftSideBar.vue';
 import MainGrid from './components/MainGrid.vue';
@@ -152,6 +159,7 @@ const mainGrid = ref<typeof MainGrid | null>(null);
 
 // Initialize the store
 const projectStore = useProjectStore();
+const gridStore = useGridStore();
 
 
 
@@ -252,13 +260,60 @@ const handleAddTestGridItem = () => {
         id: 'test-grid-item' + crypto.randomUUID(),
         title: 'Test Grid Item',
         props: {
+            pluginState: {
+
+            }
         }
     });
 };
 
 const handleSaveLayout = () => {
-    const currentLayout = mainGrid.value?.getCurrentLayout();
-    console.log('Current layout:', currentLayout);
+    const getNextAvailableLayoutName = (existingNames: string[]): string => {
+        let index = 1;
+        while (existingNames.includes(`Layout ${index}`)) {
+            index++;
+        }
+        return `Layout ${index}`;
+    }
+
+    const existingNames = Object.keys(gridStore.getAllLayouts);
+    const layoutName = getNextAvailableLayoutName(existingNames);
+    gridStore.saveGridItemsAsLayout(layoutName);
+};
+
+
+const handleRestoreLayout = (layoutName: string) => {
+
+    gridItemManager.removeAllItems();
+
+
+    const layoutToRestore = gridStore.getLayoutByName(layoutName);
+    for (const itemId in layoutToRestore) {
+
+        const item = layoutToRestore[itemId];
+        const dataManager = new ApiDataManager();
+
+        dataManager.subscribeToTimestamp(simulationTimeObservable);
+        gridItemManager.addNewItem({
+            component: item.type,
+            x: item.position.x,
+            y: item.position.y,
+            w: item.size.width,
+            h: item.size.height,
+            id: item.id,
+            title: item.title,
+            props: {
+                // Add any additional props here
+                pluginState: item.state,
+            },
+            dependencies: {
+                dataManager
+            }
+        });
+
+    }
+
+
 };
 
 

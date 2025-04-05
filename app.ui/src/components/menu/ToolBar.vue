@@ -188,12 +188,14 @@ const handleAddScatter = () => {
 };
 
 const handleAddTestGridItem = () => {
+    const { x, y } = gridItemManager.suggestFreeSpace(5, 4);
+
     gridItemManager.addNewItem({
         component: 'TestGridItem',
-        x: 0,
-        y: 0,
-        w: 2,
-        h: 2,
+        x: x,
+        y: y,
+        w: 5,
+        h: 4,
         id: 'test-grid-item' + crypto.randomUUID(),
         title: 'Test Grid Item',
         props: {

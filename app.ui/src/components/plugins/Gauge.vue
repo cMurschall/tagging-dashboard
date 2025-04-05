@@ -1,38 +1,75 @@
 <template>
   <div ref="containerRef" style="width: 100%; height: 100%;">
+
+    <!-- <div>{{ pluginState }}</div> -->
+    <!-- <div>-----------</div> -->
+    <!-- <div>{{ gaugeOption }}</div> -->
     <Transition name="fade" mode="out-in">
       <div v-if="showMenu">
-        <BRow>
+        <BRow class="mb-2">
+          <BCol cols="12">
+            <h4>Gauge Options</h4>
+          </BCol>
+        </BRow>
+        <BRow class="mb-2">
           <BCol cols="12">
             <div rule=group>
-              <label for="column-filter-query">"Search Columns:"</label>
+              <label for="column-filter-query">Filter Columns:</label>
               <BFormInput onfocus="this.value=''" id="column-filter-query" v-model="searchQuery" type="text"
                 autocomplete="off" placeholder="Search columns..." />
             </div>
           </BCol>
         </BRow>
-        <BRow>
+        <BRow class="mb-2">
           <BCol cols="12">
             <BFormGroup label="Select Columns:">
-              <BFormSelect v-model="selectedColumn" :options="filteredColumns" select-size="3" />
+              <BFormSelect v-model="pluginState.selectedColumn" :options="filteredColumns" select-size="5" />
             </BFormGroup>
           </BCol>
         </BRow>
-        <BRow>
+        <BRow class="mb-2">
           <BCol cols="6">
             <BFormGroup label="Minimum Value:">
-              <BFormInput v-model="gaugeOption.series[0].min" type="number" />
+              <BFormInput v-model="pluginState.gaugeMin" type="number" />
             </BFormGroup>
           </BCol>
           <BCol cols="6">
             <BFormGroup label="Maximum Value:">
-              <BFormInput v-model="gaugeOption.series[0].max" type="number" />
+              <BFormInput v-model="pluginState.gaugeMax" type="number" />
+            </BFormGroup>
+          </BCol>
+        </BRow>
+
+        <BRow class="mb-2">
+          <BCol cols="6">
+            <BFormGroup label="The number of split segments:">
+              <BFormInput v-model="pluginState.gaugeCountSplits" type="number" />
+            </BFormGroup>
+          </BCol>
+          <BCol cols="6">
+            <BFormGroup label="Color:">
+              <BFormInput v-model="pluginState.gaugeColor" type="color" />
+            </BFormGroup>
+          </BCol>
+        </BRow>
+
+
+        <BRow class="mb-2">
+          <BCol cols="6">
+            <BFormGroup label="Detail formatter:">
+              <BFormInput v-model="pluginState.gaugeFormat" type="text" />
+            </BFormGroup>
+          </BCol>
+          <BCol cols="6">
+            <BFormGroup label="Math js converter:">
+              <BFormInput v-model="pluginState.gaugeConverter" type="text" />
             </BFormGroup>
           </BCol>
         </BRow>
       </div>
-      <VChart v-else ref="chartRef" :option="gaugeOption" :style="{ width: '100%', height: '100%' }" />
     </Transition>
+      <VChart ref="chartRef" :option="gaugeOption" :style="{ width: '100%', height: '100%' }" />
+
   </div>
 </template>
 
@@ -45,9 +82,10 @@ import { GaugeChart } from "echarts/charts";
 import { SVGRenderer } from "echarts/renderers";
 import { IDataManager, TimeseriesDataPoint } from "../../managers/iDataManager";
 import { Subscription } from "../../observable";
-import { safeFetch, PlayerApiClient as client } from "../../services/Utilities";
+import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue } from "../../services/Utilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
+import gridManager from "../../managers/gridItemManager";
 
 use([GaugeChart, SVGRenderer]);
 
@@ -56,16 +94,25 @@ use([GaugeChart, SVGRenderer]);
 // Inject the function from the parent
 const setCardTitle = inject('setCardTitle') as (title: string) => void;
 
+type PluginState = {
+  gaugeMin: number;
+  gaugeMax: number;
+
+  gaugeCountSplits:number;
+  gaugeColor: string;
+
+  gaugeFormat: string;
+  gaugeConverter: string | null;
+
+  selectedColumn: ColumnInfo | null;
+}
+
 
 
 interface GaugeProps {
-  min?: number,
-  max?: number,
-  label?: string,
-  width?: number,
-  height?: number,
-  color?: string,
   showMenu?: boolean,
+  id: string;
+  pluginState?: PluginState;
 }
 
 interface BFormSelectColumnInfo {
@@ -73,8 +120,28 @@ interface BFormSelectColumnInfo {
   value: ColumnInfo;
 }
 
-// Define component props
-const props = defineProps<GaugeProps>();
+// Define component props with default values
+const props = withDefaults(defineProps<GaugeProps>(), {
+  showMenu: false, // Default value for showMenu
+
+  id: '', // Default value for id
+
+  // Default values for properties within pluginState if pluginState is undefined
+  pluginState: () => ({
+    gaugeMin: 0,
+    gaugeMax: 100,
+    gaugeCountSplits: 10,
+    gaugeColor: "#007bff",
+    gaugeFormat: "{value:F2}",
+    gaugeConverter: "value * 1",
+
+    selectedColumn: null,
+  }),
+});
+
+
+// Define 
+const pluginState = ref<PluginState>(props.pluginState);
 
 // Default gauge options
 const gaugeOption = ref({
@@ -83,22 +150,35 @@ const gaugeOption = ref({
       type: "gauge",
       startAngle: 220,
       endAngle: -40,
-      min: props.min ?? 0,
-      max: props.max ?? 100,
+      min: pluginState.value.gaugeMin ?? 0,
+      max: pluginState.value.gaugeMax ?? 100,
       progress: { show: false },
       axisLine: {
         lineStyle: {
-          width: 2,
-          color: [[1, props.color ?? "#007bff"]],
+          width: 4,
+          color: [[1,pluginState.value.gaugeColor ??  "#007bff"]],
         },
       },
+      axisTick :{
+        show:false
+      },
+      splitNumber: pluginState.value.gaugeCountSplits ?? 10,
       detail: {
-        // color: "#fff",
+        offsetCenter : [0, '60%'],
         valueAnimation: false,
-        formatter: (x: number) => x.toFixed(2),
+        formatter: (x: number) => {
+          if (pluginState.value.gaugeFormat) {
+            if (pluginState.value.gaugeConverter) {
+              x = transformMathJsValue(x, pluginState.value.gaugeConverter);
+            }
+    
+            return formatWithTemplate(x, pluginState.value.gaugeFormat);
+          }
+          return x.toString();
+        },
         fontSize: 10
       },
-      data: [{ value: -1, name: props.label ?? "" }],
+      data: [{ value: -1, name: "" }],
     },
   ],
 });
@@ -111,7 +191,6 @@ const containerRef = ref(null);
 const chartRef = ref<typeof VChart | null>(null);
 
 const searchQuery = ref('');
-const selectedColumn = ref<ColumnInfo | null>(null);
 const availableColumns = ref<BFormSelectColumnInfo[]>([]);
 
 
@@ -129,21 +208,50 @@ const filteredColumns = computed(() => {
 });
 
 
-watch(selectedColumn, async (newVal) => {
-  console.log('Selected column:', newVal);
-  if (newVal) {
-    await dataManager.initialize([newVal.name]);
-    // gaugeOption.value.series[0].data[0].name = newVal.name;
-    setCardTitle(newVal.name);
+let lastSelectedColumn: ColumnInfo | null = null;
+
+watch(pluginState, async (newValue) => {
+
+  // check if the new values are different from the old values
+  if (newValue.gaugeMax !== gaugeOption.value.series[0].max) {
+    gaugeOption.value.series[0].max = newValue.gaugeMax;
   }
-});
+
+  if (newValue.gaugeMin !== gaugeOption.value.series[0].min) {
+    gaugeOption.value.series[0].min = newValue.gaugeMin;
+  }
+  if (newValue.gaugeCountSplits !== gaugeOption.value.series[0].splitNumber) {
+    gaugeOption.value.series[0].splitNumber = newValue.gaugeCountSplits;
+  }
+
+  if (newValue.gaugeColor !== gaugeOption.value.series[0].axisLine.lineStyle.color[0][1]) {
+    gaugeOption.value.series[0].axisLine.lineStyle.color[0][1] = newValue.gaugeColor;
+  }
+
+
+  const selectedColumnUpdated = newValue.selectedColumn != lastSelectedColumn;
+
+  // check if the selected column is different from the old value
+  if (selectedColumnUpdated && newValue.selectedColumn) {
+    await dataManager.initialize([newValue.selectedColumn.name]);
+    // gaugeOption.value.series[0].data[0].name = newVal.selectedColumn.name;
+    setCardTitle(newValue.selectedColumn.name);
+
+    lastSelectedColumn = newValue.selectedColumn;
+  }
+  // update the gridmanager with the new plugin state
+  gridManager.updateItemById(props.id, {
+    pluginState: { ...newValue }
+  });
+}, { deep: true });
+
+
+
+
 
 onMounted(async () => {
 
   await loadColumns();
-
-
-
   // Listen to resize events
   // Create a ResizeObserver to watch the container element
   if (containerRef.value) {
@@ -159,11 +267,11 @@ onMounted(async () => {
 
   subscription = dataManager.measurement$.subscribe((measurements: TimeseriesDataPoint) => {
     // check if measurements has our selected column name
-    if (!selectedColumn.value || !measurements.values[selectedColumn.value.name]) {
+    if (!pluginState.value.selectedColumn || !measurements.values[pluginState.value.selectedColumn.name]) {
       return;
     }
     // Use the gauge data.
-    gaugeOption.value.series[0].data[0].value = measurements.values[selectedColumn.value?.name ?? '']
+    gaugeOption.value.series[0].data[0].value = measurements.values[pluginState.value.selectedColumn?.name ?? '']
 
   });
 });
@@ -189,11 +297,11 @@ const loadColumns = async () => {
     // console.log('Numeric Columns loaded', numericColumns);
     availableColumns.value = numericColumns.map(x => ({ text: x.name, value: x }));
 
-    const preSelectedColumn = numericColumns.filter(c => c.name == 'car0_velocity_vehicle')
-    if (preSelectedColumn.length > 0) {
+    // const preSelectedColumn = numericColumns.filter(c => c.name == 'car0_velocity_vehicle')
+    // if (preSelectedColumn.length > 0) {
 
-      selectedColumn.value = preSelectedColumn[0];
-    }
+    //   pluginState.value.selectedColumn = preSelectedColumn[0];
+    // }
   }
   if (error) {
     console.error('Error loading columns:', error);

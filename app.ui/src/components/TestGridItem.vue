@@ -53,10 +53,6 @@ export default defineComponent({
   },
   setup() {
     const setCardTitle = inject('setCardTitle') as (title: string) => void;
-
-
-
-
     return {
       updateTitle: () => setCardTitle('Updated Title from Child '),
       seekTo

@@ -22,7 +22,7 @@ export class ApiDataManager implements IDataManager {
 
         return result;
       });
-      console.log('Data fetched:', this.timeseriesData);
+      console.log(`Data ${columns} fetched:`, this.timeseriesData);
     }
     else {
       console.error('Error fetching measurement data:', error);

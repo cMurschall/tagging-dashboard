@@ -1,4 +1,5 @@
 import * as RestClient from './../../services/restclient';
+import * as math from 'mathjs'
 import { TestDriveProjectInfoOutput, CreateProjectPayload, TestDriveVideoInfo } from './../../services/restclient';
 
 
@@ -56,7 +57,7 @@ export type { TestDriveProjectInfoOutput as TestDriveProjectInfo, CreateProjectP
 
 export function throttle<T extends (...args: any[]) => void>(func: T, limit: number): T {
   let lastCall = 0;
-  return function(this: any, ...args: any[]) {
+  return function (this: any, ...args: any[]) {
     const now = Date.now();
     if (now - lastCall >= limit) {
       lastCall = now;
@@ -64,3 +65,63 @@ export function throttle<T extends (...args: any[]) => void>(func: T, limit: num
     }
   } as T;
 }
+
+
+export const formatWithTemplate = (value: number, formatTemplate: string) => {
+  // Regular expression to find the placeholder and format specifier
+  const regex = /\{value(:([A-Za-z]\d*))?\}/;
+  const match = formatTemplate.match(regex);
+
+  if (!match) {
+    return formatTemplate.replace('{value}', String(value)); // Simple replacement if no format
+  }
+
+  const formatSpecifier = match[2];
+  let numberFormatOptions = {};
+
+  if (formatSpecifier) {
+    const formatType = formatSpecifier.charAt(0).toUpperCase();
+    const precision = parseInt(formatSpecifier.slice(1), 10);
+
+    switch (formatType) {
+      case 'F': // Fixed-point
+        numberFormatOptions = {
+          style: 'decimal',
+          minimumFractionDigits: isNaN(precision) ? 2 : precision,
+          maximumFractionDigits: isNaN(precision) ? 2 : precision,
+        };
+        break;
+      case 'P': // Percent
+        numberFormatOptions = {
+          style: 'percent',
+          minimumFractionDigits: isNaN(precision) ? 0 : precision,
+          maximumFractionDigits: isNaN(precision) ? 0 : precision,
+        };
+        break;
+      // Add more cases for other format specifiers as needed (e.g., N for number with grouping)
+      default:
+        console.warn(`Unsupported format specifier: ${formatSpecifier}`);
+    }
+  }
+
+  try {
+    const formatter = new Intl.NumberFormat('en-US', numberFormatOptions);
+    const formattedValue = formatter.format(value);
+    return formatTemplate.replace(match[0], formattedValue);
+  } catch (error) {
+    console.error("Error formatting number:", error);
+    return formatTemplate.replace(match[0], String(value));
+  }
+}
+
+
+
+export const transformMathJsValue = (value: number, expression: string) => {
+  try {
+    const scope = { value };
+    return math.evaluate(expression, scope);
+  } catch (error) {
+    console.error('Error evaluating expression:', error);
+    return value; // Return original value on error
+  }
+};

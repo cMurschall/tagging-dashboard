@@ -2,6 +2,7 @@
     <div style="{width : 100%}" class="d-flex flex-row justify-content-start align-items-center">
 
         <BDropdown text="Add Plugin" class="me-2">
+            <BDropdownItem @click="handleAddVideo">Add Video</BDropdownItem>
             <BDropdownItem @click="handleAddGauge">Add Gauge</BDropdownItem>
             <BDropdownItem @click="handleAddScatter">Add Chart</BDropdownItem>
             <BDropdownItem @click="handleAddList">Add List</BDropdownItem>
@@ -78,20 +79,11 @@
             </BModal>
         </BDropdown>
 
-
-
-        <!-- <BButton variant="primary" class="mx-1" @click="handleSaveLayout">Save Layout</BButton>
-        <BDropdown text="Restore Layout" class="mx-1">
-            <BDropdownItemButton v-for="layoutName in availableLayouts" :key="layoutName"
-                @click="handleRestoreLayout(layoutName)">
-                {{ layoutName }}
-            </BDropdownItemButton>
-        </BDropdown> -->
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import { useProjectStore } from './../../stores/projectStore';
 import { Observable } from '../../observable';
@@ -100,6 +92,8 @@ import gridItemManager from './../../managers/gridItemManager';
 import layoutManager, { StoredLayoutItem } from './../../managers/layoutManager';
 
 const simulationTimeObservable = new Observable<number>(0);
+
+
 const projectStore = useProjectStore();
 
 
@@ -121,6 +115,29 @@ let subscription: { unsubscribe: () => void } | null = null;
 
 
 
+const handleAddVideo = () => {
+
+
+    gridItemManager.addNewItem({
+        component: 'VideoPlayer',
+        x: 3,
+        y: 0,
+        w: 6,
+        h: 7,
+        id: 'video-player',
+        title: 'Video Player',
+        props: {
+            videoInfo: projectStore.loadedProject?.testDriveVideoInfo || {},
+            // simulationTimeObservable
+        },
+        dependencies: {
+            simulationTimeObservable
+        }
+    });
+};
+
+
+
 const handleAddGauge = () => {
     const dataManager = new ApiDataManager();
     dataManager.subscribeToTimestamp(simulationTimeObservable);
@@ -133,10 +150,6 @@ const handleAddGauge = () => {
         id: 'gauge-' + crypto.randomUUID(),
         title: '',
         props: {
-            // min: 0,
-            // max: 100,
-            // label: 'Speed',
-            color: '#007bff'
         },
         dependencies: {
             dataManager
@@ -176,10 +189,6 @@ const handleAddScatter = () => {
         id: 'scatter-' + crypto.randomUUID(),
         title: '',
         props: {
-            // min: 0,
-            // max: 100,
-            // label: 'Speed',
-            color: '#007bff'
         },
         dependencies: {
             dataManager
@@ -199,21 +208,12 @@ const handleAddTestGridItem = () => {
         id: 'test-grid-item' + crypto.randomUUID(),
         title: 'Test Grid Item',
         props: {
-            pluginState: {
-
-            }
         }
     });
 };
 
 
-
-watch(() => projectStore.currentSimulationTime, (newTime) => {
-    simulationTimeObservable.next(newTime);
-});
-
 onMounted(async () => {
-
     // Fetch the initial layout data when the component is mounted
     availableLayouts.value = layoutManager.getLayoutNames();
     subscription = layoutManager.layouts$.subscribe((layouts) => {
@@ -225,10 +225,8 @@ onMounted(async () => {
 
 
 const openSaveLayoutModal = () => {
-    // this.newLayoutName = '';
-    // this.overwriteLayoutId = null;
-    // this.$bvModal.show('save-layout-modal');
-
+    newLayoutName.value = '';
+    overwriteLayoutName.value = null;
     showSaveLayoutModal.value = true;
 }
 
@@ -272,9 +270,27 @@ const handleRestoreLayout = (layoutName: string) => {
 
     for (const item of layoutToRestore) {
 
-        const dataManager = new ApiDataManager();
 
-        dataManager.subscribeToTimestamp(simulationTimeObservable);
+
+        let componentProps: any = {
+            pluginState: item.pluginState,
+        };
+
+        let componentDependencies: any = {};
+
+        if (item.component === 'VideoPlayer') {
+            componentProps.videoInfo = projectStore.loadedProject?.testDriveVideoInfo || {};
+            componentDependencies.simulationTimeObservable = simulationTimeObservable;
+        } else {
+
+            const dataManager = new ApiDataManager();
+
+            dataManager.subscribeToTimestamp(simulationTimeObservable);
+            componentDependencies.dataManager = dataManager;
+        }
+
+
+
         gridItemManager.addNewItem({
             component: item.component,
             x: item.x,
@@ -283,14 +299,11 @@ const handleRestoreLayout = (layoutName: string) => {
             h: item.h,
             id: item.id,
             title: item.title,
-            props: {
-                // Add any additional props here
-                pluginState: item.pluginState,
-            },
-            dependencies: {
-                dataManager
-            }
+            props: componentProps,
+            dependencies: componentDependencies
         });
+
+
     }
 };
 

@@ -33,11 +33,19 @@ export class ApiDataManager implements IDataManager {
 
   subscribeToTimestamp(ts$: Observable<number>): void {
     ts$.subscribe((timestamp: number) => {
-      if (this.timeseriesData.length === 0) return;
+
+      if (this.timeseriesData.length === 0) {
+        console.warn('No timeseries data available to subscribe to.');
+        return;
+      }
 
       const nearest = findNearestDataPoint(this.timeseriesData, timestamp);
-      if (!nearest) return;
+      if (!nearest) {
+        console.warn('No nearest data point found for timestamp:', timestamp);
+        return;
+      }
 
+      console.log('Nearest data point found:', nearest);
       this.measurement$.next(nearest);
     });
   }

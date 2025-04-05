@@ -68,7 +68,10 @@
         </BRow>
       </div>
     </Transition>
-      <VChart ref="chartRef" :option="gaugeOption" :style="{ width: '100%', height: '100%' }" />
+    <div v-if="!pluginState.selectedColumn">
+      <h4>No data column selected. Open options to select.</h4>
+    </div>
+    <VChart v-else ref="chartRef" :option="gaugeOption" :style="{ width: '100%', height: '100%' }" />
 
   </div>
 </template>
@@ -98,7 +101,7 @@ type PluginState = {
   gaugeMin: number;
   gaugeMax: number;
 
-  gaugeCountSplits:number;
+  gaugeCountSplits: number;
   gaugeColor: string;
 
   gaugeFormat: string;
@@ -156,22 +159,28 @@ const gaugeOption = ref({
       axisLine: {
         lineStyle: {
           width: 4,
-          color: [[1,pluginState.value.gaugeColor ??  "#007bff"]],
+          color: [[1, pluginState.value.gaugeColor ?? "#007bff"]],
         },
       },
-      axisTick :{
-        show:false
+      axisTick: {
+        show: false
+      },
+      axisLabel: {
+        show: true,
+        formatter: (value: number) => {
+          if (Math.abs(value) > 1) {
+            return value.toFixed(0);
+          } else {
+            return value.toFixed(2);
+          }
+        },
       },
       splitNumber: pluginState.value.gaugeCountSplits ?? 10,
       detail: {
-        offsetCenter : [0, '60%'],
+        offsetCenter: [0, '60%'],
         valueAnimation: false,
         formatter: (x: number) => {
           if (pluginState.value.gaugeFormat) {
-            if (pluginState.value.gaugeConverter) {
-              x = transformMathJsValue(x, pluginState.value.gaugeConverter);
-            }
-    
             return formatWithTemplate(x, pluginState.value.gaugeFormat);
           }
           return x.toString();
@@ -264,14 +273,28 @@ onMounted(async () => {
     resizeObserver.observe(containerRef.value);
   }
 
+  // check if we have a selected column
+  if (pluginState.value.selectedColumn) {
+    await dataManager.initialize([pluginState.value.selectedColumn.name]);
+    // gaugeOption.value.series[0].data[0].name = pluginState.value.selectedColumn.name;
+    setCardTitle(pluginState.value.selectedColumn.name);
+  } else {
+    setCardTitle('No column selected');
+  }
 
   subscription = dataManager.measurement$.subscribe((measurements: TimeseriesDataPoint) => {
+    console.log('Received measurements:', measurements);
     // check if measurements has our selected column name
     if (!pluginState.value.selectedColumn || !measurements.values[pluginState.value.selectedColumn.name]) {
       return;
     }
     // Use the gauge data.
-    gaugeOption.value.series[0].data[0].value = measurements.values[pluginState.value.selectedColumn?.name ?? '']
+
+    let x = measurements.values[pluginState.value.selectedColumn?.name ?? ''];
+    if (pluginState.value.gaugeConverter) {
+      x = transformMathJsValue(x, pluginState.value.gaugeConverter);
+    }
+    gaugeOption.value.series[0].data[0].value = x
 
   });
 });

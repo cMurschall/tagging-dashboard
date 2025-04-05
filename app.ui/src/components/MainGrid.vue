@@ -106,8 +106,8 @@ export default defineComponent({
                         const gridStoreItem = gridManager.getGridItems().find(item => item.id === widget.id);
                         if (gridStoreItem) {
                             for (const key in gridStoreItem.dependencies) {
-                                const d = gridStoreItem.dependencies[key];
-                                console.log('Providing', key, d.measurement$.getValue());
+                                // const d = gridStoreItem.dependencies[key];
+                                // console.log('Providing', key, d.measurement$.getValue());
                                 provide(key, readonly(markRaw(gridStoreItem.dependencies[key])));
                             }
                         }

@@ -17,7 +17,7 @@ export const useProjectStore = defineStore('app', {
 
     isLoading: false,
 
-    currentSimulationTime: 0,
+    // currentSimulationTime: 0,
 
   }),
   getters: {

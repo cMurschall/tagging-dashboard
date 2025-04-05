@@ -175,184 +175,42 @@ onMounted(async () => {
 });
 
 
-// watch(() => projectStore.currentSimulationTime, (newTime) => {
-//     simulationTimeObservable.next(newTime);
-// });
 
-// const handleAddGauge = () => {
-//     const dataManager = new ApiDataManager();
-//     dataManager.subscribeToTimestamp(simulationTimeObservable);
-//     gridItemManager.addNewItem({
-//         component: 'Gauge',
-//         x: 0,
-//         y: 0,
-//         w: 3,
-//         h: 5,
-//         id: 'gauge-' + crypto.randomUUID(),
-//         title: '',
-//         props: {
-//             // min: 0,
-//             // max: 100,
-//             // label: 'Speed',
-//             color: '#007bff'
-//         },
-//         dependencies: {
-//             dataManager
+// watch(
+//     () => projectStore.loadedProject,
+//     (newProject, oldProject) => {
+//         console.log('loadedProject changed from', oldProject, 'to', newProject);
+//         if (newProject) {
+
+//             const simulationTimeObservable = new Observable<number>(0);
+
+//             simulationTimeObservable.subscribe((time) => {
+//                 // console.log('Simulation time:', time);
+//                 projectStore.updateSimulationTime(time);
+//             });
+
+//             gridItemManager.addNewItem<{
+//                 videoInfo: TestDriveVideoInfo,
+//                 simulationTimeObservable: Observable<number>
+//             }>({
+//                 component: 'VideoPlayer',
+//                 x: 3,
+//                 y: 0,
+//                 w: 6,
+//                 h: 7,
+//                 id: 'video-player',
+//                 title: 'Video Player',
+//                 props: {
+//                     videoInfo: projectStore.loadedProject?.testDriveVideoInfo || {},
+//                     simulationTimeObservable
+//                 }
+//             });
+//         } else {
+//             console.info('The project was unloaded.');
+//             gridItemManager.removeAllItems();
 //         }
-//     });
-// };
-
-// const handleAddList = () => {
-//     const dataManager = new ApiDataManager();
-//     dataManager.subscribeToTimestamp(simulationTimeObservable);
-//     gridItemManager.addNewItem({
-//         component: 'ListView',
-//         x: 0,
-//         y: 0,
-//         w: 3,
-//         h: 5,
-//         id: 'list-' + crypto.randomUUID(),
-//         title: '',
-//         props: {
-//         },
-//         dependencies: {
-//             dataManager
-//         }
-//     });
-// };
-
-
-// const handleAddScatter = () => {
-//     const dataManager = new ApiDataManager();
-//     dataManager.subscribeToTimestamp(simulationTimeObservable);
-//     gridItemManager.addNewItem({
-//         component: 'ScatterPlot',
-//         x: 0,
-//         y: 0,
-//         w: 7,
-//         h: 4,
-//         id: 'scatter-' + crypto.randomUUID(),
-//         title: '',
-//         props: {
-//             // min: 0,
-//             // max: 100,
-//             // label: 'Speed',
-//             color: '#007bff'
-//         },
-//         dependencies: {
-//             dataManager
-//         }
-//     });
-// };
-
-// const handleAddTestGridItem = () => {
-//     gridItemManager.addNewItem({
-//         component: 'TestGridItem',
-//         x: 0,
-//         y: 0,
-//         w: 2,
-//         h: 2,
-//         id: 'test-grid-item' + crypto.randomUUID(),
-//         title: 'Test Grid Item',
-//         props: {
-//             pluginState: {
-
-//             }
-//         }
-//     });
-// };
-
-// const handleSaveLayout = () => {
-//     const getNextAvailableLayoutName = (existingNames: string[]): string => {
-//         let index = 1;
-//         while (existingNames.includes(`Layout ${index}`)) {
-//             index++;
-//         }
-//         return `Layout ${index}`;
 //     }
-
-//     const existingNames = Object.keys(layoutManager.getLayoutNames());
-//     const layoutName = getNextAvailableLayoutName(existingNames);
-
-//     const items = gridItemManager.getGridItems().map(item => ({ ...item }));
-//     layoutManager.saveLayout(layoutName, items);
-// };
-
-
-// const handleRestoreLayout = (layoutName: string) => {
-
-//     gridItemManager.removeAllItems();
-
-
-//     const layoutToRestore = layoutManager.getLayout(layoutName);
-//     if (!layoutToRestore) {
-//         console.error(`Layout "${layoutName}" not found.`);
-//         return;
-//     }
-
-//     for (const item of layoutToRestore) {
-
-//         const dataManager = new ApiDataManager();
-
-//         dataManager.subscribeToTimestamp(simulationTimeObservable);
-//         gridItemManager.addNewItem({
-//             component: item.component,
-//             x: item.x,
-//             y: item.y,
-//             w: item.w,
-//             h: item.h,
-//             id: item.id,
-//             title: item.title,
-//             props: {
-//                 // Add any additional props here
-//                 pluginState: item.pluginState,
-//             },
-//             dependencies: {
-//                 dataManager
-//             }
-//         });
-
-//     }
-
-
-// };
-
-
-watch(
-    () => projectStore.loadedProject,
-    (newProject, oldProject) => {
-        console.log('loadedProject changed from', oldProject, 'to', newProject);
-        if (newProject) {
-
-            const simulationTimeObservable = new Observable<number>(0);
-
-            simulationTimeObservable.subscribe((time) => {
-                // console.log('Simulation time:', time);
-                projectStore.updateSimulationTime(time);
-            });
-
-            gridItemManager.addNewItem<{
-                videoInfo: TestDriveVideoInfo,
-                simulationTimeObservable: Observable<number>
-            }>({
-                component: 'VideoPlayer',
-                x: 3,
-                y: 0,
-                w: 6,
-                h: 7,
-                id: 'video-player',
-                title: 'Video Player',
-                props: {
-                    videoInfo: projectStore.loadedProject?.testDriveVideoInfo || {},
-                    simulationTimeObservable
-                }
-            });
-        } else {
-            console.info('The project was unloaded.');
-            gridItemManager.removeAllItems();
-        }
-    }
-);
+// );
 
 </script>
 

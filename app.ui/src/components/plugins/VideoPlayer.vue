@@ -7,9 +7,9 @@
     <div v-if="error" class="alert alert-danger mt-3">
       {{ error }}
     </div>
-    <div>
+    <!-- <div>
       {{ currentSimulationTimeString }}
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -27,7 +27,7 @@ const setCardTitle = inject('setCardTitle') as (title: string) => void;
 
 interface VideoPlayerProps {
   videoInfo: TestDriveVideoInfo,
-  simulationTimeObservable: Observable<number>
+  // simulationTimeObservable: Observable<number>
 }
 
 export interface VideoPlayer extends Player {
@@ -58,11 +58,16 @@ const videoOptions = ref<PlayerOptions>({
 })
 
 
-let lastProcessedSecond = -1;
-
-
 const error = ref<string | undefined>(undefined)
 const currentSimulationTimeString = ref<string>('');
+
+
+
+const simulationTimeObservable = inject<Observable<number>>('simulationTimeObservable');
+if (!simulationTimeObservable) {
+  throw new Error('simulationTimeObservable not provided');
+}
+
 
 
 const loadVideo = (videoInfo: TestDriveVideoInfo) => {
@@ -188,10 +193,7 @@ const synchronizeData = (currentSecond: number, simulationStart: number) => {
 
   currentSimulationTimeString.value = `Simulation time: ${simulationTimeInSeconds.toFixed(3)}s - from video: ${timeString}`;
 
-  if (!props.simulationTimeObservable.next) {
-    Object.setPrototypeOf(props.simulationTimeObservable, Observable.prototype);
-  }
-  props.simulationTimeObservable.next(simulationTimeInSeconds);
+  simulationTimeObservable.next(simulationTimeInSeconds);
 
 }
 

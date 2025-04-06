@@ -7,7 +7,7 @@
     <div v-if="error" class="alert alert-danger mt-3">
       {{ error }}
     </div>
-    <div v-if="false">
+    <div v-if="isDevMode()">
       <span>{{ currentSimulationTimeString }}</span>
       <pre>{{ props.videoInfo }}</pre>
     </div>
@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, inject } from 'vue';
-import { ApiPath, TestDriveVideoInfo } from './../../services/Utilities';
+import { ApiPath, TestDriveVideoInfo, isDevMode } from './../../services/Utilities';
 import { Observable } from './../../observable';
 import { useVideoControl } from './../../composables/useVideoControl'
 import videojs from "video.js";
@@ -55,6 +55,7 @@ const videoOptions = ref<PlayerOptions>({
   controls: true,
   autoplay: true,
   preload: 'auto',
+  muted: true,
   fluid: true,
   sources: [],
   aspectRatio: '16:9',
@@ -62,7 +63,11 @@ const videoOptions = ref<PlayerOptions>({
   controlBar: {
     volumePanel: {
       inline: false,
+
     },
+    remainingTimeDisplay: {
+      displayNegative: false,
+    }
   },
 })
 
@@ -145,6 +150,7 @@ onMounted(() => {
     return;
   }
 
+
   videoPlayer.value = videojs(videoElement.value, videoOptions.value, function () {
     console.log('Video player is ready');
     console.log('Video.js plugins:', videojs.getPlugins());
@@ -169,7 +175,7 @@ onMounted(() => {
     videoPlayer.value?.on('seeked', updateTime);
     videoPlayer.value?.on('pause', updateTime);
 
-    
+
 
     videoPlayer.value?.getChild('ControlBar')?.addChild('FrameByFrameButton', {
       fps: props?.videoInfo?.videoFrameRate,
@@ -177,7 +183,7 @@ onMounted(() => {
     });
     videoPlayer.value?.getChild('ControlBar')?.addChild('FrameByFrameButton', {
       fps: props?.videoInfo?.videoFrameRate,
-      value:  (props?.videoInfo?.videoFrameRate ?? 30)
+      value: (props?.videoInfo?.videoFrameRate ?? 30)
     });
     videoPlayer.value?.getChild('ControlBar')?.addChild('FrameByFrameButton', {
       fps: props?.videoInfo?.videoFrameRate,
@@ -187,6 +193,14 @@ onMounted(() => {
       fps: props?.videoInfo?.videoFrameRate,
       value: -10
     });
+
+    // remove VolumePanel from the control bar
+    const volumePanel = videoPlayer.value?.getChild('ControlBar')?.getChild('VolumePanel');
+    if (volumePanel) {
+      videoPlayer.value?.getChild('ControlBar')?.removeChild(volumePanel);
+    }
+
+
 
 
     // Ensure loadVideo is called only after the video player is ready
@@ -213,15 +227,19 @@ const synchronizeData = (currentSecond: number, simulationStart: number) => {
 
 
   const simulationTimeInSeconds = simulationStart + currentSecond
-  const simulationTime_Minutes = Math.floor(simulationTimeInSeconds / 60);
-  const simulationTime_Seconds = simulationTimeInSeconds % 60;
-  const simulationTime_Milliseconds = simulationTimeInSeconds * 1000 % 1000;
 
-  const frameCount = Math.floor(simulationTimeInSeconds * (props.videoInfo.videoFrameRate ?? 30));
+  if (isDevMode()) {
+    const simulationTime_Minutes = Math.floor(simulationTimeInSeconds / 60);
+    const simulationTime_Seconds = simulationTimeInSeconds % 60;
+    const simulationTime_Milliseconds = simulationTimeInSeconds * 1000 % 1000;
 
-  const timeString = `${simulationTime_Minutes.toFixed(0).padStart(2, '0')}:${simulationTime_Seconds.toFixed(0).padStart(2, '0')}.${simulationTime_Milliseconds.toFixed(0).padStart(3, '0')}`;
+    const frameCount = Math.floor(simulationTimeInSeconds * (props.videoInfo.videoFrameRate ?? 30));
 
-  currentSimulationTimeString.value = `Simulation time: ${simulationTimeInSeconds.toFixed(3)}s - from video: ${timeString}. Frame: ${frameCount}`;
+    const timeString = `${simulationTime_Minutes.toFixed(0).padStart(2, '0')}:${simulationTime_Seconds.toFixed(0).padStart(2, '0')}.${simulationTime_Milliseconds.toFixed(0).padStart(3, '0')}`;
+
+    currentSimulationTimeString.value = `Simulation time: ${simulationTimeInSeconds.toFixed(3)}s - from video: ${timeString}. Frame: ${frameCount}`;
+
+  }
 
   simulationTimeObservable.next(simulationTimeInSeconds);
 

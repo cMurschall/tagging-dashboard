@@ -75,17 +75,30 @@
                         </BListGroupItem>
                         <BListGroupItem>
                             <strong>Avg. Speed:</strong><br>
-                            {{ ((projectStore.loadedProject?.testDriveDataInfo?.averageSpeedMS ?? 0)* 3.6).toFixed(2) }}
+                            {{ ((projectStore.loadedProject?.testDriveDataInfo?.averageSpeedMS ?? 0) * 3.6).toFixed(2)
+                            }}
                             km/h
                         </BListGroupItem>
                         <BListGroupItem>
                             <strong>Top Speed:</strong><br>
-                            {{ ((projectStore.loadedProject?.testDriveDataInfo?.maxSpeedMS ?? 0) * 3.6).toFixed(2) }} km/h
+                            {{ ((projectStore.loadedProject?.testDriveDataInfo?.maxSpeedMS ?? 0) * 3.6).toFixed(2) }}
+                            km/h
                         </BListGroupItem>
                         <BListGroupItem>
                             <strong>Distance:</strong><br>
-                            {{ ((projectStore.loadedProject?.testDriveDataInfo?.drivenDistanceM ?? 0) / 1000 ).toFixed(2)
+                            {{ ((projectStore.loadedProject?.testDriveDataInfo?.drivenDistanceM ?? 0) / 1000
+                            ).toFixed(2)
                             }} km
+                        </BListGroupItem>
+
+
+                        <BListGroupItem>
+                            <strong>Data/Video Overlap:</strong><br>
+
+
+                            <TimelineRange
+                             :testDriveDataInfo="projectStore.loadedProject?.testDriveDataInfo ?? null"
+                                :testDriveVideoInfo="projectStore.loadedProject?.testDriveVideoInfo ?? null" />
                         </BListGroupItem>
                     </BListGroup>
 
@@ -110,11 +123,12 @@
 
 <script setup lang="ts">
 import ProjectListItem from './ProjectListItem.vue';
+import TimelineRange from './TimelineRange.vue'
 
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useProjectStore } from './../stores/projectStore';
 
-import { useToastController } from 'bootstrap-vue-next'
+import { useToastController, BProgress, BProgressBar } from 'bootstrap-vue-next'
 import { CreateProjectPayload } from '../services/Utilities';
 
 import { safeFetch, ProjectApiClient as client } from './../services/Utilities';
@@ -140,6 +154,8 @@ function createDefaultProjectPayload(): CreateProjectPayload {
 
 const showNewProjectModal = ref(false)
 const newProjectPayload = ref<CreateProjectPayload>(createDefaultProjectPayload())
+
+
 
 const createNewProject = async () => {
     // Add your project creation logic here
@@ -185,4 +201,8 @@ const handleUnloadProject = async () => {
 }
 </script>
 
-<style></style>
+<style>
+.progress-bar {
+    position: relative !important;
+}
+</style>

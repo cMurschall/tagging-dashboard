@@ -136,3 +136,9 @@ export const areArraysSameUnordered = <T>(arr1: T[], arr2: T[]): boolean => {
   const set2 = new Set(arr2);
   return !(arr1.some(item => !set2.has(item)) || arr2.some(item => !set1.has(item)));
 }
+
+
+// check if we are in development mode
+export const isDevMode = (): boolean => {
+  return import.meta.env.MODE == 'development';
+};

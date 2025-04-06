@@ -1,12 +1,18 @@
+import logging
+
 import pandas as pd
 
 from app.models.testDriveDataInfo import TestDriveDataInfo
+
+logger = logging.getLogger(__name__)
 
 
 def analyze_data(data_info: TestDriveDataInfo) -> bool:
     is_data_analyzed = data_info.driven_time_s > 0
     if is_data_analyzed:
         return False  # no update needed
+
+    logger.info(f"Analyzing data for {data_info.csv_file_name}...")
 
     # skip first row
     df = pd.read_csv(data_info.csv_file_full_path, skiprows=[1])
@@ -32,5 +38,9 @@ def analyze_data(data_info: TestDriveDataInfo) -> bool:
     data_info.driven_time_s = duration
     data_info.average_speed_m_s = average_speed
     data_info.max_speed_m_s = max_speed
+
+    data_info.data_simulation_time_start_s = start_time
+    data_info.data_simulation_time_end_s = end_time
+    data_info.data_count_rows = len(df)
 
     return True  # update needed

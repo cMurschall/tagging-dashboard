@@ -43,6 +43,7 @@ declare module 'vue' {
     ProjectListItem: typeof import('./src/components/ProjectListItem.vue')['default']
     ScatterPlot: typeof import('./src/components/plugins/ScatterPlot.vue')['default']
     TestGridItem: typeof import('./src/components/TestGridItem.vue')['default']
+    TimelineRange: typeof import('./src/components/TimelineRange.vue')['default']
     ToolBar: typeof import('./src/components/menu/ToolBar.vue')['default']
     VideoPlayer: typeof import('./src/components/plugins/VideoPlayer.vue')['default']
     WindowManager: typeof import('./src/components/WindowManager.vue')['default']

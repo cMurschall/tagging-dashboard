@@ -129,9 +129,9 @@ import { computed, ref } from 'vue'
 import { useProjectStore } from './../stores/projectStore';
 
 import { useToastController, BProgress, BProgressBar } from 'bootstrap-vue-next'
-import { CreateProjectPayload } from '../services/Utilities';
+import { CreateProjectPayload } from '../services/utilities';
 
-import { safeFetch, ProjectApiClient as client } from './../services/Utilities';
+import { safeFetch, ProjectApiClient as client } from '../services/utilities';
 import { BFormGroup } from 'bootstrap-vue-next';
 
 

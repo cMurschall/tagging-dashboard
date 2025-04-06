@@ -105,9 +105,9 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, inject, watch } from 'vue';
-import { IDataManager, TimeseriesDataPoint } from '../../managers/iDataManager';
+import { DataManager, TimeseriesDataPoint } from '../../managers/dataManager';
 import { Subscription } from '../../observable';
-import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue } from "../../services/Utilities";
+import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue } from "../../services/utilities";
 import { BCol, BFormSelect, BRow, BButton, BFormInput, BTr, BTd, BTh, BTableSimple, BThead, BTbody } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import gridManager from '../../managers/gridItemManager';
@@ -154,7 +154,7 @@ interface BFormSelectColumnInfo {
 }
 
 
-const dataManager = inject<IDataManager>('dataManager');
+const dataManager = inject<DataManager>('dataManager');
 if (!dataManager) {
     throw new Error('dataManager not provided');
 }

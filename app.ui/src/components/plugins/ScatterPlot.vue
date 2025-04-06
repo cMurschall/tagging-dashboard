@@ -40,9 +40,9 @@ import { ECElementEvent, ElementEvent, use } from "echarts/core";
 import { ScatterChart, LineChart } from "echarts/charts";
 import { CanvasRenderer } from "echarts/renderers";
 import { GridComponent, TooltipComponent } from 'echarts/components';
-import { IDataManager, TimeseriesDataPoint } from "../../managers/iDataManager";
+import { DataManager, TimeseriesDataPoint } from "../../managers/dataManager";
 import { Subscription } from "../../observable";
-import { safeFetch, PlayerApiClient as client } from "../../services/Utilities";
+import { safeFetch, PlayerApiClient as client } from "../../services/utilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 
@@ -145,7 +145,7 @@ const yAxisExpression = ref<string>('y'); // Default expression
 let resizeObserver: ResizeObserver | null = null;
 let subscription: Subscription | undefined;
 
-const dataManager = inject<IDataManager>('dataManager');
+const dataManager = inject<DataManager>('dataManager');
 if (!dataManager) {
   throw new Error('dataManager not provided');
 }

@@ -79,9 +79,9 @@ import VChart from "vue-echarts";
 import { use } from "echarts/core";
 import { GaugeChart } from "echarts/charts";
 import { SVGRenderer } from "echarts/renderers";
-import { IDataManager, TimeseriesDataPoint } from "../../managers/iDataManager";
+import { DataManager, TimeseriesDataPoint } from "../../managers/dataManager";
 import { Subscription } from "../../observable";
-import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue } from "../../services/Utilities";
+import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue } from "../../services/utilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import gridManager from "../../managers/gridItemManager";
@@ -202,7 +202,7 @@ const availableColumns = ref<BFormSelectColumnInfo[]>([]);
 let resizeObserver: ResizeObserver | null = null;
 let subscription: Subscription | undefined;
 
-const dataManager = inject<IDataManager>('dataManager');
+const dataManager = inject<DataManager>('dataManager');
 if (!dataManager) {
   throw new Error('dataManager not provided');
 }

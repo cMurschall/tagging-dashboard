@@ -129,7 +129,7 @@ import { useProjectStore } from './stores/projectStore';
 import ToolBar from './components/menu/ToolBar.vue';
 import LeftSideBar from './components/LeftSideBar.vue';
 import MainGrid from './components/MainGrid.vue';
-import { TestDriveVideoInfo } from './services/Utilities';
+import { TestDriveVideoInfo } from './services/utilities';
 import { Observable } from './observable';
 
 import VideoPlayer from './components/plugins/VideoPlayer.vue';

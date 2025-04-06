@@ -1,6 +1,6 @@
-import * as RestClient from './../../services/restclient';
+import * as RestClient from '../../services/restclient';
 import * as math from 'mathjs'
-import { TestDriveProjectInfoOutput, CreateProjectPayload, TestDriveVideoInfo } from './../../services/restclient';
+import { TestDriveProjectInfoOutput, CreateProjectPayload, TestDriveVideoInfo } from '../../services/restclient';
 
 
 
@@ -14,25 +14,6 @@ export async function safeFetch<T>(fetchFunction: () => Promise<T>): Promise<[Er
   }
 }
 
-// export async function safeFetch<T>(fetchFunction: () => Promise<Response>): Promise<[Error | null, T | null]> {
-//   try {
-//     const response = await fetchFunction();
-
-//     // Check if the HTTP status is not OK
-//     if (!response.ok) {
-//       const error = new Error(`HTTP error! Status: ${response.status} - ${response.statusText}`);
-//       // console.error('API Error:', error.message);
-//       throw error;
-//     }
-
-//     // Parse the response as JSON (or any other expected format)
-//     const data: T = await response.json();
-//     return [null, data]; // No error, return data
-//   } catch (error: any) {
-//     // console.error('API Error:', error.message || error);
-//     return [error, null]; // Return error, no data
-//   }
-// }
 
 export const BasePath = 'http://localhost:8888';
 export const ApiPath = BasePath + '/api/v1';
@@ -114,12 +95,34 @@ export const formatWithTemplate = (value: number, formatTemplate: string): strin
   }
 }
 
-
-
+const compiledExpressions: { [expression: string]: math.EvalFunction } = {};
 export const transformMathJsValue = (value: number, expression: string): number => {
   try {
+    // Check if the expression has already been compiled
+    if (!compiledExpressions[expression]) {
+      // Compile the expression and store it
+      compiledExpressions[expression] = math.compile(expression);
+    }
+
+    // Retrieve the compiled expression
+    const compiledExpression = compiledExpressions[expression];
+
+    // Evaluate the compiled expression with the scope
     const scope = { value };
-    return math.evaluate(expression, scope);
+    const evaluated = compiledExpression.evaluate(scope);
+
+    return evaluated as number;
+  } catch (error) {
+    console.error('Error evaluating expression:', error);
+    return value; // Return original value on error
+  }
+};
+
+export const transformMathJsValueNoCompile = (value: number, expression: string): number => {
+  try {
+    const scope = { value };
+    const evaluated = math.evaluate(expression, scope);
+    return evaluated as number;
   } catch (error) {
     console.error('Error evaluating expression:', error);
     return value; // Return original value on error

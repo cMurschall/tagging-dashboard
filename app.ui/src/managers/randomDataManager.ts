@@ -1,9 +1,9 @@
 // RandomSpeedDataManager.ts
 
 import { Observable } from "./../observable";
-import type { IDataManager, TimeseriesDataPoint } from "./iDataManager";
+import { DataManager, TimeseriesDataPoint } from "./dataManager";
 
-export class RandomDataManager implements IDataManager {
+export class RandomDataManager extends DataManager {
     measurement$: Observable<TimeseriesDataPoint>;
     private currentSpeed: number;
     private minSpeed: number;
@@ -24,6 +24,7 @@ export class RandomDataManager implements IDataManager {
         maxSpeed: number = 220,
         accelerationFactor: number = 5
     ) {
+        super();
         this.currentSpeed = initialSpeed;
         this.minSpeed = minSpeed;
         this.maxSpeed = maxSpeed;

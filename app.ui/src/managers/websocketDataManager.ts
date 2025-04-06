@@ -1,8 +1,8 @@
 
-import { findNearestDataPoint, IDataManager, TimeseriesDataPoint } from "./iDataManager";
+import { DataManager, TimeseriesDataPoint } from "./dataManager";
 import { Observable } from "./../observable";
 
-export class WebsocketDataManager implements IDataManager {
+export class WebsocketDataManager extends DataManager {
   timeseriesData: TimeseriesDataPoint[] = [];
   measurement$: Observable<TimeseriesDataPoint>;
   ws: WebSocket;
@@ -11,6 +11,8 @@ export class WebsocketDataManager implements IDataManager {
   constructor(
     public wsUrl: string,
   ) {
+    super();
+
     this.measurement$ = new Observable();
     this.ws = new WebSocket(wsUrl);
 
@@ -50,7 +52,7 @@ export class WebsocketDataManager implements IDataManager {
   subscribeToTimestamp(ts$: Observable<number>): void {
     ts$.subscribe((timestamp: number) => {
       if (this.timeseriesData.length === 0) return;
-      const nearest = findNearestDataPoint(this.timeseriesData, timestamp);
+      const nearest = this.findNearestDataPoint(this.timeseriesData, timestamp);
       if (!nearest) return;
 
       this.measurement$.next(nearest);

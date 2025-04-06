@@ -42,7 +42,7 @@ export class FrameByFrameButton extends Button {
 
         const value = this.options_.value;
         const displayValue = `${value > 0 ? '+' : value < 0 ? '-' : ''}${Math.abs(value)}f`
-        
+
 
 
         const el = super.createEl('button', {

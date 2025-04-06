@@ -5,10 +5,9 @@ import vue from '@vitejs/plugin-vue';
 
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [vue(),
-    Components({
-        resolvers: [BootstrapVueNextResolver()],
-    }),
+    plugins: [
+        vue(),
+        Components({ resolvers: [BootstrapVueNextResolver()] })
     ],
     build: {
         sourcemap: true,

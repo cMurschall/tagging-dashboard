@@ -1,10 +1,10 @@
 // ApiDataManager.ts
-import { findNearestDataPoint, IDataManager, TimeseriesDataPoint } from "./iDataManager";
+import { DataManager, TimeseriesDataPoint } from "./dataManager";
 import { Observable } from "./../observable";
-import { safeFetch, PlayerApiClient as client } from "../services/Utilities";
+import { safeFetch, PlayerApiClient as client } from "../services/utilities";
 
 
-export class ApiDataManager implements IDataManager {
+export class ApiDataManager extends DataManager {
 
   timeseriesData: TimeseriesDataPoint[] = [];
   measurement$: Observable<TimeseriesDataPoint> = new Observable();
@@ -40,7 +40,7 @@ export class ApiDataManager implements IDataManager {
         return;
       }
 
-      const nearest = findNearestDataPoint(this.timeseriesData, timestamp);
+      const nearest = this.findNearestDataPoint(this.timeseriesData, timestamp);
       if (!nearest) {
         console.warn('No nearest data point found for timestamp:', timestamp);
         return;

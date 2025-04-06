@@ -32,6 +32,7 @@ export class RandomDataManager implements IDataManager {
     }
 
 
+
     getAllMeasurements(): TimeseriesDataPoint[] {
         const measurements: TimeseriesDataPoint[] = [];
         for (let i = 0; i < 10; i++) {
@@ -69,5 +70,10 @@ export class RandomDataManager implements IDataManager {
                 }
             });
         });
+    }
+
+
+    getColumnNames(): string[] {
+        return this.measurementKeys;
     }
 }

@@ -5,6 +5,7 @@ import { safeFetch, PlayerApiClient as client } from "../services/Utilities";
 
 
 export class ApiDataManager implements IDataManager {
+
   timeseriesData: TimeseriesDataPoint[] = [];
   measurement$: Observable<TimeseriesDataPoint> = new Observable();
 
@@ -55,6 +56,13 @@ export class ApiDataManager implements IDataManager {
 
   getAllMeasurements(): TimeseriesDataPoint[] {
     return this.timeseriesData;
+  }
+
+  getColumnNames(): string[] {
+    if (this.timeseriesData.length === 0) {
+      return [];
+    }
+    return Object.keys(this.timeseriesData[0].values);
   }
 }
 

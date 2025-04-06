@@ -1,9 +1,5 @@
 <template>
   <div ref="containerRef" style="width: 100%; height: 100%;">
-
-    <!-- <div>{{ pluginState }}</div> -->
-    <!-- <div>-----------</div> -->
-    <!-- <div>{{ gaugeOption }}</div> -->
     <Transition name="fade" mode="out-in">
       <div v-if="showMenu">
         <BRow class="mb-2">
@@ -57,12 +53,12 @@
         <BRow class="mb-2">
           <BCol cols="6">
             <BFormGroup label="Detail formatter:">
-              <BFormInput v-model="pluginState.gaugeFormat" type="text" />
+              <BFormInput v-model="pluginState.gaugeFormat" type="text"      style="font-family: monospace ;"/>
             </BFormGroup>
           </BCol>
           <BCol cols="6">
             <BFormGroup label="Math js converter:">
-              <BFormInput v-model="pluginState.gaugeConverter" type="text" />
+              <BFormInput v-model="pluginState.gaugeConverter" type="text"     style="font-family: monospace ;" />
             </BFormGroup>
           </BCol>
         </BRow>
@@ -143,7 +139,7 @@ const props = withDefaults(defineProps<GaugeProps>(), {
 });
 
 
-// Define 
+
 const pluginState = ref<PluginState>(props.pluginState);
 
 // Default gauge options

@@ -7,9 +7,10 @@
     <div v-if="error" class="alert alert-danger mt-3">
       {{ error }}
     </div>
-    <!-- <div>
-      {{ currentSimulationTimeString }}
-    </div> -->
+    <div v-if="false">
+      <span>{{ currentSimulationTimeString }}</span>
+      <pre>{{ props.videoInfo }}</pre>
+    </div>
   </div>
 </template>
 
@@ -21,6 +22,14 @@ import { useVideoControl } from './../../composables/useVideoControl'
 import videojs from "video.js";
 import "videojs-sprite-thumbnails";
 import Player from 'video.js/dist/types/player';
+import { FrameByFrameButton } from '../../services/FrameByFrameButton ';
+
+
+
+// Register the component with Video.js, so it can be used in players.
+videojs.registerComponent('FrameByFrameButton', FrameByFrameButton);
+
+
 
 // Inject the function from the parent
 const setCardTitle = inject('setCardTitle') as (title: string) => void;
@@ -160,6 +169,25 @@ onMounted(() => {
     videoPlayer.value?.on('seeked', updateTime);
     videoPlayer.value?.on('pause', updateTime);
 
+    
+
+    videoPlayer.value?.getChild('ControlBar')?.addChild('FrameByFrameButton', {
+      fps: props?.videoInfo?.videoFrameRate,
+      value: +10
+    });
+    videoPlayer.value?.getChild('ControlBar')?.addChild('FrameByFrameButton', {
+      fps: props?.videoInfo?.videoFrameRate,
+      value:  (props?.videoInfo?.videoFrameRate ?? 30)
+    });
+    videoPlayer.value?.getChild('ControlBar')?.addChild('FrameByFrameButton', {
+      fps: props?.videoInfo?.videoFrameRate,
+      value: -1 * (props?.videoInfo?.videoFrameRate ?? 30)
+    });
+    videoPlayer.value?.getChild('ControlBar')?.addChild('FrameByFrameButton', {
+      fps: props?.videoInfo?.videoFrameRate,
+      value: -10
+    });
+
 
     // Ensure loadVideo is called only after the video player is ready
     if (props.videoInfo) {
@@ -189,14 +217,33 @@ const synchronizeData = (currentSecond: number, simulationStart: number) => {
   const simulationTime_Seconds = simulationTimeInSeconds % 60;
   const simulationTime_Milliseconds = simulationTimeInSeconds * 1000 % 1000;
 
+  const frameCount = Math.floor(simulationTimeInSeconds * (props.videoInfo.videoFrameRate ?? 30));
+
   const timeString = `${simulationTime_Minutes.toFixed(0).padStart(2, '0')}:${simulationTime_Seconds.toFixed(0).padStart(2, '0')}.${simulationTime_Milliseconds.toFixed(0).padStart(3, '0')}`;
 
-  currentSimulationTimeString.value = `Simulation time: ${simulationTimeInSeconds.toFixed(3)}s - from video: ${timeString}`;
+  currentSimulationTimeString.value = `Simulation time: ${simulationTimeInSeconds.toFixed(3)}s - from video: ${timeString}. Frame: ${frameCount}`;
 
   simulationTimeObservable.next(simulationTimeInSeconds);
 
 }
 
+
+
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.vjs-fbf {
+  border: 1px solid white;
+  padding: 2px 3px;
+  border-radius: 2px;
+}
+
+/* CSS Grid - Clip toolbar - mobile */
+@media only screen and (max-width: 576px) {
+
+  .video-js .vjs-control {
+    width: 2.5em;
+  }
+
+}
+</style>

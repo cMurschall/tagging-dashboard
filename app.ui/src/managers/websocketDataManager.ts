@@ -31,6 +31,9 @@ export class WebsocketDataManager implements IDataManager {
       console.error("WebSocket error:", error);
     };
   }
+  getColumnNames(): string[] {
+    return this.measurementKeys;
+  }
 
 
   getAllMeasurements(): TimeseriesDataPoint[] {

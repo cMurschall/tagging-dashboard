@@ -44,9 +44,9 @@ export const useProjectStore = defineStore('app', {
         console.info('Project loaded', this.loadedProject);
       }
     },
-    updateSimulationTime(time: number) {
-      this.currentSimulationTime = time;
-    },
+    // updateSimulationTime(time: number) {
+    //   this.currentSimulationTime = time;
+    // },
     async unloadProject() {
       const [error, deactivatedProject] = await safeFetch(() => client.deactivateTestdriveApiV1ProjectDeactivatePost());
       if (error) {

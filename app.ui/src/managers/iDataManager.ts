@@ -13,7 +13,18 @@ export interface IDataManager {
    */
   measurement$: Observable<TimeseriesDataPoint>;
 
+  /**
+   * Returns all measurements.
+   * Example: [{ car0_speed: 123.4, car0_rpm: 2500 }, ...]
+   */
   getAllMeasurements(): TimeseriesDataPoint[];
+
+
+  /**
+   * Returns the names of all measurements.
+   * Example: ['car0_speed', 'car0_rpm']
+   */
+  getColumnNames(): string[]
 
   /**
    * User defines which measurements they're interested in.

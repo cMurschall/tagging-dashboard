@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     DEBUG: bool = Field(False, env="DEBUG")
 
     # Paths
+    TAG_PATH: str = Field("./tags", env="CSV_PATH")
     CSV_PATH: str = Field("data", env="CSV_PATH")
     VIDEO_PATH: str = Field("videos", env="VIDEO_PATH")
     SPRITE_FOLDER: str = Field("./sprites", env="SPRITE_FOLDER")

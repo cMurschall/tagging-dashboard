@@ -7,7 +7,6 @@ from typing import Dict, List
 from pydantic import ValidationError
 import pandas as pd
 
-from app.models.tags import Tag
 from app.models.testDriveDataInfo import TestDriveDataInfo
 from app.models.testDriveProjectInfo import TestDriveProjectInfo
 

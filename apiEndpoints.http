@@ -77,28 +77,32 @@ GET http://127.0.0.1:8888/api/v1/player/data/feather?
 GET http://localhost:8888/api/v1/player/thumbnail/paul_timing_cw2_sprite.png
 
 
+### Activate Project
+POST http://127.0.0.1:8888/api/v1/project/activate/1
+
+### Get all tags
+GET http://127.0.0.1:8888/api/v1/tag/all
 
 
-### Play Stream
-POST http://127.0.0.1:8888/api/v1/player/play
-Content-Type: application/json
-
-{}
-
-### Pause Stream
-POST http://127.0.0.1:8888/api/v1/player/pause
-Content-Type: application/json
-
-{}
-
-### Jump to Timestamp
-POST http://127.0.0.1:8888/api/v1/player/toTimeStamp
+### Create tag
+POST http://127.0.0.1:8888/api/v1/tag/create
 Content-Type: application/json
 
 {
-  "timestamp": 12.5
+  "timestamp_start_s": 0,
+  "timestamp_end_s": 120.42,
+  "category": "Group A",
+  "notes": "Brake, sudden stop"
 }
 
-### Get the data stream
-WEBSOCKET ws://127.0.0.1:8888/ws/replay
-Content-Type: application/json // Used for content highlighting only
+
+### Create tag
+POST http://127.0.0.1:8888/api/v1/tag/create
+Content-Type: application/json
+
+{
+  "timestamp_start_s": 0,
+  "timestamp_end_s": 120.42,
+  "category": "Group A",
+  "notes": "Stop and go"
+}

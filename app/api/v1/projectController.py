@@ -9,6 +9,7 @@ from app.dependencies import get_testdata_manager, get_settings
 from app.models.testDriveDataInfo import TestDriveDataInfo
 from app.models.testDriveMetaData import TestDriveMetaData
 from app.models.testDriveProjectInfo import TestDriveProjectInfo
+from app.models.testDriveTagInfo import TestDriveTagInfo
 from app.models.testDriveVideoInfo import TestDriveVideoInfo
 from app.services.testDriveDataService import TestDriveDataService
 from app.settings import Settings
@@ -23,15 +24,10 @@ class CreateProjectPayload(BaseModel):
     notes: str = Field("", title="Notes", description="Notes for the test drive project")
 
 
-class SingleTimeTagModel(BaseModel):
-    timestamp: float = Field(0.0, title="Timestamp", description="The timestamp of the tag")
-    notes: str = Field("", title="Notes", description="Notes for the tag")
-
-
 class TimeRangeTagModel(BaseModel):
-    start_timestamp: float
-    end_timestamp: float
-    notes: str
+    start_timestamp: float = Field(0.0, title="Start Timestamp", description="The start timestamp of the tag")
+    end_timestamp: float = Field(0.0, title="End Timestamp", description="The end timestamp of the tag")
+    notes: str = Field("", title="Notes", description="Notes for the tag")
 
 
 class CSVFileResponse(BaseModel):
@@ -92,6 +88,11 @@ class ProjectController:
             video_path = os.path.join(settings.VIDEO_PATH, payload.video_file_name)
             csv_path = os.path.join(settings.CSV_PATH, payload.csv_file_name)
 
+            # create tag file name: same name as csv file but with _tags suffix and .csv extension
+            #  e.g. testdrive.csv -> testdrive_tags.json
+            tag_file_name = payload.csv_file_name.replace(".csv", "_tags.csv")
+            tag_path = os.path.join(settings.TAG_PATH, tag_file_name)
+
             testdrive = TestDriveProjectInfo(
                 test_drive_data_info=TestDriveDataInfo(csv_file_name=payload.csv_file_name,
                                                        csv_file_full_path=os.path.normpath(csv_path)),
@@ -100,7 +101,9 @@ class ProjectController:
                 test_drive_meta_info=TestDriveMetaData(driver_name=payload.driver_name,
                                                        vehicle_name=payload.vehicle_name,
                                                        route_name=payload.route_name,
-                                                       notes=payload.notes)
+                                                       notes=payload.notes),
+                test_drive_tag_info=TestDriveTagInfo(tag_file_name=tag_file_name,
+                                                     tag_file_full_path=tag_path)
             )
             created_testdrive = service.create_testdrive(testdrive)
             return {"testdrive": created_testdrive}

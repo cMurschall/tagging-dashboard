@@ -57,29 +57,6 @@ class PlayerController:
 
     def _define_routes(self):
 
-        # @self.router.get("/video/{filename}")
-        # def get_video_stream(filename: str, settings: Settings = Depends(get_settings)) -> StreamingResponse:
-        #
-        #     file_path = Path(settings.VIDEO_PATH) / filename
-        #     if not file_path.exists():
-        #         raise HTTPException(status_code=404, detail="Video not found")
-        #
-        #     def video_streamer():
-        #         with open(file_path, "rb") as file:
-        #             while chunk := file.read(1024 * 1024):  # Stream in chunks of 1 MB
-        #                 yield chunk
-        #
-        #     return StreamingResponse(video_streamer(), media_type="video/mp4")
-
-        # @self.router.get("/video/{filename}")
-        # async def get_video_stream(filename: str, settings: Settings = Depends(get_settings)) -> StreamingResponse:
-        #
-        #     file_path = Path(settings.VIDEO_PATH) / filename
-        #     if not file_path.exists():
-        #         raise HTTPException(status_code=404, detail="Video not found")
-        #
-        #     return FileResponse(file_path)
-
         @self.router.get("/video/{filename}")
         async def get_video_stream(filename: str, request: Request,
                                    settings: Settings = Depends(get_settings)) -> StreamingResponse:
@@ -104,64 +81,6 @@ class PlayerController:
                     }
                     return Response(data, status_code=206, headers=headers, media_type="video/mp4")
             return FileResponse(file_path)
-
-        # @self.router.get("/video/{filename}")
-        # def get_video_stream(filename: str, request: Request, settings: Settings = Depends(get_settings)) -> Response:
-        #
-        #     self.logger.info(f"Video file requested: {filename}")
-        #
-        #     video_path = Path(settings.VIDEO_PATH) / filename
-        #     if not video_path.exists():
-        #         raise HTTPException(status_code=404, detail="Video not found")
-        #
-        #     file_size = video_path.stat().st_size
-        #     range_header = request.headers.get("range")
-        #
-        #     if range_header:
-        #         self.logger.info(f"Range header: {range_header}")
-        #         byte_range = range_header.split("=")[1].split("-")
-        #         start_byte = int(byte_range[0])
-        #         end_byte = file_size - 1 if byte_range[1] == "" else int(byte_range[1])
-        #
-        #         if start_byte == 0 and end_byte == file_size - 1:
-        #
-        #             self.logger.info("Full file requested. Sending 200 StreamingResponse.")
-        #
-        #             # Client requested the entire file using a Range header
-        #             def video_streamer():
-        #                 with open(video_path, "rb") as file:
-        #                     while chunk := file.read(10 * 1024 * 1024):  # Stream in chunks of 10 MB
-        #                         yield chunk
-        #
-        #             headers = {"Content-Length": str(file_size)}
-        #             return StreamingResponse(video_streamer(), media_type="video/mp4", headers=headers, status_code=200)
-        #
-        #         else:
-        #             # Client requested a partial range
-        #             chunk_size = end_byte - start_byte + 1
-        #
-        #             with open(video_path, "rb") as video:
-        #                 video.seek(start_byte)
-        #                 video_bytes = video.read(chunk_size)
-        #
-        #             headers = {
-        #                 "Content-Range": f"bytes {start_byte}-{end_byte}/{file_size}",
-        #                 "Accept-Ranges": "bytes",
-        #                 "Content-Length": str(chunk_size),
-        #                 "Content-Type": "video/mp4",
-        #             }
-        #             self.logger.info(f"Partial file requested. Sending 206 Response with headers: {headers}")
-        #             return Response(content=video_bytes, headers=headers, status_code=206)
-        #     else:
-        #         # Client did not send a Range header
-        #         def video_streamer():
-        #             with open(video_path, "rb") as file:
-        #                 while chunk := file.read(10 * 1024 * 1024):  # Stream in chunks of 10 MB
-        #                     yield chunk
-        #
-        #         self.logger.info(f"No range header, sending streaming response.")
-        #         headers = {"Content-Length": str(file_size)}
-        #         return StreamingResponse(video_streamer(), media_type="video/mp4", headers=headers, status_code=200)
 
         @self.router.get("/thumbnail/{filename}")
         def get_thumbnail(filename: str, settings: Settings = Depends(get_settings)) -> FileResponse:

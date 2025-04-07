@@ -18,6 +18,7 @@ import { GridItemHTMLElement, GridStack, GridStackNode } from 'gridstack';
 import CardWrapper from './CardWrapper.vue';
 import { pinia, bootstrap } from "./../plugins/AppPlugins";
 import gridManager, { GridManagerItem, GridManager } from './../managers/gridItemManager';
+import { i } from 'mathjs';
 
 
 export default defineComponent({
@@ -53,6 +54,47 @@ export default defineComponent({
                 },
                 gridContainer.value as HTMLElement
             );
+            // Function to find the grid item element from an event target
+            const getGridItemElement = (target: EventTarget | null): GridItemHTMLElement | null => {
+                if (!(target instanceof Element)) {
+                    return null;
+                }
+                // Use closest to find the parent grid item element
+                // Use type assertion or type guarding if needed, but closest often returns Element | null
+                const item = target.closest<HTMLElement>('.grid-stack-item');
+
+                // Verify it's the correct type expected by GridStack (runtime check)
+                // GridItemHTMLElement is HTMLElement + gridstackNode property
+                if (item && typeof (item as any).gridstackNode !== 'undefined') {
+                    return item as GridItemHTMLElement;
+                }
+                return null;
+            };
+            // grid.el.addEventListener('mousedown', (event: MouseEvent) => {
+            //     // Check if Ctrl key is pressed and grid instance exists
+
+            //     const targetItem = getGridItemElement(event.target);
+
+            //     const isItemCurrentlyNoMove = targetItem?.gridstackNode?.noMove === true; // Check if explicitly set to true
+            //     if (!grid) {
+            //         return;
+            //     }
+
+            //     if (event.ctrlKey) {
+
+
+            //         // Ensure we are targeting a valid grid item
+            //         if (targetItem) {
+            //             console.log('Ctrl + Mousedown detected on item:', targetItem.getAttribute('gs-id') || targetItem.id);
+
+            //             // Temporarily enable moving for this specific item
+            //             grid.update(targetItem, { noMove: !isItemCurrentlyNoMove, });
+            //         }
+            //     }
+            // });
+
+
+
 
             grid.on('resizestop', (event: Event, el: GridItemHTMLElement) => {
                 console.log('Resizestop:', { event, node: el.gridstackNode });
@@ -61,21 +103,25 @@ export default defineComponent({
 
                     gridManager.updateItemById(el.gridstackNode.id.toString(), {
                         w: el.gridstackNode.w ?? 0,
-                        h: el.gridstackNode.h ?? 0,                
+                        h: el.gridstackNode.h ?? 0,
                     });
                 }
             });
 
+
+
             grid.on('dragstop', (event: Event, el: GridItemHTMLElement) => {
-                console.log('Drag:', { event, node: el.gridstackNode });
+                console.log('Drag end:', { event, node: el.gridstackNode });
 
                 if (el.gridstackNode && el.gridstackNode.id) {
-                  
+
                     gridManager.updateItemById(el.gridstackNode.id.toString(), {
                         x: el.gridstackNode.x ?? 0,
                         y: el.gridstackNode.y ?? 0,
                     });
                 }
+
+
             });
 
 
@@ -97,10 +143,6 @@ export default defineComponent({
                 // Create a sub-app that wraps the child component in CardWrapper
                 const subApp = createApp({
                     setup() {
-                        // If user clicks remove in the card header, remove from store
-                        const handleRemove = () => {
-                            if (widget.id) gridManager.removeItemById(widget.id.toString());
-                        };
 
                         // Iterate over dependencies and provide each one:
                         const gridStoreItem = gridManager.getGridItems().find(item => item.id === widget.id);
@@ -112,11 +154,31 @@ export default defineComponent({
                             }
                         }
 
+
+                        // If user clicks remove in the card header, remove from store
+                        const handleRemove = () => {
+                            if (widget.id) {
+                                gridManager.removeItemById(widget.id.toString());
+                            }
+                        };
+
+                        // If user clicks remove in the card header, 
+                        const handleToggleMoveLock = (value: boolean) => {
+                            console.log('Move lock changed:', {
+                                value,
+                                id: widget.id,
+                            });
+                            if (grid && w.el) {
+                                grid?.update(w.el, { noMove: value });
+                            }
+                        };
+
                         // Wrap that child in our CardWrapper
                         return () =>
                             h(CardWrapper, {
                                 title: widget.title,
-                                onRemove: handleRemove
+                                onRemove: handleRemove,
+                                "onMove-lock-changed": handleToggleMoveLock,
                             }, {
                                 default: (slotProps: any) => {
                                     return h(compDef, {

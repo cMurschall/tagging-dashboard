@@ -1,6 +1,7 @@
 import * as RestClient from '../../services/restclient';
 import * as math from 'mathjs'
 import { TestDriveProjectInfoOutput, CreateProjectPayload, TestDriveVideoInfo } from '../../services/restclient';
+import { TimeseriesDataPoint, TimeseriesTable } from '../managers/dataManager';
 
 
 
@@ -145,3 +146,24 @@ export const areArraysSameUnordered = <T>(arr1: T[], arr2: T[]): boolean => {
 export const isDevMode = (): boolean => {
   return import.meta.env.MODE == 'development';
 };
+
+
+
+// Helper function to convert an array of TimeseriesDataPoint into a TimeseriesTable.
+export const toDenseTable = (dataPoints: TimeseriesDataPoint[]): TimeseriesTable => {
+  const timestamps = new Float64Array(dataPoints.map((dp) => dp.timestamp));
+  const values: Record<string, number[]> = {};
+  for (const dp of dataPoints) {
+    for (const key in dp.values) {
+      if (!values[key]) {
+        values[key] = [];
+      }
+      values[key].push(dp.values[key]);
+    }
+  }
+  const denseValues: Record<string, Float64Array> = {};
+  for (const key in values) {
+    denseValues[key] = new Float64Array(values[key]);
+  }
+  return { timestamps, values: denseValues };
+}

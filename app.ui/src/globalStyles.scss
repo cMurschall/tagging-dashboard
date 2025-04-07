@@ -8,3 +8,13 @@ body, html { /* Make body and html the flex container */
     display: flex;
     flex-direction: column;
 }
+
+
+
+/* Target grid items that are NOT disabled for dragging */
+.grid-stack-item:not(.ui-draggable-disabled) {
+    
+    box-shadow: 0 0 8px 2px rgba(0, 4, 255, 0.5); /* Adjust color, blur, spread */
+    /* Add a transition for a smooth fade-in/out effect */
+    transition: box-shadow 0.3s ease-in-out;
+  }

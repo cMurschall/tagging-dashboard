@@ -161,9 +161,10 @@ if (!dataManager) {
 
 
 
-const subscription = ref<Subscription | null>(null);
-const availableColumns = ref<BFormSelectColumnInfo[]>([]);
+let subscription: Subscription | null = null;
 
+
+const availableColumns = ref<BFormSelectColumnInfo[]>([]);
 const displayData = ref<TimeseriesDataPoint>({ timestamp: 0, values: {} });
 
 const handleAddRow = () => {
@@ -195,7 +196,7 @@ onMounted(async () => {
 
     await loadColumns();
 
-    subscription.value = dataManager.measurement$.subscribe((data) => {
+    subscription = dataManager.measurement$.subscribe((data) => {
         displayData.value = data;
         console.log('Data received:', data);
     });
@@ -210,7 +211,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-    subscription.value?.unsubscribe();
+    subscription?.unsubscribe();
 });
 
 

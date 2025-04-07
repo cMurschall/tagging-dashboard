@@ -6,6 +6,7 @@ export interface GridManagerItem<T = Record<string, any>> {
     y?: number;
     w?: number;
     h?: number;
+    noMove?: boolean;
     component?: string;
     title?: string;
     props?: T;

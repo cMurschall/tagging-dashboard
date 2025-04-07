@@ -1,61 +1,20 @@
 
-import { DataManager, TimeseriesDataPoint } from "./dataManager";
+import { DataManager, TimeseriesDataPoint, TimeseriesTable } from "./dataManager";
 import { Observable } from "./../observable";
 
 export class WebsocketDataManager extends DataManager {
-  timeseriesData: TimeseriesDataPoint[] = [];
-  measurement$: Observable<TimeseriesDataPoint>;
-  ws: WebSocket;
-  measurementKeys: string[] = [];
-
-  constructor(
-    public wsUrl: string,
-  ) {
-    super();
-
-    this.measurement$ = new Observable();
-    this.ws = new WebSocket(wsUrl);
-
-    this.ws.onmessage = (event: MessageEvent) => {
-      try {
-        const jsonData = JSON.parse(event.data);
-        // Expecting jsonData.data to be an array of timeseries datapoints
-        if (jsonData.data && Array.isArray(jsonData.data)) {
-          // Append new datapoints
-          this.timeseriesData.push(...jsonData.data);
-        }
-      } catch (error) {
-        console.error("Error parsing websocket data:", error);
-      }
-    };
-
-    this.ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
+  measurement$: Observable<TimeseriesDataPoint> = new Observable();
+  getAllMeasurements(): TimeseriesTable {
+    throw new Error("Method not implemented.");
   }
   getColumnNames(): string[] {
-    return this.measurementKeys;
+    throw new Error("Method not implemented.");
   }
-
-
-  getAllMeasurements(): TimeseriesDataPoint[] {
-    return this.timeseriesData;
-  }
-
-
-
   initialize(measurementKeys: string[]): Promise<void> {
-    this.measurementKeys = measurementKeys;
-    return Promise.resolve();
+    throw new Error(`Method not implemented: ${measurementKeys}.`);
   }
-
   subscribeToTimestamp(ts$: Observable<number>): void {
-    ts$.subscribe((timestamp: number) => {
-      if (this.timeseriesData.length === 0) return;
-      const nearest = this.findNearestDataPoint(this.timeseriesData, timestamp);
-      if (!nearest) return;
-
-      this.measurement$.next(nearest);
-    });
+    throw new Error(`Method not implemented: ${ts$}.`);
   }
+ 
 }

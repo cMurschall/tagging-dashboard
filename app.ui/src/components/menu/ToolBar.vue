@@ -68,7 +68,7 @@
                 <div v-if="selectedLayoutToRename">
                     <div class="mb-3">
                         <label for="renameLayoutName" class="form-label">New Layout Name for "{{ selectedLayoutToRename
-                        }}":</label>
+                            }}":</label>
                         <BFormInput id="renameLayoutName" v-model="renameLayoutName" placeholder="Enter new name">
                         </BFormInput>
                     </div>
@@ -124,6 +124,7 @@ const handleAddVideo = () => {
         y: 0,
         w: 6,
         h: 7,
+        noMove: true,
         id: 'video-player',
         title: 'Video Player',
         props: {
@@ -147,6 +148,7 @@ const handleAddGauge = () => {
         y: 0,
         w: 3,
         h: 5,
+        noMove: true,
         id: 'gauge-' + crypto.randomUUID(),
         title: '',
         props: {
@@ -166,6 +168,7 @@ const handleAddList = () => {
         y: 0,
         w: 3,
         h: 5,
+        noMove: true,
         id: 'list-' + crypto.randomUUID(),
         title: '',
         props: {
@@ -186,6 +189,7 @@ const handleAddScatter = () => {
         y: 0,
         w: 7,
         h: 4,
+        noMove: true,
         id: 'scatter-' + crypto.randomUUID(),
         title: '',
         props: {
@@ -205,6 +209,7 @@ const handleAddTestGridItem = () => {
         y: y,
         w: 5,
         h: 4,
+        noMove: true,
         id: 'test-grid-item' + crypto.randomUUID(),
         title: 'Test Grid Item',
         props: {
@@ -297,6 +302,7 @@ const handleRestoreLayout = (layoutName: string) => {
             y: item.y,
             w: item.w,
             h: item.h,
+            noMove: true,
             id: item.id,
             title: item.title,
             props: componentProps,

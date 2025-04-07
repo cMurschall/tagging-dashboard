@@ -156,11 +156,7 @@ onMounted(() => {
     console.log('Video.js plugins:', videojs.getPlugins());
     console.log('Video.js player:', videoPlayer.value);
 
-    const roundingPrecisionMs = 300; // Define the rounding precision in milliseconds
-    const updateTime = () => {
-      const currentTime = videoPlayer.value?.currentTime() ?? 0;
-      synchronizeData(currentTime, props.videoInfo.videoSimulationTimeStartS ?? 0);
-    };
+
 
     // Define the actual seekTo logic
     setSeekTo((simulationTime: number) => {
@@ -170,6 +166,14 @@ onMounted(() => {
         videoPlayer.value.currentTime(newTime);
       }
     });
+
+
+    // const roundingPrecisionMs = 300; // Define the rounding precision in milliseconds
+    const updateTime = () => {
+      const currentTime = videoPlayer.value?.currentTime() ?? 0;
+      synchronizeData(currentTime, props.videoInfo.videoSimulationTimeStartS ?? 0);
+    };
+
 
     videoPlayer.value?.on('timeupdate', updateTime);
     videoPlayer.value?.on('seeked', updateTime);
@@ -218,6 +222,9 @@ onBeforeUnmount(() => {
   if (videoPlayer.value) {
     videoPlayer.value.dispose();
     videoPlayer.value = undefined;
+  }
+  if(simulationTimeObservable){
+    simulationTimeObservable.next(0); // Reset the observable when the component is destroyed
   }
 })
 

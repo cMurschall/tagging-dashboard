@@ -10,12 +10,12 @@
         <div class="container-fluid flex-grow-1 d-flex">
             <div class="row flex-grow-1 w-100 align-items-stretch">
                 <!-- Left Sidebar -->
-                <aside class="col-2 bg-light mt-3 border-end d-flex flex-column">
+                <aside class="col-2 bg-light mt-3 border-end d-flex flex-column" style="overflow-y: auto;">
                     <LeftSideBar />
                 </aside>
 
                 <!-- Main Content -->
-                <main class="col-8  d-flex flex-column">
+                <main class="col-8  d-flex flex-column mb-4">
 
                     <!-- Toolbar -->
                     <div class="toolbar d-flex align-items-center justify-content-start p-2 bg-light border-bottom">
@@ -25,9 +25,9 @@
                     <!-- Main Grid -->
                     <MainGrid ref="mainGrid" class="flex-grow-1" />
                 </main>
-
                 <!-- Right Sidebar -->
-                <aside class="col-2 bg-light mt-3 border-start d-flex flex-column" style="overflow-y: auto;">
+                <aside v-if="false" class="col-2 bg-light mt-3 border-start d-flex flex-column"
+                    style="overflow-y: auto;">
                     <h5>Tags</h5>
                     <ul class="list-unstyled">
                         <!-- Singuläre Ereignisse -->
@@ -112,6 +112,7 @@
                         </li>
                     </ul>
                 </aside>
+
             </div>
         </div>
 
@@ -123,14 +124,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, markRaw, watch, ref } from 'vue';
+import { onMounted, markRaw, watch, ref, onBeforeMount, onUnmounted } from 'vue';
 import { useProjectStore } from './stores/projectStore';
 
 import ToolBar from './components/menu/ToolBar.vue';
 import LeftSideBar from './components/LeftSideBar.vue';
 import MainGrid from './components/MainGrid.vue';
-import { TestDriveVideoInfo } from './services/utilities';
-import { Observable } from './observable';
+
 
 import VideoPlayer from './components/plugins/VideoPlayer.vue';
 import ListView from './components/plugins/ListView.vue';
@@ -139,6 +139,7 @@ import ScatterPlot from './components/plugins/ScatterPlot.vue';
 import TestGridItem from './components/TestGridItem.vue';
 import gridItemManager, { GridManagerItem } from './managers/gridItemManager';
 import layoutManager from './managers/layoutManager';
+import { Subscription } from './observable';
 
 
 
@@ -147,9 +148,6 @@ const mainGrid = ref<typeof MainGrid | null>(null);
 
 // Initialize the store
 const projectStore = useProjectStore();
-
-
-
 
 
 
@@ -163,7 +161,7 @@ gridItemManager.setComponentMap({
 
 const availableLayouts = ref<string[]>([]);
 const layoutsData = ref<Record<string, GridManagerItem[]>>({});
-let subscription: { unsubscribe: () => void } | null = null;
+let subscription: Subscription | null = null;
 
 
 onMounted(async () => {
@@ -176,41 +174,13 @@ onMounted(async () => {
 
 
 
-// watch(
-//     () => projectStore.loadedProject,
-//     (newProject, oldProject) => {
-//         console.log('loadedProject changed from', oldProject, 'to', newProject);
-//         if (newProject) {
+onUnmounted(() => {
+    if (subscription) {
+        subscription.unsubscribe();
+    }
+});
 
-//             const simulationTimeObservable = new Observable<number>(0);
 
-//             simulationTimeObservable.subscribe((time) => {
-//                 // console.log('Simulation time:', time);
-//                 projectStore.updateSimulationTime(time);
-//             });
-
-//             gridItemManager.addNewItem<{
-//                 videoInfo: TestDriveVideoInfo,
-//                 simulationTimeObservable: Observable<number>
-//             }>({
-//                 component: 'VideoPlayer',
-//                 x: 3,
-//                 y: 0,
-//                 w: 6,
-//                 h: 7,
-//                 id: 'video-player',
-//                 title: 'Video Player',
-//                 props: {
-//                     videoInfo: projectStore.loadedProject?.testDriveVideoInfo || {},
-//                     simulationTimeObservable
-//                 }
-//             });
-//         } else {
-//             console.info('The project was unloaded.');
-//             gridItemManager.removeAllItems();
-//         }
-//     }
-// );
 
 </script>
 

@@ -1,7 +1,7 @@
 // RandomSpeedDataManager.ts
 
 import { Observable } from "./../observable";
-import { DataManager, TimeseriesDataPoint } from "./dataManager";
+import { DataManager, TimeseriesDataPoint, TimeseriesTable } from "./dataManager";
 
 export class RandomDataManager extends DataManager {
     measurement$: Observable<TimeseriesDataPoint>;
@@ -34,16 +34,25 @@ export class RandomDataManager extends DataManager {
 
 
 
-    getAllMeasurements(): TimeseriesDataPoint[] {
-        const measurements: TimeseriesDataPoint[] = [];
-        for (let i = 0; i < 10; i++) {
-            const measurement: TimeseriesDataPoint = { timestamp: i, values: {} };
-            this.measurementKeys.forEach(key => {
-                measurement.values[key] = Math.random() * (this.maxSpeed - this.minSpeed) + this.minSpeed;
-            });
-            measurements.push(measurement);
+    getAllMeasurements(): TimeseriesTable {
+        const countData = 10000; // Number of data points to generate
+        const timestamps = new Float64Array(countData);
+
+
+        // Create a record mapping each measurement key to a new Float64Array.
+        const values: Record<string, Float64Array> = {};
+        for (const key of this.measurementKeys) {
+            values[key] = new Float64Array(countData);
         }
-        return measurements;
+
+        for (let i = 0; i < countData; i++) {
+            timestamps[i] = i;
+            for (const key of this.measurementKeys) {
+                values[key][i] = this.currentSpeed + (Math.random() - 0.5) * 2 * this.accelerationFactor;
+            }
+        }
+
+        return { timestamps, values };
     }
 
 

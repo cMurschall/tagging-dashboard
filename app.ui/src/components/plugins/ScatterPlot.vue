@@ -45,45 +45,62 @@
         </BRow>
       </div>
 
-      <VChart v-else ref="chartRef" :option="chartOption" :style="{ width: '100%', height: '100%' }"
+      <Chart v-else ref="chartRef" :option="chartOption" :style="{ width: '100%', height: '100%' }"
         @zr:click="handleVChartClick" :autoresize="{ throttle: 100 }" />
     </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import VChart from "vue-echarts";
+import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, computed, watch } from "vue";
-import { ECElementEvent, ElementEvent, use } from "echarts/core";
-import { ScatterChart, LineChart } from "echarts/charts";
-import { CanvasRenderer, SVGRenderer } from "echarts/renderers";
-import {
-  GridComponent,
-  TooltipComponent,
-  LegendComponent,
-  DataZoomComponent,
-  ToolboxComponent
-} from 'echarts/components';
 import { DataManager, TimeseriesDataPoint, TimeseriesTable } from "../../managers/dataManager";
 import { Subscription } from "../../observable";
-import { safeFetch, PlayerApiClient as client, transformMathJsValue } from "../../services/utilities";
+import { safeFetch, PlayerApiClient as client } from "../../services/utilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
-
-
 import { useVideoControl } from './../../composables/useVideoControl';
 
 
-use([
-  ScatterChart,
-  // LineChart,
-  CanvasRenderer,
+
+import { use } from 'echarts/core'
+import { ScatterChart } from 'echarts/charts'
+import {
+  LegendComponent,
   GridComponent,
-  // TooltipComponent,
-  // LegendComponent,
-  // DataZoomComponent,
-  // ToolboxComponent
-]);
+  DataZoomComponent,
+  GraphicComponent,
+  TooltipComponent
+} from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+import type { ComposeOption, ElementEvent } from 'echarts/core'
+import type { ScatterSeriesOption } from 'echarts/charts'
+import type {
+  LegendComponentOption,
+  GridComponentOption,
+  DataZoomComponentOption,
+  GraphicComponentOption,
+  TooltipComponentOption
+} from 'echarts/components'
+
+use([
+  LegendComponent,
+  GridComponent,
+  DataZoomComponent,
+  GraphicComponent,
+  TooltipComponent,
+  ScatterChart,
+  CanvasRenderer
+])
+
+type EChartsOption = ComposeOption<
+  | LegendComponentOption
+  | GridComponentOption
+  | DataZoomComponentOption
+  | GraphicComponentOption
+  | TooltipComponentOption
+  | ScatterSeriesOption
+>
 
 
 const setCardTitle = inject('setCardTitle') as (title: string) => void;
@@ -117,8 +134,10 @@ const yAxisExpression = ref<string>('value'); // Default to 'value' for primary 
 const selectedYColumn2 = ref<ColumnInfo | null>(null);
 const yAxisExpression2 = ref<string>('value'); // Default to 'value' for secondary Y-axis
 
+const currentDataTable = ref<TimeseriesTable | null>(null);
+
 let subscription: Subscription | null = null;
-let resizeObserver: ResizeObserver | null = null; // Added resizeObserver variable back
+// let resizeObserver: ResizeObserver | null = null; // Added resizeObserver variable back
 
 // --- Interfaces ---
 interface BFormSelectColumnInfo {
@@ -149,37 +168,49 @@ const filteredColumnsSecondary = computed(() => {
 
 
 // --- ECharts Option ---
-const chartOption = ref({
+const chartOption = ref<EChartsOption>({
   // title: {
   //   // text: "Chart Title",
   // },
-  tooltip: {},
-  // toolbox: {
-  //   left: 'center',
-  //   feature: {
-  //     dataZoom: {
-  //       show: false
-  //     }
-  //   }
-  // },
-  // legend: {
-  //   orient: 'vertical',
-  //   right: 10,
-  //   show: false
-  // },
-  xAxis: [{}],
-  yAxis: [{}],
+  legend: {
+    orient: 'vertical',
+    right: 10,
+    show: true,
+  },
+  xAxis: [{
+    scale: true
+  }],
+  yAxis: [{
+    scale: true
+  }],
   dataZoom: [
     {
       type: 'inside',
 
     },
-    // {
-    //   type: 'slider'
-    // }
+    {
+      type: 'slider'
+    }
+  ],
+  graphic: [
+    {
+      id: 'highlight-point',
+      type: 'circle',
+      shape: {
+        cx: 0,
+        cy: 0,
+        r: 5,
+      },
+      style: {
+        fill: 'red',
+      },
+      z: 10000, // make sure it's on top
+      zlevel: 1, 
+    }
   ],
   series: [
     {
+      id: 'SeriesA',
       name: 'A',
       type: 'scatter',
       data: new Float64Array(),
@@ -191,6 +222,7 @@ const chartOption = ref({
       large: true
     },
     {
+      id: 'SeriesB',
       name: 'B',
       type: 'scatter',
       data: new Float64Array(),
@@ -200,27 +232,39 @@ const chartOption = ref({
         opacity: 0.8
       },
       large: true
-    }
+    },
   ],
+  tooltip: {
+    trigger: 'axis', // Trigger tooltip on axis pointer move
+    axisPointer: {
+      type: 'line', // Show a line axis pointer
+      lineStyle: {
+        color: 'red',
+        width: 1
+      },
+      z: 100 // Ensure it's on top
+    },
+  },
+
   animation: false
 });
 
 // --- Methods ---
 const handleVChartClick = (params: ElementEvent) => {
-  const chart = chartRef.value?.getZr();
-  if (!chart || !chartRef.value) return;
-  const pointInPixel = [params.offsetX, params.offsetY];
-  const pointInGrid = chartRef.value.convertFromPixel({ gridIndex: 0 }, pointInPixel);
-  if (pointInGrid) {
-    const xValue = pointInGrid[0];
-    seekTo(xValue);
-  }
-};
 
+  const chart = chartRef.value;
+  if (!chart) return;
+
+  const [x, _] = chart.convertFromPixel({ seriesIndex: 0 }, [params.offsetX, params.offsetY]);
+  seekTo(x); // Call the seekTo function with the x value
+};
 
 
 const updateChartData = (table: TimeseriesTable) => {
   console.log("Updating chart data from TimeseriesTable...");
+
+  currentDataTable.value = table; // Store the current data table
+
 
   // Check if the table and required column data exist
   if (!table || !table.timestamps || !table.values) {
@@ -275,19 +319,20 @@ const updateChartData = (table: TimeseriesTable) => {
 
 
   // Update the chart options with the processed data
-  chartOption.value.series[0].data = primaryValues ? primaryData : new Float64Array(0);
-  chartOption.value.series[1].data = secondaryValues ? secondaryData : new Float64Array(0);
+  const series = chartOption.value.series as SeriesOption[];
+  series[0].data = primaryValues ? primaryData : new Float64Array(0);
+  series[1].data = secondaryValues ? secondaryData : new Float64Array(0);
 
 
   // chartOption.value.series[1].data = secondaryData ? secondaryData : [];
   // chartOption.value.series[2].data = []; // Clear highlight point
 
   // Update axis names based on selections
-  chartOption.value.series[0].name = primaryColName     ? `${primaryColName}` : '';
-  chartOption.value.series[1].name = secondaryColName ? `${secondaryColName}` : '';
+  series[0].name = primaryColName ? `${primaryColName}` : '';
+  series[1].name = secondaryColName ? `${secondaryColName}` : '';
 
   // Show legend only if a secondary column is selected and has data
-  chartOption.value.legend.show = !!secondaryColName && secondaryData.length > 0;
+  // chartOption.value.legend.show = !!secondaryColName && secondaryData.length > 0;
 
   console.log(`Processed data points - Primary: ${primaryData ? primaryData.length : 0}, Secondary: ${secondaryData.length}`);
 };
@@ -295,9 +340,11 @@ const updateChartData = (table: TimeseriesTable) => {
 // --- Watchers ---
 watch([selectedYColumn, yAxisExpression, selectedYColumn2, yAxisExpression2], async ([newYCol, newYExpr, newYCol2, newYExpr2], [oldYCol, oldYExpr, oldYCol2, oldYExpr2]) => {
   if (!newYCol) {
-    chartOption.value.series[0].data = new Float64Array(0);
-    chartOption.value.series[1].data = new Float64Array(0);
-    chartOption.value.series[2].data = new Float64Array(0);
+
+    const series = chartOption.value.series as SeriesOption[];
+    series[0].data = new Float64Array(0);
+    series[1].data = new Float64Array(0);
+    series[2].data = [[0, 0]]
     setCardTitle('Select Data');
     return;
   }
@@ -319,12 +366,12 @@ watch([selectedYColumn, yAxisExpression, selectedYColumn2, yAxisExpression2], as
     title += ` & ${newYCol2.name}`;
   }
   setCardTitle(title);
-  chartOption.value.title.text = title;
 
   const allMeasurements = dataManager.getAllMeasurements();
   updateChartData(allMeasurements);
 
 }, { immediate: false });
+
 
 // --- Lifecycle Hooks ---
 onMounted(async () => {
@@ -344,46 +391,64 @@ onMounted(async () => {
       title += ` & ${selectedYColumn2.value.name}`;
     }
     setCardTitle(title);
-    chartOption.value.title.text = title;
   }
 
 
   // Subscribe to live data updates
   subscription = dataManager.measurement$.subscribe((measurement: TimeseriesDataPoint) => {
-    // if (!selectedYColumn.value || !measurement || measurement.timestamp === undefined) return;
+    // check if new timestamp is in the range of the first series. if yes put point on the first series
 
-    // const primaryData = chartOption.value.series[0].data as number[][];
-    // if (!primaryData || primaryData.length === 0) return;
+    if (currentDataTable.value === null) {
+      return;
+    }
 
-    // const firstTimestamp = primaryData[0][0];
-    // const lastTimestamp = primaryData[primaryData.length - 1][0];
-    // let highlightTimestamp = measurement.timestamp;
+    const firstTimestamp = currentDataTable.value.timestamps[0];
+    const lastTimestamp = currentDataTable.value.timestamps[currentDataTable.value.timestamps.length - 1];
 
-    // if (highlightTimestamp < firstTimestamp) {
-    //   highlightTimestamp = firstTimestamp;
-    // } else if (highlightTimestamp > lastTimestamp) {
-    //   highlightTimestamp = lastTimestamp;
-    // }
 
-    // const yValue = transformValue(measurement.values[selectedYColumn.value.name], yAxisExpression.value);
+    let xValue: number = 0
+    let yValue: number = measurement.values[selectedYColumn.value!.name]
 
-    // if (yValue !== undefined) {
-    //   chartOption.value.series[1].data = [[highlightTimestamp, yValue]];
-    // } else {
-    //   chartOption.value.series[1].data = [];
-    // }
+    if (measurement.timestamp < firstTimestamp) {
+      xValue = firstTimestamp
+    }
+    else if (measurement.timestamp > lastTimestamp) {
+      xValue = lastTimestamp;
+    }
+    else {
+      xValue = measurement.timestamp;
+    }
+
+    const vChartsRef = chartRef.value;
+    if (!vChartsRef) { return; }
+
+
+    const [x, y] = vChartsRef.convertToPixel({ seriesIndex: 0 }, [xValue, yValue]);
+
+    // chartOption.value.graphic.elements[0].x = x;
+    // chartOption.value.graphic.elements[0].y = y;
+
+    const zr = vChartsRef.chart.getZr();
+    const el = zr.storage.getDisplayList().find(el => el.id == 'highlight-point');
+
+    if (el) {
+      el.attr({ position: [x, y] }); // no flicker 🎉
+    }
+
+
+
   });
 });
 
 onUnmounted(() => {
   subscription?.unsubscribe();
-  // Clean up ResizeObserver
-  if (resizeObserver && containerRef.value) {
-    resizeObserver.unobserve(containerRef.value);
-    resizeObserver.disconnect();
-    console.log("ResizeObserver disconnected");
-  }
-  resizeObserver = null;
+  // // Clean up ResizeObserver
+  // if (resizeObserver && containerRef.value) {
+  //   resizeObserver.unobserve(containerRef.value);
+  //   resizeObserver.disconnect();
+  //   console.log("ResizeObserver disconnected");
+  // }
+  // resizeObserver = null;
 });
 
 const loadColumns = async () => {

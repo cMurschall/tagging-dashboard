@@ -1,5 +1,16 @@
+/* Override default font with Geist font (Inter would also been a good choice) */
+$font-family-sans-serif: 'Geist', sans-serif !default;
+
+@import 'bootstrap/dist/css/bootstrap.css';
+@import 'bootstrap-vue-next/dist/bootstrap-vue-next.css';
+
 @import "./../node_modules/video.js/dist/video-js.css";
 @import './../node_modules/gridstack/dist/gridstack.css';
+
+
+
+// @import "./../node_modules/bootstrap/scss/bootstrap";
+
 
 
 body, html { /* Make body and html the flex container */
@@ -18,3 +29,6 @@ body, html { /* Make body and html the flex container */
     /* Add a transition for a smooth fade-in/out effect */
     transition: box-shadow 0.3s ease-in-out;
   }
+
+
+

@@ -180,7 +180,7 @@ export class TimestampLookup {
 
         // --- Proximity Check Passed ---
 
-        // Update last known position *before* logging stats
+        // Update last known position before logging stats
         this.lastIndex = index;
         this.lastTimestamp = actualTs; // Use the actual timestamp found
 
@@ -188,7 +188,7 @@ export class TimestampLookup {
         const duration = performance.now() - startPerf;
         this.stats[method].count++;
         this.stats[method].totalTime += duration;
-        console.log(`Lookup [${method}]: ${duration.toFixed(8)} ms -> Index ${index}`); // Optional detailed logging
+        // console.log(`Lookup [${method}]: ${duration.toFixed(8)} ms -> Index ${index}`); // Optional detailed logging
 
         // Return the data point
         return this.getDataPoint(index);

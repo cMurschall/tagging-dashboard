@@ -46,7 +46,7 @@ export class ApiDataManager extends DataManager {
     ts$.subscribe((timestamp: number) => {
 
       if (this.timeseriesData.timestamps.length === 0) {
-        console.warn('No timeseries data available to subscribe to.');
+        // console.warn('No timeseries data available to subscribe to.');
         return;
       }
 

@@ -11,7 +11,6 @@
     "node-version": "nvm use 21.6.1"
   },
   "dependencies": {
-    "@douglassllc/videojs-framebyframe": "^1.2.0",
     "bootstrap": "^5.3.3",
     "bootstrap-vue-next": "^0.26.21",
     "echarts": "^5.6.0",

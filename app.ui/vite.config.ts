@@ -12,4 +12,11 @@ export default defineConfig({
     build: {
         sourcemap: true,
     },
+    css: {
+        preprocessorOptions: {
+          scss: {
+            quietDeps: true, // Suppresses deprecation warnings from node_modules
+          },
+        },
+      },
 });

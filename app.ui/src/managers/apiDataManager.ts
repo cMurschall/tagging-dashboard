@@ -61,7 +61,7 @@ export class ApiDataManager extends DataManager {
         return;
       }
 
-      console.log(`Nearest data point found for requested ${timestamp}:`, nearest);
+      // console.log(`Nearest data point found for requested ${timestamp}:`, nearest);
       this.measurement$.next(nearest);
     });
   }

@@ -14,8 +14,8 @@
 
 <script lang="ts">
 import { defineComponent, inject, PropType } from 'vue';
-import { useVideoControl } from './../composables/useVideoControl';
-import gridManager from '../managers/gridItemManager';
+import { useVideoControl } from '../../composables/useVideoControl';
+import gridManager from '../../managers/gridItemManager';
 
 
 const { seekTo } = useVideoControl()

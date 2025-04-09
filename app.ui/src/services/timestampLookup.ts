@@ -207,14 +207,19 @@ export class TimestampLookup {
             return right;
         }
 
+        let counter = 0; // Counter to track the number of iterations
 
         while (left <= right) {
+            counter++;
             const mid = Math.floor((left + right) / 2);
             const midTs = this.table.timestamps[mid];
 
             if (midTs === targetTs) {
+                // Exact match found
+                // console.log(`Binary search found exact match at index ${mid} after ${counter} iterations.`);
                 return mid;
             }
+        
 
             if (midTs < targetTs) {
                 left = mid + 1;
@@ -224,8 +229,11 @@ export class TimestampLookup {
         }
 
 
+
         const leftDiff = Math.abs(this.table.timestamps[left] - targetTs);
         const rightDiff = Math.abs(this.table.timestamps[right] - targetTs);
+        // No exact match, return the closest index
+        // console.log(`Binary search (${this.rowCount} rows) found closest match at index ${left} after ${counter} iterations. Left diff: ${leftDiff}, Right diff: ${rightDiff}`);
 
         return leftDiff < rightDiff ? left : right;
     }

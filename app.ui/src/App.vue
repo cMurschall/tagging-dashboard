@@ -124,7 +124,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, markRaw, watch, ref, onBeforeMount, onUnmounted } from 'vue';
+import { onMounted, markRaw, ref, onUnmounted } from 'vue';
 import { useProjectStore } from './stores/projectStore';
 
 import ToolBar from './components/menu/ToolBar.vue';
@@ -136,7 +136,8 @@ import VideoPlayer from './components/plugins/VideoPlayer.vue';
 import ListView from './components/plugins/ListView.vue';
 import Gauge from './components/plugins/Gauge.vue';
 import ScatterPlot from './components/plugins/ScatterPlot.vue';
-import TestGridItem from './components/TestGridItem.vue';
+import TestGridItem from './components/plugins/TestGridItem.vue';
+
 import gridItemManager, { GridManagerItem } from './managers/gridItemManager';
 import layoutManager from './managers/layoutManager';
 import { Subscription } from './observable';

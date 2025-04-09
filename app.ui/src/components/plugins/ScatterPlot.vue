@@ -56,7 +56,7 @@ import VChart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, computed, watch } from "vue";
 import { ECElementEvent, ElementEvent, use } from "echarts/core";
 import { ScatterChart, LineChart } from "echarts/charts";
-import { CanvasRenderer } from "echarts/renderers";
+import { CanvasRenderer, SVGRenderer } from "echarts/renderers";
 import {
   GridComponent,
   TooltipComponent,
@@ -76,13 +76,13 @@ import { useVideoControl } from './../../composables/useVideoControl';
 
 use([
   ScatterChart,
-  LineChart,
+  // LineChart,
   CanvasRenderer,
   GridComponent,
-  TooltipComponent,
-  LegendComponent,
-  DataZoomComponent,
-  ToolboxComponent
+  // TooltipComponent,
+  // LegendComponent,
+  // DataZoomComponent,
+  // ToolboxComponent
 ]);
 
 
@@ -150,30 +150,33 @@ const filteredColumnsSecondary = computed(() => {
 
 // --- ECharts Option ---
 const chartOption = ref({
-  title: {
-    text: "Chart Title",
-  },
+  // title: {
+  //   // text: "Chart Title",
+  // },
   tooltip: {},
-  toolbox: {
-    left: 'center',
-    feature: {
-      dataZoom: {}
-    }
-  },
-  legend: {
-    orient: 'vertical',
-    right: 10,
-    show: false
-  },
+  // toolbox: {
+  //   left: 'center',
+  //   feature: {
+  //     dataZoom: {
+  //       show: false
+  //     }
+  //   }
+  // },
+  // legend: {
+  //   orient: 'vertical',
+  //   right: 10,
+  //   show: false
+  // },
   xAxis: [{}],
   yAxis: [{}],
   dataZoom: [
     {
-      type: 'inside'
+      type: 'inside',
+
     },
-    {
-      type: 'slider'
-    }
+    // {
+    //   type: 'slider'
+    // }
   ],
   series: [
     {
@@ -183,7 +186,7 @@ const chartOption = ref({
       dimensions: ['x', 'y'],
       symbolSize: 3,
       itemStyle: {
-        opacity: 0.4
+        opacity: 0.8
       },
       large: true
     },
@@ -194,7 +197,7 @@ const chartOption = ref({
       dimensions: ['x', 'y'],
       symbolSize: 3,
       itemStyle: {
-        opacity: 0.4
+        opacity: 0.8
       },
       large: true
     }
@@ -280,8 +283,8 @@ const updateChartData = (table: TimeseriesTable) => {
   // chartOption.value.series[2].data = []; // Clear highlight point
 
   // Update axis names based on selections
-  // chartOption.value.yAxis[0].name = primaryColName ? `${primaryColName}${yAxisExpression.value !== 'y' ? ` (${yAxisExpression.value})` : ''}` : '';
-  // chartOption.value.yAxis[1].name = secondaryColName ? `${secondaryColName}${yAxisExpression2.value !== 'y' ? ` (${yAxisExpression2.value})` : ''}` : '';
+  chartOption.value.series[0].name = primaryColName     ? `${primaryColName}` : '';
+  chartOption.value.series[1].name = secondaryColName ? `${secondaryColName}` : '';
 
   // Show legend only if a secondary column is selected and has data
   chartOption.value.legend.show = !!secondaryColName && secondaryData.length > 0;

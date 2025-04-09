@@ -60,6 +60,7 @@ const videoOptions = ref<PlayerOptions>({
   sources: [],
   aspectRatio: '16:9',
   responsive: true,
+  playbackRates: [0.5, 1, 1.5, 2],
   controlBar: {
     volumePanel: {
       inline: false,

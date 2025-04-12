@@ -2,19 +2,27 @@
 import { ref } from 'vue'
 import { VideoPlayer } from '../components/plugins/VideoPlayer.vue'
 
-const videoRef = ref<VideoPlayer | null>(null)
-// Just a plain function reference, not reactive
-let seekTo = (_: number) => { }
 
+// Just a plain function reference, not reactive
+const videoRef = ref<VideoPlayer | null>(null)
+
+
+// This will eventually hold the "real" seekTo function
+const seekToImpl = ref<(time: number) => void>(() => {
+  console.warn('[useVideoControl] seekTo called before VideoPlayer is ready.')
+})
+
+// This function never changes, but it delegates to whatever is in `seekToImpl.value`
+function seekTo(time: number) {
+  seekToImpl.value(time)
+}
 
 export function useVideoControl() {
   return {
     videoRef,
-    get seekTo() {
-      return seekTo
-    },
-    setSeekTo(fn: typeof seekTo) {
-      seekTo = fn
+    seekTo,
+    setSeekTo(fn: (time: number) => void) {
+      seekToImpl.value = fn
     },
   }
 }

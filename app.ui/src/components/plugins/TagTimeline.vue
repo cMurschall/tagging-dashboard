@@ -1,6 +1,8 @@
 <template>
-    <Chart ref="chartContainer" :option="chartOption" :style="{ width: '100%', height: '100%' }"
+    <Chart ref="chartRef" :option="chartOption" :style="{ width: '100%', height: '100%' }"
         :autoresize="{ throttle: 100 }" />
+
+
 </template>
 
 <script setup lang="ts">
@@ -57,7 +59,7 @@ const sampleLabels: TimeLabel[] = [
 ];
 
 
-const chartContainer = ref<HTMLDivElement | null>(null);
+const chartRef = ref<typeof Chart | null>(null);
 const chartOption = ref<EChartsOption>({});
 
 const categoryColors: Record<string, string> = {
@@ -68,13 +70,21 @@ const categoryColors: Record<string, string> = {
     Default: '#bfbfbf', // Grey for unknown categories
 };
 
-function getColorByCategory(category: string): string {
+
+function getColorByCategory(categoryIndex: number): string {
+    // get index from categoryColors
+    const category = Object.keys(categoryColors)[categoryIndex];
     return categoryColors[category] || categoryColors.Default;
+
 }
 
 
 // The core rendering logic for the custom series
 function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRenderItemAPI): echarts.CustomSeriesRenderItemReturn {
+
+    console.log("api:", api);
+
+
     const startTime = api.value(0) as number;
     const endTime = api.value(1) as number;
     const category = api.value(2) as string;
@@ -214,9 +224,40 @@ const getChartOption = (labels: TimeLabel[]): EChartsOption => {
                     label.label_id,
                     label.value,
                 ]),
+                markLine: {
+                    symbol: 'none',
+                    label: { show: false },
+                    lineStyle: {
+                        color: '#000',
+                        type: 'solid',
+                        width: 2,
+                    },
+                    data: [
+                        { xAxis: 0 }, // Placeholder, will be updated
+                    ],
+                },
             },
         ],
     };
+};
+
+const handleOnChartClick = (params: any) => {
+
+    // const chart = chartRef.value;
+    // if (!chart) return;
+
+
+    // const pointInPixel = [params.event.offsetX, params.event.offsetY];
+    // const pointInGrid = chart.convertFromPixel({ xAxisIndex: 0 }, pointInPixel);
+    // const time = pointInGrid[0];
+
+    // // Call your seekTo function
+    // // seekTo(time);
+
+    // // Update the markLine
+    // const updatedOption = chart.getOption();
+    // updatedOption.series[0].markLine.data = [{ xAxis: time }];
+    // chart.setOption(updatedOption);
 };
 
 onMounted(() => {

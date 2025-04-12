@@ -167,3 +167,72 @@ export const toDenseTable = (dataPoints: TimeseriesDataPoint[]): TimeseriesTable
   }
   return { timestamps, values: denseValues };
 }
+
+
+
+export interface TimestampStatistics {
+  count: number;
+  min: number;
+  max: number;
+  duration: number;
+  meanInterval: number;
+  medianInterval: number;
+  minInterval: number;
+  maxInterval: number;
+  uniform: boolean;
+}
+
+
+export function getTimestampStatistics(table: TimeseriesTable): TimestampStatistics {
+  const ts = table.timestamps;
+  const count = ts.length;
+
+  if (count < 2) {
+    return {
+      count,
+      min: ts[0] ?? NaN,
+      max: ts[0] ?? NaN,
+      duration: 0,
+      meanInterval: 0,
+      medianInterval: 0,
+      minInterval: 0,
+      maxInterval: 0,
+      uniform: true
+    };
+  }
+
+  const min = ts[0];
+  const max = ts[ts.length - 1];
+  const duration = max - min;
+
+  const intervals: number[] = [];
+  for (let i = 1; i < ts.length; i++) {
+    intervals.push(ts[i] - ts[i - 1]);
+  }
+
+  const meanInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+
+  const sortedIntervals = [...intervals].sort((a, b) => a - b);
+  const mid = Math.floor(sortedIntervals.length / 2);
+  const medianInterval = sortedIntervals.length % 2 === 0
+    ? (sortedIntervals[mid - 1] + sortedIntervals[mid]) / 2
+    : sortedIntervals[mid];
+
+  const minInterval = sortedIntervals[0];
+  const maxInterval = sortedIntervals[sortedIntervals.length - 1];
+
+  const tolerance = 1e-9;
+  const uniform = maxInterval - minInterval < tolerance;
+
+  return {
+    count,
+    min,
+    max,
+    duration,
+    meanInterval,
+    medianInterval,
+    minInterval,
+    maxInterval,
+    uniform
+  };
+}

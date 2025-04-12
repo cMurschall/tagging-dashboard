@@ -49,7 +49,7 @@ const props = defineProps<VideoPlayerProps>()
 const videoElement = ref<HTMLVideoElement | null>(null); // Reference to the html video element
 const videoPlayer = ref<VideoPlayer | undefined>(undefined); // Reference to the video player instance
 
-const { videoRef, setSeekTo } = useVideoControl()
+
 
 const videoOptions = ref<PlayerOptions>({
   controls: true,
@@ -146,6 +146,8 @@ watch(() => props.videoInfo.videoFileName, (newValue) => {
 
 
 onMounted(() => {
+  const { videoRef, setSeekTo } = useVideoControl()
+  
   if (!videoElement.value) {
     console.error('Video element not found');
     return;

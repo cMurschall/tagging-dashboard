@@ -15,7 +15,7 @@
                 </aside>
 
                 <!-- Main Content -->
-                <main class="col-8  d-flex flex-column mb-4">
+                <main class="col-10  d-flex flex-column mb-4">
 
                     <!-- Toolbar -->
                     <div class="toolbar d-flex align-items-center justify-content-start p-2 bg-light border-bottom">
@@ -137,6 +137,7 @@ import ListView from './components/plugins/ListView.vue';
 import Gauge from './components/plugins/Gauge.vue';
 import ScatterPlot from './components/plugins/ScatterPlot.vue';
 import TestGridItem from './components/plugins/TestGridItem.vue';
+import TagTimeline from './components/plugins/TagTimeline.vue';
 
 import gridItemManager, { GridManagerItem } from './managers/gridItemManager';
 import layoutManager from './managers/layoutManager';
@@ -157,7 +158,8 @@ gridItemManager.setComponentMap({
     VideoPlayer: () => markRaw(VideoPlayer),
     Gauge: () => markRaw(Gauge),
     ScatterPlot: () => markRaw(ScatterPlot),
-    TestGridItem: () => markRaw(TestGridItem)
+    TestGridItem: () => markRaw(TestGridItem),
+    TagTimeline: () => markRaw(TagTimeline),
 });
 
 const availableLayouts = ref<string[]>([]);

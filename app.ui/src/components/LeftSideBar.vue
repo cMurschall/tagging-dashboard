@@ -93,11 +93,21 @@
 
 
                         <BListGroupItem>
+                            <strong>Data file:</strong><br>
+                            {{ projectStore.loadedProject?.testDriveDataInfo?.csvFileName }}
+                        </BListGroupItem>
+
+                        <BListGroupItem>
+                            <strong>Video file:</strong><br>
+                            {{ projectStore.loadedProject?.testDriveVideoInfo?.videoFileName }}
+                        </BListGroupItem>
+
+
+                        <BListGroupItem>
                             <strong>Data/Video Overlap:</strong><br>
 
 
-                            <TimelineRange
-                             :testDriveDataInfo="projectStore.loadedProject?.testDriveDataInfo ?? null"
+                            <TimelineRange :testDriveDataInfo="projectStore.loadedProject?.testDriveDataInfo ?? null"
                                 :testDriveVideoInfo="projectStore.loadedProject?.testDriveVideoInfo ?? null" />
                         </BListGroupItem>
                     </BListGroup>

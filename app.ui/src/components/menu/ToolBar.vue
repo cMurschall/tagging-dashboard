@@ -6,6 +6,7 @@
             <BDropdownItem @click="handleAddGauge">Add Gauge</BDropdownItem>
             <BDropdownItem @click="handleAddScatter">Add Chart</BDropdownItem>
             <BDropdownItem @click="handleAddList">Add List</BDropdownItem>
+            <BDropdownItem @click="handleAddTagLine">Add Tag Line</BDropdownItem>
             <BDropdownDivider />
             <BDropdownItem @click="handleAddTestGridItem">Add Test</BDropdownItem>
 
@@ -112,6 +113,27 @@ const showRenameLayoutModal = ref(false);
 
 const layoutsData = ref<Record<string, StoredLayoutItem[]>>({});
 let subscription: { unsubscribe: () => void } | null = null;
+
+
+
+const handleAddTagLine = () => {
+    gridItemManager.addNewItem({
+        component: 'TagTimeline',
+        x: 0,
+        y: 0,
+        w: 6,
+        h: 7,
+        noMove: true,
+        id: 'tag-timeline',
+        title: 'Tag Timeline',
+        props: {
+            // simulationTimeObservable
+        },
+        dependencies: {
+            simulationTimeObservable
+        }
+    });
+};
 
 
 

@@ -1,12 +1,44 @@
 <template>
-    <Chart ref="chartRef" :option="chartOption" :style="{ width: '100%', height: '100%' }"
-        :autoresize="{ throttle: 100 }" />
+    <Chart ref="chartRef" :option="chartOption" :style="{ width: '100%', height: '80%' }"
+        :autoresize="{ throttle: 100 }" @click="handleOnChartClick" />
+
+    <!-- The editor form goes below (visible if we have an activeLabel) -->
+    <div v-if="activeLabel" class="mt-1">
+
+        <!-- Flex container for a single-row layout -->
+        <div class="d-flex align-items-center flex-wrap gap-1">
+
+            <h5 class="mb-0 me-2">Edit Label: {{ activeLabel.label_id }}</h5>
 
 
+            <!-- Start Time -->
+            <label for="startTime" class="mb-0">Start:</label>
+            <input id="startTime" type="number" class="form-control" style="width: 100px;" v-model="formData.start" />
+
+            <!-- End Time -->
+            <label for="endTime" class="mb-0">End:</label>
+            <input id="endTime" type="number" class="form-control" style="width: 100px;" v-model="formData.end" />
+
+            <!-- Category -->
+            <label for="category" class="mb-0">Category:</label>
+            <input id="category" type="text" class="form-control" style="width: 150px;" v-model="formData.category" />
+
+
+            <!-- Notes -->
+            <label for="notes" class="mb-0">Notes:</label>
+            <input id="notes" type="text" class="form-control" style="width: 150px;" v-model="formData.category" />
+
+
+            <!-- Buttons -->
+            <BButton variant="primary" @click="onSaveLabel">Save</BButton>
+            <BButton variant="danger" @click="onDeleteLabel">Delete</BButton>
+            <BButton variant="secondary" @click="onCancelEdit">Cancel</BButton>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import Chart from 'vue-echarts';
 
 import * as echarts from 'echarts/core';
@@ -20,7 +52,7 @@ import {
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import type { EChartsOption, CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams } from 'echarts';
-
+import { BButton } from "bootstrap-vue-next";
 import { useVideoControl } from '../../composables/useVideoControl';
 // import gridManager from '../../managers/gridItemManager'; // Assuming this is not directly used for chart logic
 
@@ -44,37 +76,44 @@ interface TimeLabel {
     category: string;
     label_start_time: number; //  seconds
     label_end_time: number;   //  seconds
-    value?: any;
+    note?: any;
 }
 
 
 
 const sampleLabels: TimeLabel[] = [
-    { label_id: 'l1', category: 'Alert', label_start_time: 10, label_end_time: 10, value: 'System restarted' },
-    { label_id: 'l2', category: 'Maintenance', label_start_time: 20, label_end_time: 40, value: 'DB Backup' },
-    { label_id: 'l3', category: 'Warning', label_start_time: 30, label_end_time: 35, value: 'High CPU Load' },
-    { label_id: 'l4', category: 'Alert', label_start_time: 50, label_end_time: 50, value: 'Disk Full' },
-    { label_id: 'l5', category: 'Info', label_start_time: 15, label_end_time: 80, value: 'User Activity Spike' },
-    { label_id: 'l6', category: 'Maintenance', label_start_time: 40, label_end_time: 45, value: 'Patch Deployment' },
+    { label_id: 'l1', category: 'Alert', label_start_time: 10, label_end_time: 10, note: 'System restarted' },
+    { label_id: 'l2', category: 'Maintenance', label_start_time: 20, label_end_time: 40, note: 'DB Backup' },
+    { label_id: 'l3', category: 'Warning', label_start_time: 30, label_end_time: 35, note: 'High CPU Load' },
+    { label_id: 'l4', category: 'Alert', label_start_time: 50, label_end_time: 50, note: 'Disk Full' },
+    { label_id: 'l5', category: 'Info', label_start_time: 15, label_end_time: 80, note: 'User Activity Spike' },
+    { label_id: 'l6', category: 'Maintenance', label_start_time: 40, label_end_time: 45, note: 'Patch Deployment' },
 ];
 
 
 const chartRef = ref<typeof Chart | null>(null);
 const chartOption = ref<EChartsOption>({});
 
-const categoryColors: Record<string, string> = {
-    Alert: '#ff4d4f', // Red
-    Maintenance: '#1890ff', // Blue
-    Warning: '#faad14', // Orange
-    Info: '#52c41a', // Green
-    Default: '#bfbfbf', // Grey for unknown categories
-};
+
+const categoryColors = [
+    '#0072B2', // blue
+    '#E69F00', // orange
+    '#009E73', // green
+    '#F0E442', // yellow
+    '#56B4E9', // sky blue
+    '#D55E00', // vermillion (reddish orange)
+    '#CC79A7', // purple-pink
+    '#999999', // gray
+    '#000000', // black
+    '#8DD3C7', // teal
+    '#FB8072', // salmon
+    '#80B1D3', // light blue
+];
 
 
 function getColorByCategory(categoryIndex: number): string {
-    // get index from categoryColors
-    const category = Object.keys(categoryColors)[categoryIndex];
-    return categoryColors[category] || categoryColors.Default;
+
+    return categoryColors[categoryIndex] || categoryColors[categoryColors.length - 1]; // default to last color if not found
 
 }
 
@@ -88,6 +127,9 @@ function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeries
     const startTime = api.value(0) as number;
     const endTime = api.value(1) as number;
     const category = api.value(2) as string;
+    const labelId = api.value(3) as string;
+
+
     const isInstantaneous = startTime === endTime;
 
     const startPoint = api.coord([startTime, api.value(2)]); // Use category value for y-coordinate
@@ -135,6 +177,7 @@ function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeries
                 transition: ['shape'],
                 shape: rectShape,
                 style: itemStyle,
+                id: labelId,
             }
             : undefined;
     }
@@ -222,7 +265,7 @@ const getChartOption = (labels: TimeLabel[]): EChartsOption => {
                     label.label_end_time,
                     label.category,
                     label.label_id,
-                    label.value,
+                    label.note,
                 ]),
                 markLine: {
                     symbol: 'none',
@@ -241,24 +284,68 @@ const getChartOption = (labels: TimeLabel[]): EChartsOption => {
     };
 };
 
+
+const activeLabel = ref<TimeLabel | null>(null);
+
+// This object tracks whatever the user types in the "edit" form
+const formData = reactive({
+    start: 0,
+    end: 0,
+    category: '',
+});
+
+const setFormData = (label: TimeLabel) => {
+    formData.start = label.label_start_time;
+    formData.end = label.label_end_time;
+    formData.category = label.category;
+}
+
 const handleOnChartClick = (params: any) => {
+    if (params.componentType === 'series' && params.componentSubType === 'custom') {
+        // Identify the clicked label
 
-    // const chart = chartRef.value;
-    // if (!chart) return;
+        // const startTime = params.value[0] as number;
+        // const endTime = params.value[1] as number;
+        // const category = params.value[2] as string;
+        const labelId = params.value[3] as string;
 
 
-    // const pointInPixel = [params.event.offsetX, params.event.offsetY];
-    // const pointInGrid = chart.convertFromPixel({ xAxisIndex: 0 }, pointInPixel);
-    // const time = pointInGrid[0];
+        // Find the label in your `labels` array
+        const found = sampleLabels.find(l => l.label_id === labelId);
+        if (found) {
+            activeLabel.value = { ...found };
+            setFormData(found);
+        }
+    } else {
+        // Clicked somewhere else, optionally clear active label
+        // activeLabel.value = null;
+    }
+}
 
-    // // Call your seekTo function
-    // // seekTo(time);
+const onSaveLabel = () => {
+    if (activeLabel.value) {
+        activeLabel.value.label_start_time = formData.start;
+        activeLabel.value.label_end_time = formData.end;
+        activeLabel.value.category = formData.category;
+        chartOption.value = getChartOption(sampleLabels);
+    }
+}
 
-    // // Update the markLine
-    // const updatedOption = chart.getOption();
-    // updatedOption.series[0].markLine.data = [{ xAxis: time }];
-    // chart.setOption(updatedOption);
-};
+const onDeleteLabel = () => {
+    if (activeLabel.value) {
+        const index = sampleLabels.findIndex(l => l.label_id === activeLabel.value?.label_id);
+        if (index !== -1) {
+            sampleLabels.splice(index, 1);
+            chartOption.value = getChartOption(sampleLabels);
+        }
+    }
+}
+
+const onCancelEdit = () => {
+    activeLabel.value = null;
+    setFormData({ label_id: '', category: '', label_start_time: 0, label_end_time: 0 });
+}
+
 
 onMounted(() => {
     chartOption.value = getChartOption(sampleLabels);

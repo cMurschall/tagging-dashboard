@@ -90,32 +90,21 @@
                             ).toFixed(2)
                             }} km
                         </BListGroupItem>
-
-
                         <BListGroupItem>
                             <strong>Data file:</strong><br>
                             {{ projectStore.loadedProject?.testDriveDataInfo?.csvFileName }}
                         </BListGroupItem>
-
                         <BListGroupItem>
                             <strong>Video file:</strong><br>
                             {{ projectStore.loadedProject?.testDriveVideoInfo?.videoFileName }}
                         </BListGroupItem>
-
-
                         <BListGroupItem>
                             <strong>Data/Video Overlap:</strong><br>
-
-
                             <TimelineRange :testDriveDataInfo="projectStore.loadedProject?.testDriveDataInfo ?? null"
                                 :testDriveVideoInfo="projectStore.loadedProject?.testDriveVideoInfo ?? null" />
                         </BListGroupItem>
                     </BListGroup>
-
                 </BCardBody>
-                <!-- <BCardFooter class="text-end">
-             
-                </BCardFooter> -->
             </BCard>
 
         </div>
@@ -135,10 +124,10 @@
 import ProjectListItem from './ProjectListItem.vue';
 import TimelineRange from './TimelineRange.vue'
 
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useProjectStore } from './../stores/projectStore';
 
-import { useToastController, BProgress, BProgressBar } from 'bootstrap-vue-next'
+import { useToastController } from 'bootstrap-vue-next'
 import { CreateProjectPayload } from '../services/utilities';
 
 import { safeFetch, ProjectApiClient as client } from '../services/utilities';

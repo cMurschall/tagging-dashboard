@@ -69,7 +69,7 @@
                 <div v-if="selectedLayoutToRename">
                     <div class="mb-3">
                         <label for="renameLayoutName" class="form-label">New Layout Name for "{{ selectedLayoutToRename
-                            }}":</label>
+                        }}":</label>
                         <BFormInput id="renameLayoutName" v-model="renameLayoutName" placeholder="Enter new name">
                         </BFormInput>
                     </div>
@@ -127,6 +127,7 @@ const handleAddTagLine = () => {
         id: 'tag-timeline',
         title: 'Tag Timeline',
         props: {
+            projectInfo: projectStore.loadedProject || {}
             // simulationTimeObservable
         },
         dependencies: {
@@ -308,7 +309,14 @@ const handleRestoreLayout = (layoutName: string) => {
         if (item.component === 'VideoPlayer') {
             componentProps.videoInfo = projectStore.loadedProject?.testDriveVideoInfo || {};
             componentDependencies.simulationTimeObservable = simulationTimeObservable;
-        } else {
+        }
+        else if (item.component === 'TagTimeline') {
+            componentProps.projectInfo = projectStore.loadedProject || {};
+            componentDependencies.simulationTimeObservable = simulationTimeObservable;
+        }
+
+
+        else {
 
             const dataManager = new ApiDataManager();
 

@@ -2,6 +2,7 @@ import csv
 import logging
 from typing import List, Optional
 import pandas as pd
+import re
 
 from app.models.tag import Tag
 from app.models.testDriveTagInfo import TestDriveTagInfo
@@ -12,25 +13,45 @@ class TestDriveTagService:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
-    def _get_next_id(self, file_path: str) -> int:
-        """
-        Reads the CSV file and returns the next available integer ID (max id + 1).
-        If the file does not exist or is empty, returns 1.
-        """
+    def _get_next_id(self, file_path: str, id_prefix="id_"):
         try:
             df = pd.read_csv(file_path)
-            if df.empty or 'id' not in df.columns:
-                self.logger.debug("CSV file is empty or missing 'id' column; starting IDs at 1.")
-                return 1
-            next_id = int(df['id'].max()) + 1
-            self.logger.debug("Current max ID is %d. Next ID will be %d.", int(df['id'].max()), next_id)
-            return next_id
+            if df.empty:
+                return f"{id_prefix}1"
+            # Extract the numeric part of the IDs
+            df['numeric_id'] = df['id'].apply(lambda x: int(re.search(r'\d+$', x).group()))
+            # Find the maximum numeric ID
+            max_numeric_id = df['numeric_id'].max()
+            # The next free ID will be one greater than the maximum
+            next_numeric_id = max_numeric_id + 1
+            return f"{id_prefix}{next_numeric_id}"
+
         except (FileNotFoundError, pd.errors.EmptyDataError):
             self.logger.info("CSV file not found or empty; starting IDs at 1.")
             return 1
         except Exception as e:
             self.logger.exception("Unexpected error when determining next ID: %s", e)
             raise
+
+    # def _get_next_id(self, file_path: str) -> int:
+    #     """
+    #     Reads the CSV file and returns the next available integer ID (max id + 1).
+    #     If the file does not exist or is empty, returns 1.
+    #     """
+    #     try:
+    #         df = pd.read_csv(file_path)
+    #         if df.empty or 'id' not in df.columns:
+    #             self.logger.debug("CSV file is empty or missing 'id' column; starting IDs at 1.")
+    #             return "id_1"
+    #         next_id = int(df['id'].max()) + 1
+    #         self.logger.debug("Current max ID is %d. Next ID will be %d.", int(df['id'].max()), next_id)
+    #         return next_id
+    #     except (FileNotFoundError, pd.errors.EmptyDataError):
+    #         self.logger.info("CSV file not found or empty; starting IDs at 1.")
+    #         return 1
+    #     except Exception as e:
+    #         self.logger.exception("Unexpected error when determining next ID: %s", e)
+    #         raise
 
     def get_all_tags(self, info: TestDriveTagInfo) -> List[Tag]:
         file_path = info.tag_file_full_path
@@ -93,7 +114,7 @@ class TestDriveTagService:
 
         return tag
 
-    def update_tag(self, info: TestDriveTagInfo, id: int, updated_tag: Tag) -> Optional[Tag]:
+    def update_tag(self, info: TestDriveTagInfo, id: str, updated_tag: Tag) -> Optional[Tag]:
         file_path = info.tag_file_full_path
         self.logger.info("Updating tag with Id %s in file: %s", id, file_path)
         try:
@@ -123,7 +144,7 @@ class TestDriveTagService:
             self.logger.error("Tag with Id %d not found for update.", id)
             raise ValueError(f"Tag with Id '{id}' not found in the CSV file.")
 
-    def delete_tag(self, info: TestDriveTagInfo, id: int) -> bool:
+    def delete_tag(self, info: TestDriveTagInfo, id: str) -> bool:
         file_path = info.tag_file_full_path
         self.logger.info("Deleting tag with ID %d from file: %s", id, file_path)
         try:

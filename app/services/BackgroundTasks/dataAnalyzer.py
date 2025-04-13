@@ -4,7 +4,7 @@ import pandas as pd
 
 from app.models.testDriveDataInfo import TestDriveDataInfo
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('uvicorn.error')
 
 
 def analyze_data(data_info: TestDriveDataInfo) -> bool:

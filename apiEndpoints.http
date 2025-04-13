@@ -80,6 +80,24 @@ GET http://localhost:8888/api/v1/player/thumbnail/paul_timing_cw2_sprite.png
 ### Activate Project
 POST http://127.0.0.1:8888/api/v1/project/activate/1
 
+
+### Get all tags categories
+GET http://127.0.0.1:8888/api/v1/tag/category/all
+
+
+### Add tags category
+POST  http://127.0.0.1:8888/api/v1/tag/category
+Content-Type: application/json
+
+{
+  "name": "Group B"
+}
+
+
+### Delete tags category
+DELETE http://127.0.0.1:8888/api/v1/tag/category/2
+
+
 ### Get all tags
 GET http://127.0.0.1:8888/api/v1/tag/all
 

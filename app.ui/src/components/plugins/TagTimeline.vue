@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, inject, onUnmounted } from 'vue';
 import Chart from 'vue-echarts';
 
 import * as echarts from 'echarts/core';
@@ -55,8 +55,10 @@ import type { EChartsOption, CustomSeriesRenderItemAPI, CustomSeriesRenderItemPa
 import { BButton } from "bootstrap-vue-next";
 import { useVideoControl } from '../../composables/useVideoControl';
 import { Tag, TagCategory } from '../../../services/restclient';
-import { safeFetch, TagApiClient as client } from '../../services/utilities';
-// import gridManager from '../../managers/gridItemManager'; // Assuming this is not directly used for chart logic
+import { safeFetch, TagApiClient as client, TestDriveProjectInfo } from '../../services/utilities';
+import { Observable, Subscription } from '../../observable';
+
+
 
 echarts.use([
     CustomChart,
@@ -71,8 +73,44 @@ echarts.use([
 const { seekTo } = useVideoControl();
 
 
+// Inject the function from the parent
+const setCardTitle = inject('setCardTitle') as (title: string) => void;
 
-// TimeLabel interface remains the same
+
+type PluginState = {
+
+}
+
+
+
+
+interface TagTimelineProps {
+    showMenu: boolean;
+    id: string;
+    pluginState?: PluginState;
+
+    projectInfo?: TestDriveProjectInfo,
+}
+
+
+const props = withDefaults(defineProps<TagTimelineProps>(), {
+    showMenu: false, // Default value for showMenu
+
+    id: '', // Default value for id
+    pluginState: () => ({
+
+    }),
+
+});
+
+const pluginState = ref<PluginState>(structuredClone(props.pluginState));
+
+const simulationTimeObservable = inject<Observable<number>>('simulationTimeObservable');
+if (!simulationTimeObservable) {
+    throw new Error('simulationTimeObservable not provided');
+}
+
+
 interface TimeLabel {
     label_id: string;
     category: string;
@@ -80,8 +118,6 @@ interface TimeLabel {
     label_end_time: number;   //  seconds
     note?: any;
 }
-
-
 
 
 
@@ -178,20 +214,33 @@ function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeries
 }
 
 const getChartOption = (): EChartsOption => {
-
-
     const labels = availableTags.value;
-    let minTime = labels[0]?.label_start_time ?? 0;
-    let maxTime = labels[0]?.label_end_time ?? 0;
-    //const categories = [...new Set(labels.map((label) => label.category))]; // Extract unique categories
-    const uniqueCategories = new Set( [...labels.map((label) => label.category), ...availableTagCategories.value.map(t => t.name)  ]);
+
+
+    const minDataTime = props.projectInfo?.testDriveDataInfo?.dataSimulationTimeStartS ?? 0;
+    const maxDataTime = props.projectInfo?.testDriveDataInfo?.dataSimulationTimeEndS ?? 0;
+
+    const minVideoTime = props.projectInfo?.testDriveVideoInfo?.videoSimulationTimeEndS ?? 0;
+    const maxVideoTime = props.projectInfo?.testDriveVideoInfo?.videoSimulationTimeEndS ?? 0;
+
+   
+    let minLabelTime = labels[0]?.label_start_time ?? 0;
+    let maxLabelTime = labels[0]?.label_end_time ?? 0;
+
+    labels.forEach((label) => {
+        minLabelTime = Math.min(minLabelTime, label.label_start_time);
+        maxLabelTime = Math.max(maxLabelTime, label.label_end_time);
+    });
+
+    const minTime = Math.min(minDataTime, minVideoTime, minLabelTime);
+    const maxTime = Math.max(maxDataTime, maxVideoTime, maxLabelTime);
+
+
+    const uniqueCategories = new Set([...labels.map((label) => label.category), ...availableTagCategories.value.map(t => t.name)]);
     const categories = Array.from(uniqueCategories).sort((a, b) => b.localeCompare(a)); // Sort categories alphabetically
 
 
-    labels.forEach((label) => {
-        minTime = Math.min(minTime, label.label_start_time);
-        maxTime = Math.max(maxTime, label.label_end_time);
-    });
+
 
     const timePadding = (maxTime - minTime) * 0.05;
 
@@ -324,10 +373,20 @@ const handleOnChartClick = (params: any) => {
 
 const onSaveLabel = () => {
     if (activeLabel.value) {
-        activeLabel.value.label_start_time = formData.start;
-        activeLabel.value.label_end_time = formData.end;
-        activeLabel.value.category = formData.category;
-        chartOption.value = getChartOption();
+        const index = availableTags.value.findIndex(l => l.label_id === activeLabel.value?.label_id);
+        if (index !== -1) {
+            availableTags.value[index].label_start_time = formData.start;
+            availableTags.value[index].label_end_time = formData.end;
+            availableTags.value[index].category = formData.category;
+
+
+            chartOption.value = getChartOption();
+        }
+
+        // activeLabel.value.label_start_time = formData.start;
+        // activeLabel.value.label_end_time = formData.end;
+        // activeLabel.value.category = formData.category;
+        // chartOption.value = getChartOption();
     }
 }
 
@@ -393,12 +452,25 @@ const sampleLabels: TimeLabel[] = [
     { label_id: 'l6', category: 'Maintenance', label_start_time: 40, label_end_time: 45, note: 'Patch Deployment' },
 ];
 
+let subscription: Subscription | null = null;
 
+const currentSimulationTime = ref(0);
 
 onMounted(async () => {
     availableTags.value = sampleLabels;
     await loadProjectTags()
     await loadProjectTagCategories();
     chartOption.value = getChartOption();
+
+    subscription = simulationTimeObservable.subscribe((time) => {
+        currentSimulationTime.value = time;
+        setCardTitle(`Player: ${time}`);
+    });
 });
+
+onUnmounted(() => {
+    subscription?.unsubscribe();
+});
+
+
 </script>

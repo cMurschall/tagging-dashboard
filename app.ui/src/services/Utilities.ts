@@ -33,6 +33,11 @@ export const HealthApiClient = new RestClient.HealthcheckApi(new RestClient.Conf
 }));
 
 
+export const TagApiClient = new RestClient.TagEndpointApi(new RestClient.Configuration({
+  basePath: BasePath,
+}));
+
+
 export type { TestDriveProjectInfoOutput as TestDriveProjectInfo, CreateProjectPayload, TestDriveVideoInfo };
 
 

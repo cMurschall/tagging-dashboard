@@ -57,7 +57,7 @@ export class ApiDataManager extends DataManager {
 
       const nearest = this.timestampLookup.lookup(timestamp);
       if (!nearest) {
-        console.warn('No nearest data point found for timestamp:', timestamp);
+        // console.warn('No nearest data point found for timestamp:', timestamp);
         return;
       }
 

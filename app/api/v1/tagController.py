@@ -1,11 +1,11 @@
 import logging
-from http.client import HTTPException
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from app.dependencies import get_testdata_manager, get_tagdata_manager
 from app.models.tag import Tag
+from app.models.testDriveTagInfo import TagCategory
 from app.services.testDriveDataService import TestDriveDataService
 from app.services.testDriveTagService import TestDriveTagService
 
@@ -30,6 +30,14 @@ class AllTagListResponse(BaseModel):
 
 class TagResponse(BaseModel):
     tag: Tag
+
+
+class AllCategoriesResponse(BaseModel):
+    categories: list[TagCategory]
+
+
+class CreateNewTagCategoryPayload(BaseModel):
+    name: str = Field("", title="Category Name", description="The name of the category")
 
 
 class TagController:
@@ -66,7 +74,7 @@ class TagController:
 
         @self.router.get("/get_by_id/{id}", response_model=TagResponse)
         async def get_tag_by_guid(
-                id: int,
+                id: str,
                 test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
                 tag_service: TestDriveTagService = Depends(lambda: get_tagdata_manager())):
             active_testdrive = test_drive_service.get_active_testdrive()
@@ -78,7 +86,7 @@ class TagController:
 
         @self.router.delete("/delete/{id}", response_model=TagResponse)
         async def delete_tag(
-                id: int,
+                id: str,
                 test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
                 tag_service: TestDriveTagService = Depends(lambda: get_tagdata_manager())):
             active_testdrive = test_drive_service.get_active_testdrive()
@@ -90,7 +98,7 @@ class TagController:
 
         @self.router.put("/update/{id}", response_model=TagResponse)
         async def update_tag(
-                id: int,
+                str: int,
                 payload: UpdateTagPayload,
                 test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
                 tag_service: TestDriveTagService = Depends(lambda: get_tagdata_manager())):
@@ -101,3 +109,54 @@ class TagController:
             tag = Tag(**payload.model_dump())
             updated_tag = tag_service.update_tag(active_testdrive.test_drive_tag_info, id, tag)
             return {"tag": updated_tag}
+
+        @self.router.get("/category/all", response_model=AllCategoriesResponse)
+        async def get_all_tag_categories(
+                test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+            active_testdrive = test_drive_service.get_active_testdrive()
+            if not active_testdrive:
+                return {"categories": []}
+            return {"categories": active_testdrive.test_drive_tag_info.tag_categories}
+
+        @self.router.post("/category", response_model=AllCategoriesResponse)
+        async def add_tag_category(
+                payload: CreateNewTagCategoryPayload,
+                test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+            if not payload.name:
+                raise HTTPException(status_code=400, detail="Category name is required")
+
+            active_testdrive = test_drive_service.get_active_testdrive()
+            if not active_testdrive:
+                raise HTTPException(status_code=404, detail="No active test drive found")
+
+            not_reserved_id = 1
+            for category in active_testdrive.test_drive_tag_info.tag_categories:
+                # check if category already exists
+                if category.name == payload.name:
+                    raise HTTPException(status_code=400, detail="Category name already exists")
+                not_reserved_id += 1
+
+            new_category = TagCategory(id=not_reserved_id, name=payload.name)
+            active_testdrive.test_drive_tag_info.tag_categories.append(new_category)
+
+            updated_testdrive = test_drive_service.update_testdrive(active_testdrive)
+            return {"categories": updated_testdrive.test_drive_tag_info.tag_categories}
+
+        @self.router.delete("/category/{category_id}", response_model=AllCategoriesResponse)
+        async def delete_tag_category(
+                category_id: int,
+                test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+            active_testdrive = test_drive_service.get_active_testdrive()
+            if not active_testdrive:
+                raise HTTPException(status_code=404, detail="No active test drive found")
+
+            # Find the category by ID
+            category_index = next(
+                (index for index, cat in enumerate(active_testdrive.test_drive_tag_info.tag_categories) if
+                 cat.id == category_id), None)
+            if not category_index:
+                raise HTTPException(status_code=404, detail=f"Category with ID '{category_id}' not found")
+            # Remove the category from the list
+            active_testdrive.test_drive_tag_info.tag_categories.pop(category_index)
+            updated_testdrive = test_drive_service.update_testdrive(active_testdrive)
+            return {"categories": updated_testdrive.test_drive_tag_info.tag_categories}

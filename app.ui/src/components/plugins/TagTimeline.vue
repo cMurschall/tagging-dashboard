@@ -1,44 +1,103 @@
 <template>
-    <Chart ref="chartRef" :option="chartOption" :style="{ width: '100%', height: '80%' }"
-        :autoresize="{ throttle: 100 }" @click="handleOnChartClick" />
 
-    <!-- The editor form goes below (visible if we have an activeLabel) -->
-    <div v-if="activeLabel" class="mt-1">
+    <div ref="containerRef" style="width: 100%; height: 100%;">
+        <Transition name="fade" mode="out-in">
 
-        <!-- Flex container for a single-row layout -->
-        <div class="d-flex align-items-center flex-wrap gap-1">
+            <div v-if="showMenu">
+                <div class="p-3">
+                    <h4>Known Tag Categories</h4>
+                    <BRow class="mb-3">
+                        <!-- New Category Form -->
+                        <div class="mb-3 d-flex align-items-center gap-2">
+                            <input v-model="newTagCategoryName" class="form-control" style="max-width: 250px;"
+                                placeholder="New category name" />
+                            <BButton variant="success" @click="addTagCategory" :disabled="!newTagCategoryName.trim()">
+                                Add
+                            </BButton>
+                        </div>
+                    </BRow>
 
-            <h5 class="mb-0 me-2">Edit Label: {{ activeLabel.label_id }}</h5>
+                    <BRow class="mb-3">
+                        <BCol cols="6">
+                            <!-- Category List -->
+                            <BListGroup>
+                                <BListGroupItem v-for="(category, index) in availableTagCategories" :key="category.id"
+                                    class="d-flex justify-content-between align-items-center">
+                                    {{ category.name }}
+                                    <BButton size="sm"
+                                        :style="{ backgroundColor: categoryColors[index % categoryColors.length] }"
+                                        @click="deleteTagCategory(category)">Delete</BButton>
+                                </BListGroupItem>
+                            </BListGroup>
+                        </BCol>
+                    </BRow>
+                </div>
+            </div>
+            <div v-else class="d-flex flex-column" style="height: 100%;">
+                <!-- Flex container for a single-row layout -->
+                <div class="d-flex align-items-center flex-wrap gap-1">
+
+                    <BButton v-for="(category, index) in allCategories" :key="category" :style="{
+                        backgroundColor: categoryColors[index % categoryColors.length],
+                        border: 'none',
+                        color: '#fff'
+                    }" @click="toggleTag(category)">
+                        {{ toggleState[category] ? 'Stop ' : 'Start ' }}'{{ category }}'</BButton>
+
+                </div>
 
 
-            <!-- Start Time -->
-            <label for="startTime" class="mb-0">Start:</label>
-            <input id="startTime" type="number" class="form-control" style="width: 100px;" v-model="formData.start" />
+                <Chart ref=" chartRef" :option="chartOption" :style="{ width: '100%', height: '80%' }"
+                    :autoresize="{ throttle: 100 }" @click="handleOnChartClick" />
 
-            <!-- End Time -->
-            <label for="endTime" class="mb-0">End:</label>
-            <input id="endTime" type="number" class="form-control" style="width: 100px;" v-model="formData.end" />
+                <div v-if="activeLabel" class="mt-1">
 
-            <!-- Category -->
-            <label for="category" class="mb-0">Category:</label>
-            <input id="category" type="text" class="form-control" style="width: 150px;" v-model="formData.category" />
+                    <!-- Flex container for a single-row layout -->
+                    <div class="d-flex align-items-center flex-wrap gap-1">
+
+                        <h5 class="mb-0 me-2">Edit Label: {{ activeLabel.label_id }}</h5>
 
 
-            <!-- Notes -->
-            <label for="notes" class="mb-0">Notes:</label>
-            <input id="notes" type="text" class="form-control" style="width: 150px;" v-model="formData.category" />
+                        <!-- Start Time -->
+                        <label for="startTime" class="mb-0">Start:</label>
+                        <input id="startTime" type="number" class="form-control" style="width: 100px;"
+                            v-model="formData.start" />
+
+                        <!-- End Time -->
+                        <label for="endTime" class="mb-0">End:</label>
+                        <input id="endTime" type="number" class="form-control" style="width: 100px;"
+                            v-model="formData.end" />
+
+                        <!-- Category -->
+                        <label for="category" class="mb-0">Category:</label>
+                        <input id="category" type="text" class="form-control" style="width: 150px;"
+                            v-model="formData.category" />
 
 
-            <!-- Buttons -->
-            <BButton variant="primary" @click="onSaveLabel">Save</BButton>
-            <BButton variant="danger" @click="onDeleteLabel">Delete</BButton>
-            <BButton variant="secondary" @click="onCancelEdit">Cancel</BButton>
-        </div>
+                        <!-- Notes -->
+                        <label for="notes" class="mb-0">Notes:</label>
+                        <input id="notes" type="text" class="form-control" style="width: 150px;"
+                            v-model="formData.category" />
+
+
+                        <!-- Buttons -->
+                        <BButton variant="primary" @click="onSaveLabel">Save</BButton>
+                        <BButton variant="danger" @click="onDeleteLabel">Delete</BButton>
+                        <BButton variant="secondary" @click="onCancelEdit">Cancel</BButton>
+                    </div>
+                </div>
+
+
+            </div>
+
+        </Transition>
     </div>
+
+
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, inject, onUnmounted } from 'vue';
+import { ref, onMounted, reactive, inject, onUnmounted, computed } from 'vue';
 import Chart from 'vue-echarts';
 
 import * as echarts from 'echarts/core';
@@ -52,7 +111,8 @@ import {
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import type { EChartsOption, CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams } from 'echarts';
-import { BButton } from "bootstrap-vue-next";
+import { useToastController, BButton, BTable, BRow, BCol } from "bootstrap-vue-next";
+
 import { useVideoControl } from '../../composables/useVideoControl';
 import { Tag, TagCategory } from '../../../services/restclient';
 import { safeFetch, TagApiClient as client, TestDriveProjectInfo } from '../../services/utilities';
@@ -70,6 +130,7 @@ echarts.use([
     CanvasRenderer,
 ]);
 
+const { show: showToast } = useToastController();
 const { seekTo } = useVideoControl();
 
 
@@ -151,9 +212,6 @@ function getColorByCategory(categoryIndex: number): string {
 // The core rendering logic for the custom series
 function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRenderItemAPI): echarts.CustomSeriesRenderItemReturn {
 
-    console.log("api:", api);
-
-
     const startTime = api.value(0) as number;
     const endTime = api.value(1) as number;
     const category = api.value(2) as string;
@@ -184,7 +242,7 @@ function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeries
     );
 
     const itemStyle = {
-        fill: getColorByCategory(category),
+        fill: getColorByCategory(parseInt(category)),
     };
 
     if (isInstantaneous) {
@@ -213,6 +271,22 @@ function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeries
     }
 }
 
+const allCategories = computed(() => {
+    const uniqueCategories = new Set([
+        ...availableTags.value.map((label) => label.category),
+        ...availableTagCategories.value.map((t) => t.name),
+    ].filter(x => x !== undefined && x !== null && x !== ''));
+    const categories = Array.from(uniqueCategories);
+
+    categories.forEach((category, index) => {
+        toggleState.value[category!] = true; // Initialize toggle state for each category
+    });
+
+
+    return categories as string[];
+});
+
+
 const getChartOption = (): EChartsOption => {
     const labels = availableTags.value;
 
@@ -223,7 +297,7 @@ const getChartOption = (): EChartsOption => {
     const minVideoTime = props.projectInfo?.testDriveVideoInfo?.videoSimulationTimeEndS ?? 0;
     const maxVideoTime = props.projectInfo?.testDriveVideoInfo?.videoSimulationTimeEndS ?? 0;
 
-   
+
     let minLabelTime = labels[0]?.label_start_time ?? 0;
     let maxLabelTime = labels[0]?.label_end_time ?? 0;
 
@@ -236,8 +310,6 @@ const getChartOption = (): EChartsOption => {
     const maxTime = Math.max(maxDataTime, maxVideoTime, maxLabelTime);
 
 
-    const uniqueCategories = new Set([...labels.map((label) => label.category), ...availableTagCategories.value.map(t => t.name)]);
-    const categories = Array.from(uniqueCategories).sort((a, b) => b.localeCompare(a)); // Sort categories alphabetically
 
 
 
@@ -267,20 +339,27 @@ const getChartOption = (): EChartsOption => {
                 xAxisIndex: 0,
                 filterMode: 'weakFilter',
             },
+            // {
+            //     type: 'slider',
+            //     xAxisIndex: 0,
+            //     filterMode: 'weakFilter',
+            //     startValue: minTime,
+            //     endValue: maxTime,
+            // },
         ],
         grid: {
             left: '5%',
-            right: '5%',
-            bottom: 50,
-            top: 30,
+            right: '1%',
+            bottom: 0,
+            top: 0,
             containLabel: true, // Ensure category labels are within the grid
         },
         xAxis: {
             type: 'value',
-            min: minTime - timePadding,
+            min: minTime,
             max: maxTime + timePadding,
             axisLabel: {
-                formatter: (value: number) => `${value}s`,
+                formatter: (value: number) => `${value.toFixed(0)}s`,
             },
             splitLine: {
                 show: true,
@@ -292,9 +371,10 @@ const getChartOption = (): EChartsOption => {
         },
         yAxis: {
             type: 'category',
-            data: categories, // Use the extracted unique categories
+            data: [...allCategories.value] as string[], // Use the extracted unique categories
             axisLabel: { interval: 0 },
             splitLine: { show: true },
+            inverse: true
         },
         series: [
             {
@@ -320,18 +400,176 @@ const getChartOption = (): EChartsOption => {
                     symbol: 'none',
                     label: { show: false },
                     lineStyle: {
-                        color: '#000',
-                        type: 'solid',
+                        color: 'red',
+                        type: 'dashed',
                         width: 2,
                     },
                     data: [
-                        { xAxis: 0 }, // Placeholder, will be updated
+                        { xAxis: currentSimulationTime }, // Placeholder, will be updated
                     ],
+                    tooltip: {
+                        formatter: (params: any) => {
+
+                            const time = params.value as number;
+                            return `${time.toFixed(2)}s`;
+                        },
+                    },
+                    animation: false,
                 },
             },
         ],
     };
 };
+
+
+
+const availableTags = ref<TimeLabel[]>([]);
+const availableTagCategories = ref<TagCategory[]>([]);
+
+
+// --- Category Form State ---
+const newTagCategoryName = ref('');
+const editId = ref<number | null>(null);
+const editName = ref('');
+
+// --- Start Edit ---
+const startEditTagCategory = (category: TagCategory) => {
+    editId.value = category.id ?? null;
+    editName.value = category.name ?? '';
+}
+
+
+
+// --- Cancel Edit ---
+const cancelEdit = () => {
+    editId.value = null;
+    editName.value = '';
+}
+
+// --- Add Category ---
+const addTagCategory = async () => {
+    const trimmed = newTagCategoryName.value.trim();
+    if (!trimmed) return;
+
+    const [error, response] = await safeFetch(() => client.addTagCategoryApiV1TagCategoryPost({
+        createNewTagCategoryPayload: {
+            name: trimmed,
+        }
+    }));
+    if (error) {
+        console.error('Error adding category:', error);
+        showToast?.({
+            props: {
+                title: `Error adding category: ${trimmed}`,
+                body: error.message,
+                value: 2500,
+                variant: 'danger',
+                pos: 'top-end',
+
+            }
+        });
+        return;
+    }
+
+    if (response && response.categories) {
+
+        // find difference between the two arrays and add the new ones to the availableTagCategories
+        const newCategories = response.categories.filter((c: TagCategory) => !availableTagCategories.value.some((existing: TagCategory) => existing.id === c.id));
+        availableTagCategories.value.push(...newCategories);
+
+        showToast?.({
+            props: {
+                title: `Category added: ${trimmed}`,
+                body: `Category ${trimmed} has been added.`,
+                value: 2500,
+                variant: 'success',
+                pos: 'top-end',
+
+            }
+        });
+
+        newTagCategoryName.value = '';
+    } else {
+        console.warn('No category found or unexpected response structure.');
+    }
+
+}
+
+
+// --- Delete Category ---
+const deleteTagCategory = async (category: TagCategory) => {
+    const index = availableTagCategories.value.findIndex(c => c.id === category.id);
+    if (index === -1) return; // Category not found
+
+    const item = availableTagCategories.value[index];
+    if (!item || item.id == undefined) return; // Category not found
+
+    const [error, response] = await safeFetch(() => client.deleteTagCategoryApiV1TagCategoryCategoryIdDelete({
+        categoryId: parseInt(item.id?.toString() ?? '-1'),
+    }));
+    if (error) {
+        console.error('Error deleting category:', error);
+        showToast?.({
+            props: {
+                title: `Error deleting category: ${item.name}`,
+                body: error.message,
+                value: 2500,
+                variant: 'danger',
+                pos: 'top-end',
+
+            }
+        });
+        return;
+    }
+
+
+    // Remove the category from the availableTagCategories
+    availableTagCategories.value.splice(index, 1);
+
+    showToast?.({
+        props: {
+            title: `Category deleted: ${item.name}`,
+            body: `Category ${item.name} has been deleted.`,
+            value: 2500,
+            variant: 'success',
+            pos: 'top-end',
+
+        }
+    });
+}
+
+
+
+// --- Save Edit ---
+const saveEditTagCategory = (category: TagCategory) => {
+    // nothing to do.
+}
+
+
+
+// A reactive state for toggle status, one per category
+const toggleState = ref<Record<string, boolean>>({});
+
+
+// Toggle function: toggles state for a category
+const toggleTag = (category: string) => {
+    toggleState.value[category] = !toggleState.value[category];
+    console.log(`${category} has been ${toggleState.value[category] ? 'started' : 'stopped'}`);
+    // Insert additional logic for handling the tag state here.
+}
+
+const startNewTag = (category: string) => {
+    // Set state that a new tag is being created for the given category.
+    console.log("Starting new tag for category:", category);
+};
+
+const stopNewTag = (category: string) => {
+
+    // Set state that the new tag creation is stopped.
+    console.log("Stopping new tag for category:", category);
+};
+
+
 
 
 const activeLabel = ref<TimeLabel | null>(null);
@@ -382,11 +620,6 @@ const onSaveLabel = () => {
 
             chartOption.value = getChartOption();
         }
-
-        // activeLabel.value.label_start_time = formData.start;
-        // activeLabel.value.label_end_time = formData.end;
-        // activeLabel.value.category = formData.category;
-        // chartOption.value = getChartOption();
     }
 }
 
@@ -405,7 +638,7 @@ const onCancelEdit = () => {
     setFormData({ label_id: '', category: '', label_start_time: 0, label_end_time: 0 });
 }
 
-const availableTagCategories = ref<TagCategory[]>([]); // Assuming the type of categories is any, adjust as needed
+
 
 const loadProjectTagCategories = async () => {
     console.log("Loading Categories...");
@@ -420,7 +653,7 @@ const loadProjectTagCategories = async () => {
     }
 };
 
-const availableTags = ref<TimeLabel[]>([]); // Assuming the type of categories is any, adjust as needed
+
 
 const loadProjectTags = async () => {
     console.log("Loading Tags...");
@@ -443,28 +676,21 @@ const loadProjectTags = async () => {
     }
 };
 
-const sampleLabels: TimeLabel[] = [
-    { label_id: 'l1', category: 'Alert', label_start_time: 10, label_end_time: 10, note: 'System restarted' },
-    { label_id: 'l2', category: 'Maintenance', label_start_time: 20, label_end_time: 40, note: 'DB Backup' },
-    { label_id: 'l3', category: 'Warning', label_start_time: 30, label_end_time: 35, note: 'High CPU Load' },
-    { label_id: 'l4', category: 'Alert', label_start_time: 50, label_end_time: 50, note: 'Disk Full' },
-    { label_id: 'l5', category: 'Info', label_start_time: 15, label_end_time: 80, note: 'User Activity Spike' },
-    { label_id: 'l6', category: 'Maintenance', label_start_time: 40, label_end_time: 45, note: 'Patch Deployment' },
-];
+
 
 let subscription: Subscription | null = null;
 
 const currentSimulationTime = ref(0);
 
 onMounted(async () => {
-    availableTags.value = sampleLabels;
+
     await loadProjectTags()
     await loadProjectTagCategories();
     chartOption.value = getChartOption();
 
     subscription = simulationTimeObservable.subscribe((time) => {
         currentSimulationTime.value = time;
-        setCardTitle(`Player: ${time}`);
+        // setCardTitle(`Player: ${time}`);
     });
 });
 

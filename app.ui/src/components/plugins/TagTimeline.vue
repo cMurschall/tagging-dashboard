@@ -1,100 +1,39 @@
 <template>
+    <Chart ref="chartRef" :option="chartOption" :style="{ width: '100%', height: '80%' }"
+        :autoresize="{ throttle: 100 }" @click="handleOnChartClick" />
 
-    <div ref="containerRef" style="width: 100%; height: 100%;">
-        <Transition name="fade" mode="out-in">
+    <!-- The editor form goes below (visible if we have an activeLabel) -->
+    <div v-if="activeLabel" class="mt-1">
 
-            <div v-if="showMenu" class="p-3">
-                <!-- <BRow class="mb-3">
-                    <BCol cols="12">
-                        <div role="group">
-                            <label for="column-filter-query">Search Columns:</label>
-                            <BFormInput id="column-filter-query" v-model="searchQuery" type="text" autocomplete="off"
-                                placeholder="Filter available columns..." />
-                        </div>
-                    </BCol>
-                </BRow>
+        <!-- Flex container for a single-row layout -->
+        <div class="d-flex align-items-center flex-wrap gap-1">
 
-                <BRow class="mb-3">
-                    <BCol cols="12">
-                        <BFormGroup label="Select Primary Y Axis Column (Required):">
-                            <BFormSelect v-model="pluginState.selectedYColumnLeft" :options="filteredColumns"
-                                select-size="3" required />
-                        </BFormGroup>
-                    </BCol>
-                </BRow>
-                <BRow class="mb-3">
-                    <BCol cols="12">
-                        <BFormGroup label="Primary Y Axis Expression (e.g., value * 2):">
-                            <BFormInput v-model="pluginState.yAxisExpressionLeft" type="text" autocomplete="off"
-                                placeholder="Enter expression (use 'value')" />
-                        </BFormGroup>
-                    </BCol>
-                </BRow>
+            <h5 class="mb-0 me-2">Edit Label: {{ activeLabel.label_id }}</h5>
 
 
+            <!-- Start Time -->
+            <label for="startTime" class="mb-0">Start:</label>
+            <input id="startTime" type="number" class="form-control" style="width: 100px;" v-model="formData.start" />
 
-                <BRow class="mb-3">
-                    <BCol cols="12">
-                        <BFormGroup label="Select Secondary Y Axis Column (Optional):">
-                            <BFormSelect v-model="pluginState.selectedYColumnRight" :options="filteredColumns"
-                                select-size="3" />
-                        </BFormGroup>
-                    </BCol>
-                </BRow>
-                <BRow class="mb-3">
-                    <BCol cols="12">
-                        <BFormGroup label="Secondary Y Axis Expression (e.g., value / 10):">
-                            <BFormInput v-model="pluginState.yAxisExpressionRight" type="text" autocomplete="off"
-                                placeholder="Enter expression (use 'value')" />
-                        </BFormGroup>
-                    </BCol>
-                </BRow> -->
-            </div>
+            <!-- End Time -->
+            <label for="endTime" class="mb-0">End:</label>
+            <input id="endTime" type="number" class="form-control" style="width: 100px;" v-model="formData.end" />
 
-            <div v-else>
-
-                <Chart ref="chartRef" :option="chartOption" :style="{ width: '100%', height: '80%' }"
-                    :autoresize="{ throttle: 100 }" @click="handleOnChartClick" />
-
-                <!-- The editor form goes below (visible if we have an activeLabel) -->
-                <div v-if="activeLabel" class="mt-1">
-
-                    <!-- Flex container for a single-row layout -->
-                    <div class="d-flex align-items-center flex-wrap gap-1">
-
-                        <h5 class="mb-0 me-2">Edit Label: {{ activeLabel.label_id }}</h5>
+            <!-- Category -->
+            <label for="category" class="mb-0">Category:</label>
+            <input id="category" type="text" class="form-control" style="width: 150px;" v-model="formData.category" />
 
 
-                        <!-- Start Time -->
-                        <label for="startTime" class="mb-0">Start:</label>
-                        <input id="startTime" type="number" class="form-control" style="width: 100px;"
-                            v-model="formData.start" />
-
-                        <!-- End Time -->
-                        <label for="endTime" class="mb-0">End:</label>
-                        <input id="endTime" type="number" class="form-control" style="width: 100px;"
-                            v-model="formData.end" />
-
-                        <!-- Category -->
-                        <label for="category" class="mb-0">Category:</label>
-                        <input id="category" type="text" class="form-control" style="width: 150px;"
-                            v-model="formData.category" />
+            <!-- Notes -->
+            <label for="notes" class="mb-0">Notes:</label>
+            <input id="notes" type="text" class="form-control" style="width: 150px;" v-model="formData.category" />
 
 
-                        <!-- Notes -->
-                        <label for="notes" class="mb-0">Notes:</label>
-                        <input id="notes" type="text" class="form-control" style="width: 150px;"
-                            v-model="formData.category" />
-
-
-                        <!-- Buttons -->
-                        <BButton variant="primary" @click="onSaveLabel">Save</BButton>
-                        <BButton variant="danger" @click="onDeleteLabel">Delete</BButton>
-                        <BButton variant="secondary" @click="onCancelEdit">Cancel</BButton>
-                    </div>
-                </div>
-            </div>
-        </Transition>
+            <!-- Buttons -->
+            <BButton variant="primary" @click="onSaveLabel">Save</BButton>
+            <BButton variant="danger" @click="onDeleteLabel">Delete</BButton>
+            <BButton variant="secondary" @click="onCancelEdit">Cancel</BButton>
+        </div>
     </div>
 </template>
 
@@ -115,8 +54,8 @@ import { CanvasRenderer } from 'echarts/renderers';
 import type { EChartsOption, CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams } from 'echarts';
 import { BButton } from "bootstrap-vue-next";
 import { useVideoControl } from '../../composables/useVideoControl';
-import { safeFetch, TagApiClient as client, } from '../../services/utilities';
 import { Tag, TagCategory } from '../../../services/restclient';
+import { safeFetch, TagApiClient as client } from '../../services/utilities';
 // import gridManager from '../../managers/gridItemManager'; // Assuming this is not directly used for chart logic
 
 echarts.use([
@@ -132,7 +71,8 @@ echarts.use([
 const { seekTo } = useVideoControl();
 
 
-// TimeLabel interface 
+
+// TimeLabel interface remains the same
 interface TimeLabel {
     label_id: string;
     category: string;
@@ -142,29 +82,7 @@ interface TimeLabel {
 }
 
 
-type PluginState = {
 
-}
-
-
-interface TagTimeLineProps {
-    showMenu: boolean;
-
-    id: string;
-    pluginState?: PluginState;
-
-}
-
-
-const props = withDefaults(defineProps<TagTimeLineProps>(), {
-    showMenu: false, // Default value for showMenu
-
-    id: '', // Default value for id
-    pluginState: () => ({
-    }),
-});
-
-const pluginState = ref<PluginState>(structuredClone(props.pluginState));
 
 
 const chartRef = ref<typeof Chart | null>(null);
@@ -202,19 +120,14 @@ function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeries
 
     const startTime = api.value(0) as number;
     const endTime = api.value(1) as number;
-    const category = api.value(2) as number;
+    const category = api.value(2) as string;
     const labelId = api.value(3) as string;
-
-    const categoryName = categoryIndexMap[category] !== undefined ? categoryIndexMap[category] : 'Unknown Category';
-
-
 
 
     const isInstantaneous = startTime === endTime;
 
-
-    const startPoint = api.coord([startTime, categoryName]); // Use category value for y-coordinate
-    const endPoint = api.coord([endTime, categoryName]);
+    const startPoint = api.coord([startTime, api.value(2)]); // Use category value for y-coordinate
+    const endPoint = api.coord([endTime, api.value(2)]);
 
     const barHeight = 20;
     const yPosition = startPoint[1] - barHeight / 2; // Center the bar vertically on the category
@@ -264,39 +177,21 @@ function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeries
     }
 }
 
-let categoryIndexMap: Record<number, string> = {};
+const getChartOption = (): EChartsOption => {
 
-const getChartOption = (labels: TimeLabel[]): EChartsOption => {
-    if (!labels.length) return {};
 
+    const labels = availableTags.value;
     let minTime = labels[0]?.label_start_time ?? 0;
     let maxTime = labels[0]?.label_end_time ?? 0;
+    //const categories = [...new Set(labels.map((label) => label.category))]; // Extract unique categories
+    const uniqueCategories = new Set( [...labels.map((label) => label.category), ...availableTagCategories.value.map(t => t.name)  ]);
+    const categories = Array.from(uniqueCategories).sort((a, b) => b.localeCompare(a)); // Sort categories alphabetically
 
-    
+
     labels.forEach((label) => {
         minTime = Math.min(minTime, label.label_start_time);
         maxTime = Math.max(maxTime, label.label_end_time);
     });
-
-
-
-
-    const categorySet = new Set<string>();
-    labels.forEach((label) => {
-        categorySet.add(label.category);
-    });
-    availableTagCategories.value.forEach((category) => {
-        if (category.name) {  // Check if category name is defined
-            categorySet.add(category.name);
-        }
-    });
-    const categories = Array.from(categorySet); // Sort categories alphabetically
-
-    categoryIndexMap = categories.reduce((map, category, index) => {
-        map[index] = category;
-        return map;
-    }, {} as Record<number, string>);
-
 
     const timePadding = (maxTime - minTime) * 0.05;
 
@@ -372,7 +267,18 @@ const getChartOption = (labels: TimeLabel[]): EChartsOption => {
                     label.label_id,
                     label.note,
                 ]),
-    
+                markLine: {
+                    symbol: 'none',
+                    label: { show: false },
+                    lineStyle: {
+                        color: '#000',
+                        type: 'solid',
+                        width: 2,
+                    },
+                    data: [
+                        { xAxis: 0 }, // Placeholder, will be updated
+                    ],
+                },
             },
         ],
     };
@@ -421,7 +327,7 @@ const onSaveLabel = () => {
         activeLabel.value.label_start_time = formData.start;
         activeLabel.value.label_end_time = formData.end;
         activeLabel.value.category = formData.category;
-        chartOption.value = getChartOption(availableTags.value);
+        chartOption.value = getChartOption();
     }
 }
 
@@ -430,7 +336,7 @@ const onDeleteLabel = () => {
         const index = availableTags.value.findIndex(l => l.label_id === activeLabel.value?.label_id);
         if (index !== -1) {
             availableTags.value.splice(index, 1);
-            chartOption.value = getChartOption(availableTags.value);
+            chartOption.value = getChartOption();
         }
     }
 }
@@ -439,7 +345,6 @@ const onCancelEdit = () => {
     activeLabel.value = null;
     setFormData({ label_id: '', category: '', label_start_time: 0, label_end_time: 0 });
 }
-
 
 const availableTagCategories = ref<TagCategory[]>([]); // Assuming the type of categories is any, adjust as needed
 
@@ -479,25 +384,21 @@ const loadProjectTags = async () => {
     }
 };
 
-
-
-
-
-// const sampleLabels: TimeLabel[] = [
-//     { label_id: 'l1', category: 'Alert', label_start_time: 10, label_end_time: 10, note: 'System restarted' },
-//     { label_id: 'l2', category: 'Maintenance', label_start_time: 20, label_end_time: 40, note: 'DB Backup' },
-//     { label_id: 'l3', category: 'Warning', label_start_time: 30, label_end_time: 35, note: 'High CPU Load' },
-//     { label_id: 'l4', category: 'Alert', label_start_time: 50, label_end_time: 50, note: 'Disk Full' },
-//     { label_id: 'l5', category: 'Info', label_start_time: 15, label_end_time: 80, note: 'User Activity Spike' },
-//     { label_id: 'l6', category: 'Maintenance', label_start_time: 40, label_end_time: 45, note: 'Patch Deployment' },
-// ];
+const sampleLabels: TimeLabel[] = [
+    { label_id: 'l1', category: 'Alert', label_start_time: 10, label_end_time: 10, note: 'System restarted' },
+    { label_id: 'l2', category: 'Maintenance', label_start_time: 20, label_end_time: 40, note: 'DB Backup' },
+    { label_id: 'l3', category: 'Warning', label_start_time: 30, label_end_time: 35, note: 'High CPU Load' },
+    { label_id: 'l4', category: 'Alert', label_start_time: 50, label_end_time: 50, note: 'Disk Full' },
+    { label_id: 'l5', category: 'Info', label_start_time: 15, label_end_time: 80, note: 'User Activity Spike' },
+    { label_id: 'l6', category: 'Maintenance', label_start_time: 40, label_end_time: 45, note: 'Patch Deployment' },
+];
 
 
 
 onMounted(async () => {
-
+    availableTags.value = sampleLabels;
+    await loadProjectTags()
     await loadProjectTagCategories();
-    await loadProjectTags();
-    chartOption.value = getChartOption(availableTags.value);
+    chartOption.value = getChartOption();
 });
 </script>

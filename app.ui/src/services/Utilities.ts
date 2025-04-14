@@ -241,3 +241,5 @@ export function getTimestampStatistics(table: TimeseriesTable): TimestampStatist
     uniform
   };
 }
+
+export const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max)

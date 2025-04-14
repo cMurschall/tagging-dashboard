@@ -49,7 +49,8 @@
       </div>
 
       <Chart v-else ref="chartRef" :option="chartOption" :style="{ width: '100%', height: '100%' }"
-        @zr:click="handleVChartClick" :autoresize="{ throttle: 100 }" />
+        @zr:click="handleVChartClick" :autoresize="{ throttle: 100 }"
+        @legendselectchanged="handleVChartSelectChanged" />
     </Transition>
   </div>
 </template>
@@ -59,7 +60,7 @@ import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, computed, watch } from "vue";
 import { DataManager, TimeseriesDataPoint, TimeseriesTable } from "../../managers/dataManager";
 import { Subscription } from "../../observable";
-import { safeFetch, PlayerApiClient as client, TimestampStatistics, getTimestampStatistics } from "../../services/utilities";
+import { safeFetch, PlayerApiClient as client, TimestampStatistics, getTimestampStatistics, clamp } from "../../services/utilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import { useVideoControl } from './../../composables/useVideoControl';
@@ -109,7 +110,7 @@ type EChartsOption = ComposeOption<
 >
 
 
-const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => {});
+const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => { });
 
 
 const { seekTo } = useVideoControl();
@@ -196,6 +197,10 @@ const chartOption = ref<EChartsOption>({
   }],
   yAxis: [{
     scale: true
+  }, {
+    scale: true,
+    position: 'right' // Align the second y-axis to the right
+    // Add any other specific styling for the right y-axis here
   }],
   dataZoom: [
     {
@@ -244,7 +249,8 @@ const chartOption = ref<EChartsOption>({
       itemStyle: {
         opacity: 0.8
       },
-      large: true
+      large: true,
+      yAxisIndex: 1
     },
   ],
   tooltip: {
@@ -264,12 +270,22 @@ const chartOption = ref<EChartsOption>({
 // --- Methods ---
 const handleVChartClick = (params: ElementEvent) => {
 
-  const chart = chartRef.value;
-  if (!chart) return;
+  if (!params.target) {
+
+    const chart = chartRef.value;
+    if (!chart) return;
 
 
-  const [x, _] = chart.convertFromPixel({ seriesIndex: 0 }, [params.offsetX, params.offsetY]);
-  seekTo(x); // Call the seekTo function with the x value
+    const [x, _] = chart.convertFromPixel({ seriesIndex: 0 }, [params.offsetX, params.offsetY]);
+    seekTo(x); // Call the seekTo function with the x value
+  }
+};
+
+let selectedSeries: Record<string, boolean> = {};
+const handleVChartSelectChanged = (params: any) => {
+
+  selectedSeries = params.selected;
+  console.log("SelectionChanged:", selectedSeries);
 };
 
 
@@ -376,9 +392,11 @@ watch(pluginState, async (newValue) => {
   const columnsToInitialize = [];
   if (newValue.selectedYColumnLeft) {
     columnsToInitialize.push(newValue.selectedYColumnLeft.name);
+    selectedSeries[newValue.selectedYColumnLeft.name] = true;
   }
   if (newValue.selectedYColumnRight) {
     columnsToInitialize.push(newValue.selectedYColumnRight.name);
+    selectedSeries[newValue.selectedYColumnRight.name] = true;
   }
 
   await dataManager.initialize(columnsToInitialize);
@@ -437,25 +455,27 @@ onMounted(async () => {
     const firstTimestamp = currentTimestampStatistics.min;
     const lastTimestamp = currentTimestampStatistics.max;
 
+    const leftColumnName = pluginState.value?.selectedYColumnLeft?.name ?? '';
+    const rightColumnName = pluginState.value?.selectedYColumnRight?.name ?? '';
 
-    let xValue: number = 0
-    let yValue: number = measurement.values[pluginState.value?.selectedYColumnLeft?.name ?? 0] ?? 0;
+    const isLeftSelected = selectedSeries[leftColumnName] ?? false;
+    const isRightSelected = selectedSeries[rightColumnName] ?? false;
 
-    if (measurement.timestamp < firstTimestamp) {
-      xValue = firstTimestamp
-    }
-    else if (measurement.timestamp > lastTimestamp) {
-      xValue = lastTimestamp;
-    }
-    else {
-      xValue = measurement.timestamp;
-    }
+
+
+    const seriesIndex = isLeftSelected ? 0 : (isRightSelected ? 1 : -1);
+    if (seriesIndex === -1) return; // No series selected
+
+
+    const xValue = clamp(measurement.timestamp, firstTimestamp, lastTimestamp);
+    const yValue = isLeftSelected ? measurement.values[leftColumnName] ?? 0 : (isRightSelected ? measurement.values[rightColumnName] ?? 0 : 0);
+
 
     const vChartsRef = chartRef.value;
     if (!vChartsRef) { return; }
 
 
-    const [x, y] = vChartsRef.convertToPixel({ seriesIndex: 0 }, [xValue, yValue]);
+    const [x, y] = vChartsRef.convertToPixel({ seriesIndex: seriesIndex }, [xValue, yValue]);
 
     const zr = vChartsRef.chart.getZr();
     const el = zr.storage.getDisplayList().find((el: any) => el.id == 'highlight-point');
@@ -471,13 +491,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   subscription?.unsubscribe();
-  // // Clean up ResizeObserver
-  // if (resizeObserver && containerRef.value) {
-  //   resizeObserver.unobserve(containerRef.value);
-  //   resizeObserver.disconnect();
-  //   console.log("ResizeObserver disconnected");
-  // }
-  // resizeObserver = null;
+
 });
 
 const loadColumns = async () => {

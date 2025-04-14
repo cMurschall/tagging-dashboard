@@ -1,6 +1,6 @@
 <template>
 
-    <div ref="containerRef" style="width: 100%; height: 100%;">
+    <div ref="containerRef" class="full-size-container">
         <Transition name="fade" mode="out-in">
 
             <div v-if="showMenu">
@@ -9,7 +9,7 @@
                     <BRow class="mb-3">
                         <!-- New Category Form -->
                         <div class="mb-3 d-flex align-items-center gap-2">
-                            <input v-model="newTagCategoryName" class="form-control" style="max-width: 250px;"
+                            <input v-model="newTagCategoryName" class="form-control input-max-width-250"
                                 placeholder="New category name" />
                             <BButton variant="success" @click="addTagCategory" :disabled="!newTagCategoryName.trim()">
                                 Add
@@ -37,20 +37,19 @@
                 <!-- Flex container for a single-row layout -->
                 <div class="d-flex align-items-center flex-wrap gap-1">
 
-                    <BButton v-for="(category, index) in allCategories" :key="category" :style="{
-                        backgroundColor: categoryColors[index % categoryColors.length],
-                        border: 'none',
-                        color: '#fff'
-                    }" @click="toggleTag(category)">
+                    <BButton v-for="(category, index) in allCategories" :key="category" class="category-button"
+                        :class="['category-button', { 'is-recording': toggleState[category] }]"
+                        :style="{ backgroundColor: categoryColors[index % categoryColors.length] }"
+                        @click="toggleTag(category)">
                         {{ toggleState[category] ? 'Stop ' : 'Start ' }}'{{ category }}'</BButton>
 
                 </div>
 
 
-                <Chart ref=" chartRef" :option="chartOption" :style="{ width: '100%', height: '80%' }"
-                    :autoresize="{ throttle: 100 }" @click="handleOnChartClick" />
+                <Chart ref=" chartRef" :option="chartOption" class="chart-dimensions" :autoresize="{ throttle: 100 }"
+                    @click="handleOnChartClick" />
 
-                <div v-if="activeLabel" class="mt-1">
+                <div v-if="selectedTag" class="mt-1">
 
                     <!-- Flex container for a single-row layout -->
                     <div class="d-flex align-items-center flex-wrap gap-2">
@@ -60,33 +59,33 @@
                         <div class="d-flex align-items-center gap-1">
                             <label for="startTime" class="form-label mb-0">Start:</label>
                             <BFormInput id="startTime" type="number" v-model="formData.start" size="sm"
-                                style="width: 100px;" />
+                                class="input-width-100" />
                         </div>
 
                         <!-- End -->
                         <div class="d-flex align-items-center gap-1">
                             <label for="endTime" class="form-label mb-0">End:</label>
                             <BFormInput id="endTime" type="number" v-model="formData.end" size="sm"
-                                style="width: 100px;" />
+                                class="input-width-100" />
                         </div>
 
                         <!-- Category -->
                         <div class="d-flex align-items-center gap-1">
                             <label for="category" class="form-label mb-0">Category:</label>
                             <BFormSelect id="category" v-model="formData.category" :options="allCategories" size="sm"
-                                style="width: 150px;" class="form-select" />
+                                class="select-width-150" />
                         </div>
 
                         <!-- Notes -->
                         <div class="d-flex align-items-center gap-1">
                             <label for="notes" class="form-label mb-0">Notes:</label>
                             <BFormInput id="notes" type="text" v-model="formData.note" size="sm"
-                                style="width: 250px;" />
+                                class="input-width-250" />
                         </div>
 
                         <!-- Buttons -->
-                        <BButton size="sm" variant="primary" @click="onSaveLabel">Save</BButton>
-                        <BButton size="sm" variant="danger" @click="onDeleteLabel">Delete</BButton>
+                        <BButton size="sm" variant="primary" @click="saveTag">Save</BButton>
+                        <BButton size="sm" variant="danger" @click="deleteTag">Delete</BButton>
                         <BButton size="sm" variant="secondary" @click="onCancelEditLabel">Cancel</BButton>
                     </div>
                 </div>
@@ -177,11 +176,11 @@ if (!simulationTimeObservable) {
 }
 
 
-interface TimeLabel {
-    label_id: string;
+interface TagViewModel {
+    id: string;
     category: string;
-    label_start_time: number; //  seconds
-    label_end_time: number;   //  seconds
+    startTime: number; //  seconds
+    endTime: number;   //  seconds
     note?: any;
     isFloating: boolean;
 }
@@ -219,7 +218,7 @@ function getColorByCategory(categoryIndex: number): string {
 
 
 // The core rendering logic for the custom series
-function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRenderItemAPI): echarts.CustomSeriesRenderItemReturn {
+function renderTagItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRenderItemAPI): echarts.CustomSeriesRenderItemReturn {
 
     const startTime = api.value(0) as number;
     const endTime = api.value(1) as number;
@@ -286,7 +285,7 @@ function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeries
 
 
 
-const getChartOption = (): EChartsOption => {
+const createChartOption = (): EChartsOption => {
     const labels = availableTags.value;
 
 
@@ -297,12 +296,12 @@ const getChartOption = (): EChartsOption => {
     const maxVideoTime = props.projectInfo?.testDriveVideoInfo?.videoSimulationTimeEndS ?? 0;
 
 
-    let minLabelTime = labels[0]?.label_start_time ?? 0;
-    let maxLabelTime = labels[0]?.label_end_time ?? 0;
+    let minLabelTime = labels[0]?.startTime ?? 0;
+    let maxLabelTime = labels[0]?.endTime ?? 0;
 
     labels.forEach((label) => {
-        minLabelTime = Math.min(minLabelTime, label.label_start_time);
-        maxLabelTime = Math.max(maxLabelTime, label.label_end_time);
+        minLabelTime = Math.min(minLabelTime, label.startTime);
+        maxLabelTime = Math.max(maxLabelTime, label.endTime);
     });
 
     const minTime = Math.min(minDataTime, minVideoTime, minLabelTime);
@@ -316,22 +315,36 @@ const getChartOption = (): EChartsOption => {
     const timePadding = (maxTime - minTime) * 0.05;
 
     return {
-        tooltip: {
-            trigger: 'item',
-            formatter: (params: any) => {
-                const data = params.value as (number | string | object)[];
-                const startTime = `${data[0]}s`;
-                const endTime = `${data[1]}s`;
-                const category = data[2] as string;
-                const details = data[4] ? `<br/>Details: ${data[4]}` : '';
+        tooltip: [
+            {
+                trigger: 'item',
+                formatter: (params: any) => {
+                    const data = params.value as (number | string | object)[];
+                    const startTime = `${data[0]}s`;
+                    const endTime = `${data[1]}s`;
+                    const category = data[2] as string;
+                    const details = data[4] ? `<br/>Details: ${data[4]}` : '';
 
-                if (data[0] === data[1]) {
-                    return `<b>${category}</b><br/>Time: ${startTime}${details}`;
-                } else {
-                    return `<b>${category}</b><br/>Start: ${startTime}<br/>End: ${endTime}${details}`;
-                }
+                    if (data[0] === data[1]) {
+                        return `<b>${category}</b><br/>Time: ${startTime}${details}`;
+                    } else {
+                        return `<b>${category}</b><br/>Start: ${startTime}<br/>End: ${endTime}${details}`;
+                    }
+                },
             },
-        },
+            // {
+            //     trigger: 'axis', // Trigger tooltip on axis pointer move
+            //     axisPointer: {
+            //         axis: 'x', // Use x-axis pointer
+            //         type: 'line', // Show a line axis pointer
+            //         lineStyle: {
+            //             color: 'red',
+            //             width: 1
+            //         },
+            //         z: 100 // Ensure it's on top
+            //     },
+            // }
+        ],
         dataZoom: [
             {
                 type: 'inside',
@@ -379,7 +392,7 @@ const getChartOption = (): EChartsOption => {
             {
                 type: 'custom',
                 name: 'Labels',
-                renderItem: renderLabelItem,
+                renderItem: renderTagItem,
                 itemStyle: {
                     opacity: 0.8,
                 },
@@ -389,10 +402,10 @@ const getChartOption = (): EChartsOption => {
                     tooltip: [0, 1, 2, 4], // start, end, category, value
                 },
                 data: labels.map((label) => [
-                    label.label_start_time,
-                    label.label_end_time,
+                    label.startTime,
+                    label.endTime,
                     label.category,
-                    label.label_id,
+                    label.id,
                     label.note,
                     label.isFloating
                 ]),
@@ -403,15 +416,16 @@ const getChartOption = (): EChartsOption => {
                         color: 'red',
                         type: 'dashed',
                         width: 2,
+                        opacity: 0.5,
                     },
+                    z: 1,
                     data: [
                         { xAxis: currentSimulationTime }, // Placeholder, will be updated
                     ],
                     tooltip: {
                         formatter: (params: any) => {
-
                             const time = params.value as number;
-                            return `${time.toFixed(2)}s`;
+                            return `<b>Simulation time:</b><br/>${time.toFixed(2)}s`;
                         },
                     },
                     animation: false,
@@ -423,7 +437,7 @@ const getChartOption = (): EChartsOption => {
 
 
 
-const availableTags = ref<TimeLabel[]>([]);
+const availableTags = ref<TagViewModel[]>([]);
 const availableTagCategories = ref<TagCategory[]>([]);
 
 
@@ -455,22 +469,6 @@ watch(allCategories, (newCategories, oldCategories) => {
 
 // --- Category Form State ---
 const newTagCategoryName = ref('');
-const editId = ref<number | null>(null);
-const editName = ref('');
-
-// --- Start Edit ---
-const startEditTagCategory = (category: TagCategory) => {
-    editId.value = category.id ?? null;
-    editName.value = category.name ?? '';
-}
-
-
-
-// --- Cancel Edit ---
-const cancelEdit = () => {
-    editId.value = null;
-    editName.value = '';
-}
 
 // --- Add Category ---
 const addTagCategory = async () => {
@@ -595,16 +593,16 @@ const startNewTag = (category: string) => {
     // add floating tag to the chart
 
     const newTagId = 'tag_' + Math.random().toString(36)
-    const newTag: TimeLabel = {
-        label_id: newTagId,
+    const newTag: TagViewModel = {
+        id: newTagId,
         category: category,
-        label_start_time: currentSimulationTime.value,
-        label_end_time: currentSimulationTime.value,
+        startTime: currentSimulationTime.value,
+        endTime: currentSimulationTime.value,
         note: '',
         isFloating: true,
     };
     availableTags.value.push(newTag);
-    chartOption.value = getChartOption();
+    chartOption.value = createChartOption();
 };
 
 const stopNewTag = async (category: string) => {
@@ -620,8 +618,8 @@ const stopNewTag = async (category: string) => {
         const [error, response] = await safeFetch(() => client.addTagApiV1TagCreatePost({
             createTagPayload: {
                 category: floatingTag.category,
-                timestampStartS: floatingTag.label_start_time,
-                timestampEndS: floatingTag.label_end_time,
+                timestampStartS: floatingTag.startTime,
+                timestampEndS: floatingTag.endTime,
                 notes: floatingTag.note,
             }
         }));
@@ -640,7 +638,7 @@ const stopNewTag = async (category: string) => {
             return;
         }
         if (response && response.tag) {
-            floatingTag.label_id = response.tag.id?.toString() ?? floatingTag.label_id;
+            floatingTag.id = response.tag.id?.toString() ?? floatingTag.id;
 
 
             showToast?.({
@@ -663,13 +661,13 @@ const stopNewTag = async (category: string) => {
         console.warn("No floating tag found for category:", category);
     }
     // redraw the chart
-    chartOption.value = getChartOption();
+    chartOption.value = createChartOption();
 };
 
 
 
 
-const activeLabel = ref<TimeLabel | null>(null);
+const selectedTag = ref<TagViewModel | null>(null);
 
 // This object tracks whatever the user types in the "edit" form
 const formData = reactive({
@@ -679,14 +677,15 @@ const formData = reactive({
     note: '',
 });
 
-const setFormData = (label: TimeLabel) => {
-    formData.start = label.label_start_time;
-    formData.end = label.label_end_time;
+const setFormData = (label: TagViewModel) => {
+    formData.start = label.startTime;
+    formData.end = label.endTime;
     formData.category = label.category;
     formData.note = label.note ?? '';
 }
 
 const handleOnChartClick = (params: any) => {
+    console.log("Clicked on chart:", params);
     if (params.componentType === 'series' && params.componentSubType === 'custom') {
         // Identify the clicked label
 
@@ -694,24 +693,30 @@ const handleOnChartClick = (params: any) => {
 
 
         // Find the label in your `labels` array
-        const found = availableTags.value.find(l => l.label_id === labelId);
+        const found = availableTags.value.find(l => l.id === labelId);
         if (found) {
-            activeLabel.value = { ...found };
+            selectedTag.value = { ...found };
             setFormData(found);
         }
-    } else {
+    }
+
+    // else if(params.componentType === 'markLine') {
+    //     seekTo( params.value); // Seek to the clicked time in the video
+    // }
+
+    else {
         // Clicked somewhere else, optionally clear active label
         // activeLabel.value = null;
     }
 }
 
-const onSaveLabel = async () => {
-    if (activeLabel.value) {
-        const index = availableTags.value.findIndex(l => l.label_id === activeLabel.value?.label_id);
+const saveTag = async () => {
+    if (selectedTag.value) {
+        const index = availableTags.value.findIndex(l => l.id === selectedTag.value?.id);
         if (index !== -1) {
 
             const [error, response] = await safeFetch(() => client.updateTagApiV1TagUpdateIdPut({
-                id: availableTags.value[index].label_id,
+                id: availableTags.value[index].id,
                 updateTagPayload: {
                     category: formData.category,
                     timestampStartS: formData.start,
@@ -734,9 +739,9 @@ const onSaveLabel = async () => {
                 });
             }
             else if (response && response.tag) {
-                availableTags.value[index].label_id = response.tag.id?.toString() ?? availableTags.value[index].label_id;
-                availableTags.value[index].label_start_time = formData.start;
-                availableTags.value[index].label_end_time = formData.end;
+                availableTags.value[index].id = response.tag.id?.toString() ?? availableTags.value[index].id;
+                availableTags.value[index].startTime = formData.start;
+                availableTags.value[index].endTime = formData.end;
                 availableTags.value[index].category = formData.category;
 
 
@@ -757,24 +762,24 @@ const onSaveLabel = async () => {
         }
 
 
-        chartOption.value = getChartOption();
+        chartOption.value = createChartOption();
     }
 }
 
-const onDeleteLabel = async () => {
-    if (activeLabel.value) {
-        const index = availableTags.value.findIndex(l => l.label_id === activeLabel.value?.label_id);
+const deleteTag = async () => {
+    if (selectedTag.value) {
+        const index = availableTags.value.findIndex(l => l.id === selectedTag.value?.id);
         if (index !== -1) {
             // availableTags.value.splice(index, 1);
 
             const [error, response] = await safeFetch(() => client.deleteTagApiV1TagDeleteIdDelete({
-                id: availableTags.value[index].label_id
+                id: availableTags.value[index].id
             }));
             if (error) {
                 console.error('Error deleting tag:', error);
                 showToast?.({
                     props: {
-                        title: `Error deleting tag: ${activeLabel.value.category}`,
+                        title: `Error deleting tag: ${selectedTag.value.category}`,
                         body: error.message,
                         value: 2500,
                         variant: 'danger',
@@ -786,8 +791,8 @@ const onDeleteLabel = async () => {
                 availableTags.value.splice(index, 1);
                 showToast?.({
                     props: {
-                        title: `Tag deleted: ${activeLabel.value.category} (${activeLabel.value.label_start_time}s - ${activeLabel.value.label_end_time}s)`,
-                        body: `Tag ${activeLabel.value.category} has been deleted.`,
+                        title: `Tag deleted: ${selectedTag.value.category} (${selectedTag.value.startTime}s - ${selectedTag.value.endTime}s)`,
+                        body: `Tag ${selectedTag.value.category} has been deleted.`,
                         value: 2500,
                         variant: 'success',
                         pos: 'top-end',
@@ -800,13 +805,13 @@ const onDeleteLabel = async () => {
         }
     }
 
-    chartOption.value = getChartOption();
+    chartOption.value = createChartOption();
 }
 
 const onCancelEditLabel = () => {
 
-    activeLabel.value = null;
-    setFormData({ label_id: '', category: '', label_start_time: 0, label_end_time: 0, note: '', isFloating: false });
+    selectedTag.value = null;
+    setFormData({ id: '', category: '', startTime: 0, endTime: 0, note: '', isFloating: false });
 }
 
 
@@ -831,13 +836,13 @@ const loadProjectTags = async () => {
     const [error, response] = await safeFetch(() => client.getAllTagsApiV1TagAllGet());
     if (response && response.tags) {
         availableTags.value = response.tags.map((tag: Tag) => ({
-            label_id: tag.id?.toString() ?? '',
+            id: tag.id?.toString() ?? '',
             category: tag.category,
-            label_start_time: tag.timestampStartS,
-            label_end_time: tag.timestampEndS,
+            startTime: tag.timestampStartS,
+            endTime: tag.timestampEndS,
             note: tag.notes,
             isFloating: false
-        })) as TimeLabel[]; // Cast to TimeLabel type
+        })) as TagViewModel[]; // Cast to TimeLabel type
 
         console.log("Tags loaded:", availableTags.value);
 
@@ -858,7 +863,7 @@ onMounted(async () => {
 
     await loadProjectTags()
     await loadProjectTagCategories();
-    chartOption.value = getChartOption();
+    chartOption.value = createChartOption();
 
     subscription = simulationTimeObservable.subscribe((time) => {
         currentSimulationTime.value = time;
@@ -866,13 +871,13 @@ onMounted(async () => {
         let chartNeedsUpdate = false;
         availableTags.value.forEach((tag) => {
             if (tag.isFloating) {
-                tag.label_end_time = time;
+                tag.endTime = time;
                 chartNeedsUpdate = true;
             }
         });
         // update the chart if any floating tags were updated
         if (chartNeedsUpdate) {
-            chartOption.value = getChartOption();
+            chartOption.value = createChartOption();
         }
     });
 });
@@ -883,3 +888,79 @@ onUnmounted(() => {
 
 
 </script>
+
+<style scoped>
+/* Styles extracted from inline style attributes */
+.full-size-container {
+    width: 100%;
+    height: 100%;
+}
+
+.input-max-width-250 {
+    max-width: 250px;
+}
+
+.full-height {
+    height: 100%;
+}
+
+.category-button {
+    /* Static styles extracted from the dynamic :style binding */
+    border: none;
+    color: #fff;
+    /* Background color remains dynamic via :style */
+    transition: opacity 0.3s ease;
+    /* Optional: Smoother transition if animation stops */
+}
+
+/* Define the animation */
+@keyframes pulse-opacity {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+
+    /* Adjust opacity for desired effect */
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Apply the animation to the button when the class is present */
+.category-button.is-recording {
+    animation: pulse-opacity 1.5s ease-in-out infinite;
+    /* Adjust duration/timing as needed */
+}
+
+.chart-dimensions {
+    /* Extracted from :style binding as values were static */
+    width: 100%;
+    height: 80%;
+}
+
+.input-width-100 {
+    width: 100px;
+}
+
+.select-width-150 {
+    width: 150px;
+}
+
+.input-width-250 {
+    width: 250px;
+}
+
+/* Add fade transition styles if they weren't defined elsewhere */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+</style>

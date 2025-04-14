@@ -409,25 +409,26 @@ const createChartOption = (): EChartsOption => {
                     label.note,
                     label.isFloating
                 ]),
-                markLine: {
-                    symbol: 'none',
-                    label: { show: false },
-                    lineStyle: {
+                markPoint: {
+                    symbol: 'circle',
+                    symbolSize: 10,
+
+                    silent: true,
+                    label: {
+                        show: false,
+                    },
+                    itemStyle: {
                         color: 'red',
-                        type: 'dashed',
-                        width: 2,
-                        opacity: 0.5,
+                        opacity: 1,
                     },
                     z: 1,
                     data: [
-                        { xAxis: currentSimulationTime }, // Placeholder, will be updated
+                        {
+                            xAxis: currentSimulationTime,
+                            y: '90%',
+                        }
                     ],
-                    tooltip: {
-                        formatter: (params: any) => {
-                            const time = params.value as number;
-                            return `<b>Simulation time:</b><br/>${time.toFixed(2)}s`;
-                        },
-                    },
+                    // Disable animation
                     animation: false,
                 },
             },

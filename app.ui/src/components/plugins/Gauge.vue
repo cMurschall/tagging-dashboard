@@ -81,7 +81,7 @@ import { GaugeChart } from "echarts/charts";
 import { SVGRenderer } from "echarts/renderers";
 import { DataManager, TimeseriesDataPoint } from "../../managers/dataManager";
 import { Subscription } from "../../observable";
-import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue } from "../../services/utilities";
+import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue, IDENTITY_EXPRESSION } from "../../services/utilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import gridManager from "../../managers/gridItemManager";
@@ -133,7 +133,7 @@ const props = withDefaults(defineProps<GaugeProps>(), {
     gaugeCountSplits: 10,
     gaugeColor: "#007bff",
     gaugeFormat: "{value:F2}",
-    gaugeConverter: "value * 1",
+    gaugeConverter: `${IDENTITY_EXPRESSION} * 1`,
 
     selectedColumn: null,
   }),

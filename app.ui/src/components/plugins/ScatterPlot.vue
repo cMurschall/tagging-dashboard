@@ -22,9 +22,9 @@
         </BRow>
         <BRow class="mb-3">
           <BCol cols="12">
-            <BFormGroup label="Primary Y Axis Expression (e.g., value * 2):">
+            <BFormGroup label="Primary Y Axis Expression:">
               <BFormInput v-model="pluginState.yAxisExpressionLeft" type="text" autocomplete="off"
-                placeholder="Enter expression (use 'value')" />
+                :placeholder="defaultExpressionHint" />
             </BFormGroup>
           </BCol>
         </BRow>
@@ -40,9 +40,9 @@
         </BRow>
         <BRow class="mb-3">
           <BCol cols="12">
-            <BFormGroup label="Secondary Y Axis Expression (e.g., value / 10):">
+            <BFormGroup label="Secondary Y Axis Expression:">
               <BFormInput v-model="pluginState.yAxisExpressionRight" type="text" autocomplete="off"
-                placeholder="Enter expression (use 'value')" />
+                :placeholder="defaultExpressionHint" />
             </BFormGroup>
           </BCol>
         </BRow>
@@ -60,7 +60,7 @@ import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, computed, watch } from "vue";
 import { DataManager, TimeseriesDataPoint, TimeseriesTable } from "../../managers/dataManager";
 import { Subscription } from "../../observable";
-import { safeFetch, PlayerApiClient as client, TimestampStatistics, getTimestampStatistics, clamp, transformMathJsValue } from "../../services/utilities";
+import { safeFetch, PlayerApiClient as client, TimestampStatistics, getTimestampStatistics, clamp, transformMathJsValue, IDENTITY_EXPRESSION } from "../../services/utilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import { useVideoControl } from './../../composables/useVideoControl';
@@ -143,8 +143,8 @@ const props = withDefaults(defineProps<ScatterPlotProps>(), {
   pluginState: () => ({
     selectedYColumnLeft: null,
     selectedYColumnRight: null,
-    yAxisExpressionLeft: 'value',
-    yAxisExpressionRight: 'value',
+    yAxisExpressionLeft: '',
+    yAxisExpressionRight: '',
   }),
 });
 
@@ -156,7 +156,7 @@ const chartRef = ref<typeof Chart | null>(null);
 const searchQuery = ref('');
 const availableColumns = ref<BFormSelectColumnInfo[]>([]);
 
-
+const defaultExpressionHint = `Enter expression (use '${IDENTITY_EXPRESSION}')`;
 
 
 let currentTimestampStatistics: TimestampStatistics | null = null;
@@ -478,22 +478,39 @@ onMounted(async () => {
 
 
     const xValue = clamp(measurement.timestamp, firstTimestamp, lastTimestamp);
-    // const yValue = isLeftSelected ? measurement.values[leftColumnName] ?? 0 : (isRightSelected ? measurement.values[rightColumnName] ?? 0 : 0);
+
     let yValue = 0;
 
-    if (isLeftSelected) {
-      yValue = measurement.values[leftColumnName] ?? 0;
-      if (pluginState.value.yAxisExpressionLeft) {
-        yValue = transformMathJsValue(yValue, pluginState.value.yAxisExpressionLeft);
+    if (isLeftSelected || isRightSelected) {
+      const columnName = isLeftSelected ? leftColumnName : rightColumnName;
+      const expression = isLeftSelected
+        ? pluginState.value.yAxisExpressionLeft
+        : pluginState.value.yAxisExpressionRight;
+
+      yValue = measurement.values[columnName] ?? 0;
+
+      if (expression) {
+        yValue = transformMathJsValue(yValue, expression);
       }
-    } else if (isRightSelected) {
-      yValue = measurement.values[rightColumnName] ?? 0;
-      if (pluginState.value.yAxisExpressionRight) {
-        yValue = transformMathJsValue(yValue, pluginState.value.yAxisExpressionRight);
-      }
-    } else {
-      yValue = 0;
     }
+
+
+    // const yValue = isLeftSelected ? measurement.values[leftColumnName] ?? 0 : (isRightSelected ? measurement.values[rightColumnName] ?? 0 : 0);
+    // let yValue = 0;
+
+    // if (isLeftSelected) {
+    //   yValue = measurement.values[leftColumnName] ?? 0;
+    //   if (pluginState.value.yAxisExpressionLeft) {
+    //     yValue = transformMathJsValue(yValue, pluginState.value.yAxisExpressionLeft);
+    //   }
+    // } else if (isRightSelected) {
+    //   yValue = measurement.values[rightColumnName] ?? 0;
+    //   if (pluginState.value.yAxisExpressionRight) {
+    //     yValue = transformMathJsValue(yValue, pluginState.value.yAxisExpressionRight);
+    //   }
+    // } else {
+    //   yValue = 0;
+    // }
 
 
     const vChartsRef = chartRef.value;

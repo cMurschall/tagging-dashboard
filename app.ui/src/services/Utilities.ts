@@ -5,6 +5,9 @@ import { TimeseriesDataPoint, TimeseriesTable } from '../managers/dataManager';
 
 
 
+
+
+
 export async function safeFetch<T>(fetchFunction: () => Promise<T>): Promise<[Error | null, T | null]> {
   try {
     const data = await fetchFunction();
@@ -15,7 +18,7 @@ export async function safeFetch<T>(fetchFunction: () => Promise<T>): Promise<[Er
   }
 }
 
-
+export const IDENTITY_EXPRESSION = 'value';
 export const BasePath = 'http://localhost:8888';
 export const ApiPath = BasePath + '/api/v1';
 
@@ -53,17 +56,20 @@ export function throttle<T extends (...args: any[]) => void>(func: T, limit: num
   } as T;
 }
 
-
+const formatRegExp = new RegExp(`\\{${IDENTITY_EXPRESSION}(?::([A-Za-z]\\d*))?\\}`);
 export const formatWithTemplate = (value: number, formatTemplate: string): string => {
-  // Regular expression to find the placeholder and format specifier
-  const regex = /\{value(:([A-Za-z]\d*))?\}/;
-  const match = formatTemplate.match(regex);
+  if (!formatTemplate || formatTemplate.trim() === IDENTITY_EXPRESSION) {
+    return String(value);
+  }
+  // Match against the template
+  const match = formatTemplate.match(formatRegExp);
 
+  // Replace fallback, using the same constant again
   if (!match) {
-    return formatTemplate.replace('{value}', String(value)); // Simple replacement if no format
+    return formatTemplate.replace(`{${IDENTITY_EXPRESSION}}`, String(value));
   }
 
-  const formatSpecifier = match[2];
+  const formatSpecifier = match[1];
   let numberFormatOptions = {};
 
   if (formatSpecifier) {
@@ -101,17 +107,22 @@ export const formatWithTemplate = (value: number, formatTemplate: string): strin
   }
 }
 
-const compiledExpressions: { [expression: string]: math.EvalFunction } = {};
+
+// const compiledExpressions: { [expression: string]: math.EvalFunction } = {};
+const compiledExpressions = new Map<string, math.EvalFunction>();
 export const transformMathJsValue = (value: number, expression: string): number => {
+  if (!expression || expression.trim() === IDENTITY_EXPRESSION) {
+    return value;
+  }
   try {
     // Check if the expression has already been compiled
-    if (!compiledExpressions[expression]) {
+    if (!compiledExpressions.has(expression)) {
       // Compile the expression and store it
-      compiledExpressions[expression] = math.compile(expression);
+      compiledExpressions.set(expression, math.compile(expression));
     }
 
     // Retrieve the compiled expression
-    const compiledExpression = compiledExpressions[expression];
+    const compiledExpression = compiledExpressions.get(expression)!;
 
     // Evaluate the compiled expression with the scope
     const scope = { value };

@@ -89,6 +89,9 @@ export class TimestampLookup {
         if (this.rowCount === 0) {
             return null;
         }
+        if(this.rowCount === 1) {
+            return this.getDataPoint(0); // Return the only data point available
+        }
         // If data wasn't sorted, return null or handle as an error state
         if (!this.isSorted) {
             console.error("Cannot perform lookup on unsorted timestamps.");

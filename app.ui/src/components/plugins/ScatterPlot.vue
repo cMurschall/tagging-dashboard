@@ -60,7 +60,7 @@ import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, computed, watch } from "vue";
 import { DataManager, TimeseriesDataPoint, TimeseriesTable } from "../../managers/dataManager";
 import { Subscription } from "../../observable";
-import { safeFetch, PlayerApiClient as client, TimestampStatistics, getTimestampStatistics, clamp } from "../../services/utilities";
+import { safeFetch, PlayerApiClient as client, TimestampStatistics, getTimestampStatistics, clamp, transformMathJsValue } from "../../services/utilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import { useVideoControl } from './../../composables/useVideoControl';
@@ -340,10 +340,20 @@ const updateChartData = (table: TimeseriesTable) => {
     }
 
     if (primaryValues) {
-      primaryData[i * 2 + 1] = primaryValues[i]
+      if (pluginState.value.yAxisExpressionLeft) {
+        primaryData[i * 2 + 1] = transformMathJsValue(primaryValues[i], pluginState.value.yAxisExpressionLeft);
+      } else {
+        primaryData[i * 2 + 1] = primaryValues[i]
+      }
+      // primaryData[i * 2 + 1] = primaryValues[i]
     }
     if (secondaryValues) {
-      secondaryData[i * 2 + 1] = secondaryValues[i]
+      if (pluginState.value.yAxisExpressionRight) {
+        secondaryData[i * 2 + 1] = transformMathJsValue(secondaryValues[i], pluginState.value.yAxisExpressionRight);
+      } else {
+        secondaryData[i * 2 + 1] = secondaryValues[i]
+      }
+      // secondaryData[i * 2 + 1] = secondaryValues[i]
     }
   }
 
@@ -468,7 +478,22 @@ onMounted(async () => {
 
 
     const xValue = clamp(measurement.timestamp, firstTimestamp, lastTimestamp);
-    const yValue = isLeftSelected ? measurement.values[leftColumnName] ?? 0 : (isRightSelected ? measurement.values[rightColumnName] ?? 0 : 0);
+    // const yValue = isLeftSelected ? measurement.values[leftColumnName] ?? 0 : (isRightSelected ? measurement.values[rightColumnName] ?? 0 : 0);
+    let yValue = 0;
+
+    if (isLeftSelected) {
+      yValue = measurement.values[leftColumnName] ?? 0;
+      if (pluginState.value.yAxisExpressionLeft) {
+        yValue = transformMathJsValue(yValue, pluginState.value.yAxisExpressionLeft);
+      }
+    } else if (isRightSelected) {
+      yValue = measurement.values[rightColumnName] ?? 0;
+      if (pluginState.value.yAxisExpressionRight) {
+        yValue = transformMathJsValue(yValue, pluginState.value.yAxisExpressionRight);
+      }
+    } else {
+      yValue = 0;
+    }
 
 
     const vChartsRef = chartRef.value;
@@ -504,14 +529,6 @@ const loadColumns = async () => {
     availableColumns.value = numericColumns.map((x: ColumnInfo) => ({ text: x.name, value: x }));
     console.log(`Loaded ${availableColumns.value.length} numeric columns.`);
 
-    // const preSelectedColumn = numericColumns.find((c: ColumnInfo) => c.name === 'car0_velocity_vehicle');
-    // if (preSelectedColumn) {
-    //   selectedYColumnLeft.value = preSelectedColumn;
-    //   console.log("Pre-selected primary column:", preSelectedColumn.name);
-    // } else if (numericColumns.length > 0) {
-    //   selectedYColumnLeft.value = numericColumns[0];
-    //   console.log("Pre-selected primary column (fallback):", numericColumns[0].name);
-    // }
   } else if (error) {
     console.error('Error loading columns:', error);
   } else {

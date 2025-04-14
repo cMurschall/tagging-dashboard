@@ -23,6 +23,7 @@ import videojs from "video.js";
 import "videojs-sprite-thumbnails";
 import Player from 'video.js/dist/types/player';
 import { FrameByFrameButton } from '../../services/frameByFrameButton';
+import { SetCardTitleFn } from '../../plugins/AppPlugins';
 
 
 
@@ -32,7 +33,7 @@ videojs.registerComponent('FrameByFrameButton', FrameByFrameButton);
 
 
 // Inject the function from the parent
-const setCardTitle = inject('setCardTitle') as (title: string) => void;
+const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => {});
 
 interface VideoPlayerProps {
   videoInfo: TestDriveVideoInfo,

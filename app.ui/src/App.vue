@@ -124,7 +124,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, markRaw, ref, onUnmounted } from 'vue';
+import { onMounted, markRaw, ref, onUnmounted, inject, provide } from 'vue';
 import { useProjectStore } from './stores/projectStore';
 
 import ToolBar from './components/menu/ToolBar.vue';
@@ -142,8 +142,13 @@ import TagTimeline from './components/plugins/TagTimeline.vue';
 import gridItemManager, { GridManagerItem } from './managers/gridItemManager';
 import layoutManager from './managers/layoutManager';
 import { Subscription } from './observable';
+import { BToastOrchestrator } from 'bootstrap-vue-next';
 
 
+import { useToastController } from 'bootstrap-vue-next';
+
+
+const { show : showToast } = useToastController();
 
 const mainGrid = ref<typeof MainGrid | null>(null);
 
@@ -173,6 +178,7 @@ onMounted(async () => {
         layoutsData.value = layouts;
         availableLayouts.value = Object.keys(layouts);
     });
+
 });
 
 

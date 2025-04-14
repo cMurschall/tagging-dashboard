@@ -85,13 +85,14 @@ import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMath
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import gridManager from "../../managers/gridItemManager";
+import { SetCardTitleFn } from "../../plugins/AppPlugins";
 
 use([GaugeChart, SVGRenderer]);
 
 
 
 // Inject the function from the parent
-const setCardTitle = inject('setCardTitle') as (title: string) => void;
+const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => {});
 
 type PluginState = {
   gaugeMin: number;

@@ -1,6 +1,5 @@
 <template>
-    <div style="{width : 100%}" class="d-flex flex-row justify-content-start align-items-center">
-
+    <div style="width : 100%" class="d-flex flex-row justify-content-start align-items-center">
         <BDropdown text="Add Plugin" class="me-2">
             <BDropdownItem @click="handleAddVideo">Add Video</BDropdownItem>
             <BDropdownItem @click="handleAddGauge">Add Gauge</BDropdownItem>

@@ -1,11 +1,6 @@
 // src/stores/appStore.ts
 import { defineStore } from 'pinia';
-
 import { safeFetch, ProjectApiClient as client, TestDriveProjectInfo } from '../services/utilities';
-import { useToastController } from 'bootstrap-vue-next'
-
-const { show: showToast } = useToastController()
-
 
 
 export const useProjectStore = defineStore('app', {
@@ -50,16 +45,16 @@ export const useProjectStore = defineStore('app', {
     async unloadProject() {
       const [error, deactivatedProject] = await safeFetch(() => client.deactivateTestdriveApiV1ProjectDeactivatePost());
       if (error) {
-        showToast?.({
-          props: {
-            title: 'Error unloading project',
-            body: error.message,
-            value: 2500,
-            variant: 'danger',
-            pos: 'top-end',
+        // showToast?.({
+        //   props: {
+        //     title: 'Error unloading project',
+        //     body: error.message,
+        //     value: 2500,
+        //     variant: 'danger',
+        //     pos: 'top-end',
 
-          }
-        });
+        //   }
+        // });
         console.error('Error unloading project', error);
       } else {
         this.loadedProject = undefined;
@@ -72,16 +67,16 @@ export const useProjectStore = defineStore('app', {
 
       const [csvFilesError, csvFilesData] = await safeFetch(() => client.getCsvFilesApiV1ProjectFilesCsvGet());
       if (csvFilesError) {
-        showToast?.({
-          props: {
-            title: 'Error loading csv files',
-            body: csvFilesError.message,
-            value: 2500,
-            variant: 'danger',
-            pos: 'top-end',
+        // showToast?.({
+        //   props: {
+        //     title: 'Error loading csv files',
+        //     body: csvFilesError.message,
+        //     value: 2500,
+        //     variant: 'danger',
+        //     pos: 'top-end',
 
-          }
-        });
+        //   }
+        // });
         // log error 
         console.error('Error fetching csv files', csvFilesError);
 
@@ -92,16 +87,16 @@ export const useProjectStore = defineStore('app', {
 
       const [videoFilesError, videoFilesData] = await safeFetch(() => client.getVideoFilesApiV1ProjectFilesVideoGet());
       if (videoFilesError) {
-        showToast?.({
-          props: {
-            title: 'Error loading video files',
-            body: videoFilesError.message,
-            value: 2500,
-            variant: 'danger',
-            pos: 'top-end',
+        // showToast?.({
+        //   props: {
+        //     title: 'Error loading video files',
+        //     body: videoFilesError.message,
+        //     value: 2500,
+        //     variant: 'danger',
+        //     pos: 'top-end',
 
-          }
-        });
+        //   }
+        // });
         // log error
         console.error('Error fetching video files', videoFilesError);
       }
@@ -113,16 +108,16 @@ export const useProjectStore = defineStore('app', {
 
       const [allProjectsError, allProjectsData] = await safeFetch(() => client.getAllTestdrivesApiV1ProjectAllGet());
       if (allProjectsError) {
-        showToast?.({
-          props: {
-            title: 'Error loading projects',
-            body: allProjectsError.message,
-            value: 2500,
-            variant: 'danger',
-            pos: 'top-end',
+        // showToast?.({
+        //   props: {
+        //     title: 'Error loading projects',
+        //     body: allProjectsError.message,
+        //     value: 2500,
+        //     variant: 'danger',
+        //     pos: 'top-end',
 
-          }
-        });
+        //   }
+        // });
         // log error
         console.error('Error fetching all projects', allProjectsError);
       }
@@ -135,16 +130,16 @@ export const useProjectStore = defineStore('app', {
 
       const [activeProjectError, activeProject] = await safeFetch(() => client.getActiveTestdriveApiV1ProjectActiveGet());
       if (activeProjectError) {
-        showToast?.({
-          props: {
-            title: 'Error loading active project',
-            body: activeProjectError.message,
-            value: 2500,
-            variant: 'danger',
-            pos: 'top-end',
+        // showToast?.({
+        //   props: {
+        //     title: 'Error loading active project',
+        //     body: activeProjectError.message,
+        //     value: 2500,
+        //     variant: 'danger',
+        //     pos: 'top-end',
 
-          }
-        });
+        //   }
+        // });
         // log error
         console.error('Error fetching active project', activeProjectError);
       } else if (activeProject?.testdrive) {

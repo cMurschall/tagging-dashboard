@@ -27,14 +27,13 @@
 
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { useProjectStore } from './../stores/projectStore';
 
 import { safeFetch, ProjectApiClient as client, TestDriveProjectInfo } from '../services/utilities'
+import { useToastController } from 'bootstrap-vue-next';
 
-import { useToastController } from 'bootstrap-vue-next'
-
-const { show: showToast } = useToastController()
+const { show: showToast } = useToastController();
 
 const projectStore = useProjectStore();
 

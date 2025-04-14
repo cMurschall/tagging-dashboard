@@ -60,6 +60,7 @@ class TestDriveTagService:
             df = pd.read_csv(file_path)
             if df.empty:
                 return []
+            df["notes"] = df["notes"].fillna("")
             tags = [Tag(**row.to_dict()) for _, row in df.iterrows()]
             self.logger.debug("Retrieved %d tags.", len(tags))
             return tags

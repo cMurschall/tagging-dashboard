@@ -124,18 +124,19 @@
 import ProjectListItem from './ProjectListItem.vue';
 import TimelineRange from './TimelineRange.vue'
 
-import { ref } from 'vue'
+import { inject, ref } from 'vue'
 import { useProjectStore } from './../stores/projectStore';
 
-import { useToastController } from 'bootstrap-vue-next'
+
 import { CreateProjectPayload } from '../services/utilities';
 
 import { safeFetch, ProjectApiClient as client } from '../services/utilities';
 import { BFormGroup } from 'bootstrap-vue-next';
+import { useToastController } from 'bootstrap-vue-next';
+
+const { show: showToast } = useToastController();
 
 
-
-const { show: showToast } = useToastController()
 const projectStore = useProjectStore()
 
 

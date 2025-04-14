@@ -53,37 +53,41 @@
                 <div v-if="activeLabel" class="mt-1">
 
                     <!-- Flex container for a single-row layout -->
-                    <div class="d-flex align-items-center flex-wrap gap-1">
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                        <h5 class="mb-0 me-2">Edit:</h5>
 
-                        <h5 class="mb-0 me-2">Edit Label: {{ activeLabel.label_id }}</h5>
+                        <!-- Start -->
+                        <div class="d-flex align-items-center gap-1">
+                            <label for="startTime" class="form-label mb-0">Start:</label>
+                            <BFormInput id="startTime" type="number" v-model="formData.start" size="sm"
+                                style="width: 100px;" />
+                        </div>
 
-
-                        <!-- Start Time -->
-                        <label for="startTime" class="mb-0">Start:</label>
-                        <input id="startTime" type="number" class="form-control" style="width: 100px;"
-                            v-model="formData.start" />
-
-                        <!-- End Time -->
-                        <label for="endTime" class="mb-0">End:</label>
-                        <input id="endTime" type="number" class="form-control" style="width: 100px;"
-                            v-model="formData.end" />
+                        <!-- End -->
+                        <div class="d-flex align-items-center gap-1">
+                            <label for="endTime" class="form-label mb-0">End:</label>
+                            <BFormInput id="endTime" type="number" v-model="formData.end" size="sm"
+                                style="width: 100px;" />
+                        </div>
 
                         <!-- Category -->
-                        <label for="category" class="mb-0">Category:</label>
-                        <input id="category" type="text" class="form-control" style="width: 150px;"
-                            v-model="formData.category" />
-
+                        <div class="d-flex align-items-center gap-1">
+                            <label for="category" class="form-label mb-0">Category:</label>
+                            <BFormSelect id="category" v-model="formData.category" :options="allCategories" size="sm"
+                                style="width: 150px;" class="form-select" />
+                        </div>
 
                         <!-- Notes -->
-                        <label for="notes" class="mb-0">Notes:</label>
-                        <input id="notes" type="text" class="form-control" style="width: 150px;"
-                            v-model="formData.category" />
-
+                        <div class="d-flex align-items-center gap-1">
+                            <label for="notes" class="form-label mb-0">Notes:</label>
+                            <BFormInput id="notes" type="text" v-model="formData.note" size="sm"
+                                style="width: 250px;" />
+                        </div>
 
                         <!-- Buttons -->
-                        <BButton variant="primary" @click="onSaveLabel">Save</BButton>
-                        <BButton variant="danger" @click="onDeleteLabel">Delete</BButton>
-                        <BButton variant="secondary" @click="onCancelEdit">Cancel</BButton>
+                        <BButton size="sm" variant="primary" @click="onSaveLabel">Save</BButton>
+                        <BButton size="sm" variant="danger" @click="onDeleteLabel">Delete</BButton>
+                        <BButton size="sm" variant="secondary" @click="onCancelEditLabel">Cancel</BButton>
                     </div>
                 </div>
 
@@ -97,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, inject, onUnmounted, computed } from 'vue';
+import { ref, onMounted, reactive, inject, onUnmounted, computed, watch } from 'vue';
 import Chart from 'vue-echarts';
 
 import * as echarts from 'echarts/core';
@@ -111,12 +115,13 @@ import {
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import type { EChartsOption, CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams } from 'echarts';
-import { useToastController, BButton, BTable, BRow, BCol } from "bootstrap-vue-next";
+import { BButton, BRow, BCol, BListGroup, BListGroupItem, BFormSelect, BFormInput } from "bootstrap-vue-next";
 
 import { useVideoControl } from '../../composables/useVideoControl';
 import { Tag, TagCategory } from '../../../services/restclient';
 import { safeFetch, TagApiClient as client, TestDriveProjectInfo } from '../../services/utilities';
 import { Observable, Subscription } from '../../observable';
+import { SetCardTitleFn, ShowToastFn } from '../../plugins/AppPlugins';
 
 
 
@@ -130,13 +135,13 @@ echarts.use([
     CanvasRenderer,
 ]);
 
-const { show: showToast } = useToastController();
+
 const { seekTo } = useVideoControl();
 
 
 // Inject the function from the parent
-const setCardTitle = inject('setCardTitle') as (title: string) => void;
-
+const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => { });
+const showToast = inject<ShowToastFn>('showToast');
 
 type PluginState = {
 
@@ -178,6 +183,7 @@ interface TimeLabel {
     label_start_time: number; //  seconds
     label_end_time: number;   //  seconds
     note?: any;
+    isFloating: boolean;
 }
 
 
@@ -209,6 +215,9 @@ function getColorByCategory(categoryIndex: number): string {
 }
 
 
+
+
+
 // The core rendering logic for the custom series
 function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRenderItemAPI): echarts.CustomSeriesRenderItemReturn {
 
@@ -216,9 +225,11 @@ function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeries
     const endTime = api.value(1) as number;
     const category = api.value(2) as string;
     const labelId = api.value(3) as string;
+    const note = api.value(4) as string;
+    const isFloating = api.value(5) as unknown as boolean;
 
 
-    const isInstantaneous = startTime === endTime;
+    const isInstantaneous = endTime - startTime < 2; // Check if the label is (almost) instantaneous
 
     const startPoint = api.coord([startTime, api.value(2)]); // Use category value for y-coordinate
     const endPoint = api.coord([endTime, api.value(2)]);
@@ -243,6 +254,7 @@ function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeries
 
     const itemStyle = {
         fill: getColorByCategory(parseInt(category)),
+        opacity: isFloating ? 0.5 : 1,
     };
 
     if (isInstantaneous) {
@@ -271,20 +283,7 @@ function renderLabelItem(params: CustomSeriesRenderItemParams, api: CustomSeries
     }
 }
 
-const allCategories = computed(() => {
-    const uniqueCategories = new Set([
-        ...availableTags.value.map((label) => label.category),
-        ...availableTagCategories.value.map((t) => t.name),
-    ].filter(x => x !== undefined && x !== null && x !== ''));
-    const categories = Array.from(uniqueCategories);
 
-    categories.forEach((category, index) => {
-        toggleState.value[category!] = true; // Initialize toggle state for each category
-    });
-
-
-    return categories as string[];
-});
 
 
 const getChartOption = (): EChartsOption => {
@@ -395,6 +394,7 @@ const getChartOption = (): EChartsOption => {
                     label.category,
                     label.label_id,
                     label.note,
+                    label.isFloating
                 ]),
                 markLine: {
                     symbol: 'none',
@@ -425,6 +425,32 @@ const getChartOption = (): EChartsOption => {
 
 const availableTags = ref<TimeLabel[]>([]);
 const availableTagCategories = ref<TagCategory[]>([]);
+
+
+
+const allCategories = computed(() => {
+    const uniqueCategories = new Set([
+        ...availableTags.value.map((label) => label.category),
+        ...availableTagCategories.value.map((t) => t.name),
+    ].filter(x => x !== undefined && x !== null && x !== ''));
+    const categories = Array.from(uniqueCategories);
+
+    return categories as string[];
+});
+
+
+watch(allCategories, (newCategories, oldCategories) => {
+    // Check if the new categories are different from the old ones
+    if (newCategories.length === oldCategories.length && newCategories.every((cat, index) => cat === oldCategories[index])) {
+        return; // No change in categories
+    }
+    // Update the toggle state for the new categories
+    toggleState.value = {}; // Reset toggle state
+    newCategories.forEach((category, index) => {
+        toggleState.value[category] = false; // Initialize toggle state for each category
+    });
+},);
+
 
 
 // --- Category Form State ---
@@ -556,17 +582,88 @@ const toggleTag = (category: string) => {
     toggleState.value[category] = !toggleState.value[category];
     console.log(`${category} has been ${toggleState.value[category] ? 'started' : 'stopped'}`);
     // Insert additional logic for handling the tag state here.
+    if (toggleState.value[category]) {
+        startNewTag(category);
+    } else {
+        stopNewTag(category);
+    }
 }
 
 const startNewTag = (category: string) => {
     // Set state that a new tag is being created for the given category.
     console.log("Starting new tag for category:", category);
+    // add floating tag to the chart
+
+    const newTagId = 'tag_' + Math.random().toString(36)
+    const newTag: TimeLabel = {
+        label_id: newTagId,
+        category: category,
+        label_start_time: currentSimulationTime.value,
+        label_end_time: currentSimulationTime.value,
+        note: '',
+        isFloating: true,
+    };
+    availableTags.value.push(newTag);
+    chartOption.value = getChartOption();
 };
 
-const stopNewTag = (category: string) => {
+const stopNewTag = async (category: string) => {
 
     // Set state that the new tag creation is stopped.
     console.log("Stopping new tag for category:", category);
+    // find the floating tag in the chart
+    const floatingTag = availableTags.value.find(tag => tag.category === category && tag.isFloating);
+    if (floatingTag) {
+
+        floatingTag.isFloating = false; // Mark it as not floating anymore
+
+        const [error, response] = await safeFetch(() => client.addTagApiV1TagCreatePost({
+            createTagPayload: {
+                category: floatingTag.category,
+                timestampStartS: floatingTag.label_start_time,
+                timestampEndS: floatingTag.label_end_time,
+                notes: floatingTag.note,
+            }
+        }));
+        if (error) {
+            console.error('Error adding tag:', error);
+            showToast?.({
+                props: {
+                    title: `Error adding tag: ${floatingTag.category}`,
+                    body: error.message,
+                    value: 2500,
+                    variant: 'danger',
+                    pos: 'top-end',
+
+                }
+            });
+            return;
+        }
+        if (response && response.tag) {
+            floatingTag.label_id = response.tag.id?.toString() ?? floatingTag.label_id;
+
+
+            showToast?.({
+                props: {
+                    title: `Tag added: ${floatingTag.category}`,
+                    body: `Tag ${floatingTag.category} has been added.`,
+                    value: 2500,
+                    variant: 'success',
+                    pos: 'top-end',
+
+                }
+            });
+        } else {
+            console.warn('No tag found or unexpected response structure.');
+        }
+
+
+
+    } else {
+        console.warn("No floating tag found for category:", category);
+    }
+    // redraw the chart
+    chartOption.value = getChartOption();
 };
 
 
@@ -579,21 +676,20 @@ const formData = reactive({
     start: 0,
     end: 0,
     category: '',
+    note: '',
 });
 
 const setFormData = (label: TimeLabel) => {
     formData.start = label.label_start_time;
     formData.end = label.label_end_time;
     formData.category = label.category;
+    formData.note = label.note ?? '';
 }
 
 const handleOnChartClick = (params: any) => {
     if (params.componentType === 'series' && params.componentSubType === 'custom') {
         // Identify the clicked label
 
-        // const startTime = params.value[0] as number;
-        // const endTime = params.value[1] as number;
-        // const category = params.value[2] as string;
         const labelId = params.value[3] as string;
 
 
@@ -609,33 +705,108 @@ const handleOnChartClick = (params: any) => {
     }
 }
 
-const onSaveLabel = () => {
+const onSaveLabel = async () => {
     if (activeLabel.value) {
         const index = availableTags.value.findIndex(l => l.label_id === activeLabel.value?.label_id);
         if (index !== -1) {
-            availableTags.value[index].label_start_time = formData.start;
-            availableTags.value[index].label_end_time = formData.end;
-            availableTags.value[index].category = formData.category;
+
+            const [error, response] = await safeFetch(() => client.updateTagApiV1TagUpdateIdPut({
+                id: availableTags.value[index].label_id,
+                updateTagPayload: {
+                    category: formData.category,
+                    timestampStartS: formData.start,
+                    timestampEndS: formData.end,
+                    notes: formData.note,
+                }
+            }));
+
+            if (error) {
+                console.error('Error updating tag:', error);
+                showToast?.({
+                    props: {
+                        title: `Error updating tag: ${formData.category}`,
+                        body: error.message,
+                        value: 2500,
+                        variant: 'danger',
+                        pos: 'top-end',
+
+                    }
+                });
+            }
+            else if (response && response.tag) {
+                availableTags.value[index].label_id = response.tag.id?.toString() ?? availableTags.value[index].label_id;
+                availableTags.value[index].label_start_time = formData.start;
+                availableTags.value[index].label_end_time = formData.end;
+                availableTags.value[index].category = formData.category;
 
 
-            chartOption.value = getChartOption();
+                showToast?.({
+                    props: {
+                        title: `Tag updated: ${formData.category}`,
+                        body: `Tag ${formData.category} has been updated.`,
+                        value: 2500,
+                        variant: 'success',
+                        pos: 'top-end',
+
+                    }
+                });
+            } else {
+                console.warn('No tag found or unexpected response structure.');
+            }
+
         }
+
+
+        chartOption.value = getChartOption();
     }
 }
 
-const onDeleteLabel = () => {
+const onDeleteLabel = async () => {
     if (activeLabel.value) {
         const index = availableTags.value.findIndex(l => l.label_id === activeLabel.value?.label_id);
         if (index !== -1) {
-            availableTags.value.splice(index, 1);
-            chartOption.value = getChartOption();
+            // availableTags.value.splice(index, 1);
+
+            const [error, response] = await safeFetch(() => client.deleteTagApiV1TagDeleteIdDelete({
+                id: availableTags.value[index].label_id
+            }));
+            if (error) {
+                console.error('Error deleting tag:', error);
+                showToast?.({
+                    props: {
+                        title: `Error deleting tag: ${activeLabel.value.category}`,
+                        body: error.message,
+                        value: 2500,
+                        variant: 'danger',
+                        pos: 'top-end',
+
+                    }
+                });
+            } else if (response && response.success) {
+                availableTags.value.splice(index, 1);
+                showToast?.({
+                    props: {
+                        title: `Tag deleted: ${activeLabel.value.category} (${activeLabel.value.label_start_time}s - ${activeLabel.value.label_end_time}s)`,
+                        body: `Tag ${activeLabel.value.category} has been deleted.`,
+                        value: 2500,
+                        variant: 'success',
+                        pos: 'top-end',
+
+                    }
+                });
+            } else {
+                console.warn('No tag found or unexpected response structure.');
+            }
         }
     }
+
+    chartOption.value = getChartOption();
 }
 
-const onCancelEdit = () => {
+const onCancelEditLabel = () => {
+
     activeLabel.value = null;
-    setFormData({ label_id: '', category: '', label_start_time: 0, label_end_time: 0 });
+    setFormData({ label_id: '', category: '', label_start_time: 0, label_end_time: 0, note: '', isFloating: false });
 }
 
 
@@ -665,6 +836,7 @@ const loadProjectTags = async () => {
             label_start_time: tag.timestampStartS,
             label_end_time: tag.timestampEndS,
             note: tag.notes,
+            isFloating: false
         })) as TimeLabel[]; // Cast to TimeLabel type
 
         console.log("Tags loaded:", availableTags.value);
@@ -690,7 +862,18 @@ onMounted(async () => {
 
     subscription = simulationTimeObservable.subscribe((time) => {
         currentSimulationTime.value = time;
-        // setCardTitle(`Player: ${time}`);
+        // update all floating tags to the current time
+        let chartNeedsUpdate = false;
+        availableTags.value.forEach((tag) => {
+            if (tag.isFloating) {
+                tag.label_end_time = time;
+                chartNeedsUpdate = true;
+            }
+        });
+        // update the chart if any floating tags were updated
+        if (chartNeedsUpdate) {
+            chartOption.value = getChartOption();
+        }
     });
 });
 

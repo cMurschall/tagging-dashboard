@@ -87,6 +87,7 @@ import type {
 } from 'echarts/components'
 import { SeriesOption } from "echarts";
 import gridManager from "../../managers/gridItemManager";
+import { SetCardTitleFn } from "../../plugins/AppPlugins";
 
 use([
   LegendComponent,
@@ -108,7 +109,9 @@ type EChartsOption = ComposeOption<
 >
 
 
-const setCardTitle = inject('setCardTitle') as (title: string) => void;
+const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => {});
+
+
 const { seekTo } = useVideoControl();
 const dataManager = inject<DataManager>('dataManager');
 if (!dataManager) {

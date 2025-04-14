@@ -16,6 +16,7 @@
 import { defineComponent, inject, PropType } from 'vue';
 import { useVideoControl } from '../../composables/useVideoControl';
 import gridManager from '../../managers/gridItemManager';
+import { SetCardTitleFn } from '../../plugins/AppPlugins';
 
 
 const { seekTo } = useVideoControl()
@@ -52,9 +53,9 @@ export default defineComponent({
     }
   },
   setup() {
-    const setCardTitle = inject('setCardTitle') as (title: string) => void;
+    const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => {});
     return {
-      updateTitle: () => setCardTitle('Updated Title from Child '),
+      updateTitle: () => setCardTitle('Updated Title from Child ' + Math.random().toFixed(2)),
       seekTo
     };
   },

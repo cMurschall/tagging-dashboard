@@ -32,6 +32,10 @@ class TagResponse(BaseModel):
     tag: Tag
 
 
+class DeleteResponse(BaseModel):
+    success: bool
+
+
 class AllCategoriesResponse(BaseModel):
     categories: list[TagCategory]
 
@@ -84,7 +88,7 @@ class TagController:
             tag = tag_service.get_by_id(active_testdrive, id)
             return {"tag": tag}
 
-        @self.router.delete("/delete/{id}", response_model=TagResponse)
+        @self.router.delete("/delete/{id}", response_model=DeleteResponse)
         async def delete_tag(
                 id: str,
                 test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
@@ -93,12 +97,12 @@ class TagController:
             if not active_testdrive:
                 raise HTTPException(status_code=404, detail="No active test drive found")
 
-            tag = tag_service.delete_tag(active_testdrive.test_drive_tag_info, id)
-            return {"tag": tag}
+            success = tag_service.delete_tag(active_testdrive.test_drive_tag_info, id)
+            return {"success": success}
 
         @self.router.put("/update/{id}", response_model=TagResponse)
         async def update_tag(
-                str: int,
+                id: str,
                 payload: UpdateTagPayload,
                 test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
                 tag_service: TestDriveTagService = Depends(lambda: get_tagdata_manager())):

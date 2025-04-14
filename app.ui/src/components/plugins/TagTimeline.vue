@@ -46,15 +46,13 @@
                 </div>
 
 
-                <Chart ref=" chartRef" :option="chartOption" class="chart-dimensions" :autoresize="{ throttle: 100 }"
-                    @click="handleOnChartClick" />
+                <Chart ref="chartRef" :option="chartOption" class="chart-dimensions" :autoresize="{ throttle: 100 }"
+                    @click="handleOnChartClick" @zr:click="handleOnZrChartClick" />
 
                 <div v-if="selectedTag" class="mt-1">
 
                     <!-- Flex container for a single-row layout -->
                     <div class="d-flex align-items-center flex-wrap gap-2">
-                        <h5 class="mb-0 me-2">Edit:</h5>
-
                         <!-- Start -->
                         <div class="d-flex align-items-center gap-1">
                             <label for="startTime" class="form-label mb-0">Start:</label>
@@ -104,7 +102,7 @@ import { ref, onMounted, reactive, inject, onUnmounted, computed, watch } from '
 import Chart from 'vue-echarts';
 
 import * as echarts from 'echarts/core';
-import { CustomChart } from 'echarts/charts';
+import { CustomChart, LineChart } from 'echarts/charts';
 import {
     TooltipComponent,
     GridComponent,
@@ -113,7 +111,7 @@ import {
     MarkPointComponent,
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
-import type { EChartsOption, CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams } from 'echarts';
+import type { EChartsOption, CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams, CustomSeriesRenderItemReturn } from 'echarts';
 import { BButton, BRow, BCol, BListGroup, BListGroupItem, BFormSelect, BFormInput } from "bootstrap-vue-next";
 
 import { useVideoControl } from '../../composables/useVideoControl';
@@ -126,6 +124,7 @@ import { SetCardTitleFn, ShowToastFn } from '../../plugins/AppPlugins';
 
 echarts.use([
     CustomChart,
+    LineChart,
     TooltipComponent,
     GridComponent,
     DataZoomComponent,
@@ -149,6 +148,7 @@ type PluginState = {
 
 
 
+
 interface TagTimelineProps {
     showMenu: boolean;
     id: string;
@@ -156,6 +156,16 @@ interface TagTimelineProps {
 
     projectInfo?: TestDriveProjectInfo,
 }
+
+
+interface Cartesian2DCoordSys {
+    type: 'cartesian2d';
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
 
 
 const props = withDefaults(defineProps<TagTimelineProps>(), {
@@ -218,7 +228,7 @@ function getColorByCategory(categoryIndex: number): string {
 
 
 // The core rendering logic for the custom series
-function renderTagItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRenderItemAPI): echarts.CustomSeriesRenderItemReturn {
+function renderTagItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRenderItemAPI): CustomSeriesRenderItemReturn {
 
     const startTime = api.value(0) as number;
     const endTime = api.value(1) as number;
@@ -236,6 +246,8 @@ function renderTagItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRe
     const barHeight = 20;
     const yPosition = startPoint[1] - barHeight / 2; // Center the bar vertically on the category
 
+    const cartCoordSys = params.coordSys as Cartesian2DCoordSys;
+
     const rectShape = echarts.graphic.clipRectByRect(
         {
             x: startPoint[0],
@@ -244,10 +256,10 @@ function renderTagItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRe
             height: barHeight,
         },
         {
-            x: params.coordSys.x,
-            y: params.coordSys.y,
-            width: params.coordSys.width,
-            height: params.coordSys.height,
+            x: cartCoordSys.x,
+            y: cartCoordSys.y,
+            width: cartCoordSys.width,
+            height: cartCoordSys.height,
         }
     );
 
@@ -268,17 +280,16 @@ function renderTagItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRe
                 ],
             },
             style: itemStyle,
-        };
+        } as CustomSeriesRenderItemReturn;
     } else {
-        return rectShape
-            ? {
-                type: 'rect',
-                transition: ['shape'],
-                shape: rectShape,
-                style: itemStyle,
-                id: labelId,
-            }
-            : undefined;
+        return {
+            type: 'rect',
+            transition: ['shape'],
+            shape: rectShape,
+            style: itemStyle,
+            id: labelId,
+        } as CustomSeriesRenderItemReturn
+
     }
 }
 
@@ -309,55 +320,43 @@ const createChartOption = (): EChartsOption => {
 
 
 
-
-
+    const denseXValues = [];
+    const step = 0.1; // or smaller if you want finer movement
+    for (let t = minTime; t <= maxTime; t += step) {
+        // y-value doesn't matter if you won't show the line, so pick something consistent
+        // Could do [t, 0] or [t, <some category index>].
+        denseXValues.push([t, 0]);
+    }
 
     const timePadding = (maxTime - minTime) * 0.05;
 
     return {
-        tooltip: [
-            {
-                trigger: 'item',
-                formatter: (params: any) => {
-                    const data = params.value as (number | string | object)[];
-                    const startTime = `${data[0]}s`;
-                    const endTime = `${data[1]}s`;
-                    const category = data[2] as string;
-                    const details = data[4] ? `<br/>Details: ${data[4]}` : '';
-
-                    if (data[0] === data[1]) {
-                        return `<b>${category}</b><br/>Time: ${startTime}${details}`;
-                    } else {
-                        return `<b>${category}</b><br/>Start: ${startTime}<br/>End: ${endTime}${details}`;
-                    }
-                },
+        tooltip: {
+            show: true,
+            trigger: 'axis',
+            // Ensure we respond on mousemove
+            triggerOn: 'mousemove',
+            axisPointer: {
+                axis: 'x',
+                type: 'line',
+                snap: false,
+                lineStyle: { color: 'red', width: 1 },
             },
-            // {
-            //     trigger: 'axis', // Trigger tooltip on axis pointer move
-            //     axisPointer: {
-            //         axis: 'x', // Use x-axis pointer
-            //         type: 'line', // Show a line axis pointer
-            //         lineStyle: {
-            //             color: 'red',
-            //             width: 1
-            //         },
-            //         z: 100 // Ensure it's on top
-            //     },
-            // }
-        ],
+            // Always show the tooltip even if there's no data from the main series
+            showContent: true,
+            formatter: function (params: any) {
+                // If no series returns data, ECharts might give an empty array
+                if (!params || !params.length) return '';
+                const xVal = params[0].axisValue;
+                return `Time: ${Number(xVal).toFixed(2)}s`;
+            },
+        },
         dataZoom: [
             {
                 type: 'inside',
                 xAxisIndex: 0,
                 filterMode: 'weakFilter',
-            },
-            // {
-            //     type: 'slider',
-            //     xAxisIndex: 0,
-            //     filterMode: 'weakFilter',
-            //     startValue: minTime,
-            //     endValue: maxTime,
-            // },
+            }
         ],
         grid: {
             left: '5%',
@@ -369,7 +368,7 @@ const createChartOption = (): EChartsOption => {
         xAxis: {
             type: 'value',
             min: minTime,
-            max: maxTime + timePadding,
+            max: maxTime,
             axisLabel: {
                 formatter: (value: number) => `${value.toFixed(0)}s`,
             },
@@ -386,7 +385,11 @@ const createChartOption = (): EChartsOption => {
             data: [...allCategories.value] as string[], // Use the extracted unique categories
             axisLabel: { interval: 0 },
             splitLine: { show: true },
-            inverse: true
+            inverse: true,
+            axisPointer: {
+                // Turn off y-axis pointer
+                show: false,
+            },
         },
         series: [
             {
@@ -409,6 +412,7 @@ const createChartOption = (): EChartsOption => {
                     label.note,
                     label.isFloating
                 ]),
+                tooltip: { show: false },
                 markPoint: {
                     symbol: 'circle',
                     symbolSize: 10,
@@ -424,6 +428,7 @@ const createChartOption = (): EChartsOption => {
                     z: 1,
                     data: [
                         {
+                            name: 'Current Time',
                             xAxis: currentSimulationTime,
                             y: '90%',
                         }
@@ -431,6 +436,16 @@ const createChartOption = (): EChartsOption => {
                     // Disable animation
                     animation: false,
                 },
+            },
+            {
+                // DUMMY series to fill the x-range so ECharts can track any x
+                type: 'line',
+                encode: { x: 0, y: 1, },
+                data: denseXValues,
+                showSymbol: false,
+                // Make the line invisible
+                lineStyle: { opacity: 0 },
+                tooltip: { show: false },
             },
         ],
     };
@@ -685,8 +700,22 @@ const setFormData = (label: TagViewModel) => {
     formData.note = label.note ?? '';
 }
 
+const handleOnZrChartClick = (params: any) => {
+    if (!params.target) {
+        // Click on blank. Do something.
+        const chart = chartRef.value;
+        if (!chart) { return; }
+
+
+        const [x, _] = chart.convertFromPixel({ seriesIndex: 1 }, [params.offsetX, params.offsetY]);
+        console.log("Clicked on chart:", x);
+        seekTo(x); // Seek to the clicked time
+    }
+
+}
+
 const handleOnChartClick = (params: any) => {
-    console.log("Clicked on chart:", params);
+    // console.log("Clicked on chart:", params);
     if (params.componentType === 'series' && params.componentSubType === 'custom') {
         // Identify the clicked label
 
@@ -699,15 +728,6 @@ const handleOnChartClick = (params: any) => {
             selectedTag.value = { ...found };
             setFormData(found);
         }
-    }
-
-    // else if(params.componentType === 'markLine') {
-    //     seekTo( params.value); // Seek to the clicked time in the video
-    // }
-
-    else {
-        // Clicked somewhere else, optionally clear active label
-        // activeLabel.value = null;
     }
 }
 

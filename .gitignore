@@ -180,3 +180,4 @@ cython_debug/
 .pypirc
 /openapi-generator-cli.jar
 /openapi.json
+/app.ui/components.d.ts

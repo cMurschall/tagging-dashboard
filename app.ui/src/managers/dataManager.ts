@@ -42,3 +42,19 @@ export abstract class DataManager {
 
 }
 
+
+export class EmptyDataManager extends DataManager {
+  measurement$ = new Observable<TimeseriesDataPoint>();
+  getAllMeasurements(): TimeseriesTable {
+    return { timestamps: new Float64Array(), values: {} };
+  }
+  getColumnNames(): string[] {
+    return [];
+  }
+  initialize(_measurementKeys: string[]): Promise<void> {
+    return Promise.resolve();
+  }
+  subscribeToTimestamp(_ts$: Observable<number>): void {
+  }
+}
+

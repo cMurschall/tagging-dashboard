@@ -93,16 +93,17 @@ export class GridManager {
         items.forEach((item) => GridManager.removeItemObservable.next(item.id));
     }
 
-
     public suggestFreeSpace(width: number, height: number): { x: number; y: number } {
         if (width <= 0 || height <= 0) {
             console.warn("Warning: Width and height must be positive values.");
             return { x: 0, y: 0 };
         }
 
-        const occupiedSpaces = this.GridManagerItems.filter(item => item.x !== undefined && item.y !== undefined && item.w !== undefined && item.h !== undefined) as Required<GridManagerItem>[];
+        const occupiedSpaces = this.GridManagerItems.filter(
+            item => item.x !== undefined && item.y !== undefined && item.w !== undefined && item.h !== undefined
+        ) as Required<GridManagerItem>[];
 
-        // If there are no existing items, the top-left corner (0, 0) is free.
+        // If empty, suggest top-left
         if (occupiedSpaces.length === 0) {
             return { x: 0, y: 0 };
         }
@@ -110,42 +111,52 @@ export class GridManager {
         let maxX = 0;
         let maxY = 0;
         for (const item of occupiedSpaces) {
-            maxX = Math.max(maxX, (item.x || 0) + (item.w || 0));
-            maxY = Math.max(maxY, (item.y || 0) + (item.h || 0));
+            maxX = Math.max(maxX, item.x + item.w);
+            maxY = Math.max(maxY, item.y + item.h);
         }
 
-        // Determine a reasonable upper bound for the search.
-        // We'll search in a grid that extends beyond the currently occupied items.
         const searchWidth = maxX + width + 1;
         const searchHeight = maxY + height + 1;
+        const centerX = Math.floor(searchWidth / 2);
+        const centerY = Math.floor(searchHeight / 2);
 
-
+        // Generate all candidate positions
+        const candidates: { x: number; y: number; dist: number }[] = [];
         for (let x = 0; x < searchWidth; x++) {
             for (let y = 0; y < searchHeight; y++) {
-                const potentialNewItem = { x, y, w: width, h: height };
-                let isOverlap = false;
-
-                for (const occupiedItem of occupiedSpaces) {
-                    if (
-                        potentialNewItem.x < (occupiedItem.x || 0) + (occupiedItem.w || 0) &&
-                        potentialNewItem.x + potentialNewItem.w > (occupiedItem.x || 0) &&
-                        potentialNewItem.y < (occupiedItem.y || 0) + (occupiedItem.h || 0) &&
-                        potentialNewItem.y + potentialNewItem.h > (occupiedItem.y || 0)
-                    ) {
-                        isOverlap = true;
-                        break;
-                    }
-                }
-
-                if (!isOverlap) {
-                    return { x, y };
-                }
+                const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+                candidates.push({ x, y, dist });
             }
         }
 
+        // Sort by distance to center (closest first)
+        candidates.sort((a, b) => a.dist - b.dist);
+
+        // Check candidates
+        for (const { x, y } of candidates) {
+            const potentialNewItem = { x, y, w: width, h: height };
+            let isOverlap = false;
+
+            for (const occupiedItem of occupiedSpaces) {
+                if (
+                    potentialNewItem.x < occupiedItem.x + occupiedItem.w &&
+                    potentialNewItem.x + potentialNewItem.w > occupiedItem.x &&
+                    potentialNewItem.y < occupiedItem.y + occupiedItem.h &&
+                    potentialNewItem.y + potentialNewItem.h > occupiedItem.y
+                ) {
+                    isOverlap = true;
+                    break;
+                }
+            }
+
+            if (!isOverlap) {
+                return { x, y };
+            }
+        }
+
+        // Fallback
         return { x: 0, y: 0 };
     }
-
 }
 
 

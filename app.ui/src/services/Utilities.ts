@@ -91,7 +91,19 @@ export const formatWithTemplate = (value: number, formatTemplate: string): strin
           maximumFractionDigits: isNaN(precision) ? 0 : precision,
         };
         break;
-      // Add more cases for other format specifiers as needed (e.g., N for number with grouping)
+      case 'N':
+        numberFormatOptions = {
+          style: 'decimal',
+          useGrouping: true,
+          minimumFractionDigits: isNaN(precision) ? 0 : precision,
+          maximumFractionDigits: isNaN(precision) ? 0 : precision,
+        };
+        break;
+      case 'E':
+        const expPrecision = isNaN(precision) ? 2 : precision;
+        const exponentialValue = value.toExponential(expPrecision);
+        return formatTemplate.replace(match[0], exponentialValue);
+
       default:
         console.warn(`Unsupported format specifier: ${formatSpecifier}`);
     }

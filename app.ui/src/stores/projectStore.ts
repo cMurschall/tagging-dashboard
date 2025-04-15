@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { safeFetch, ProjectApiClient as client, TestDriveProjectInfo } from '../services/utilities';
 
 
-export const useProjectStore = defineStore('app', {
+export const useProjectStore = defineStore('project', {
   state: () => ({
     availableCsvValues: [] as string[],
     availableVideoValues: [] as string[],
@@ -82,7 +82,7 @@ export const useProjectStore = defineStore('app', {
 
       } else {
         this.availableCsvValues = csvFilesData?.files || [];
-        console.info('CSV files fetched', this.availableCsvValues);
+        // console.info('CSV files fetched', this.availableCsvValues);
       }
 
       const [videoFilesError, videoFilesData] = await safeFetch(() => client.getVideoFilesApiV1ProjectFilesVideoGet());
@@ -102,7 +102,7 @@ export const useProjectStore = defineStore('app', {
       }
       else {
         this.availableVideoValues = videoFilesData?.files || [];
-        console.info('Video files fetched', this.availableVideoValues);
+        // console.info('Video files fetched', this.availableVideoValues);
       }
 
 
@@ -123,7 +123,7 @@ export const useProjectStore = defineStore('app', {
       }
       else {
         this.availableProjects = allProjectsData?.testdrives || [];
-        console.info('All projects fetched', this.availableProjects);
+        // console.info('All projects fetched', this.availableProjects);
       }
 
 

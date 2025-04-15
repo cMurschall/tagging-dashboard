@@ -90,6 +90,10 @@ import { Observable } from '../../observable';
 import { ApiDataManager } from './../../managers/apiDataManager';
 import gridItemManager from './../../managers/gridItemManager';
 import layoutManager, { StoredLayoutItem } from './../../managers/layoutManager';
+import { TestDriveProjectInfo } from '../../services/utilities';
+import { DataManager } from '../../managers/dataManager';
+import getPluginManagerInstance, { PluginManager } from '../../managers/pluginManager';
+import gridManager from './../../managers/gridItemManager';
 
 const simulationTimeObservable = new Observable<number>(0);
 
@@ -240,6 +244,7 @@ const handleAddTestGridItem = () => {
 };
 
 
+
 onMounted(async () => {
     // Fetch the initial layout data when the component is mounted
     availableLayouts.value = layoutManager.getLayoutNames();
@@ -247,6 +252,7 @@ onMounted(async () => {
         layoutsData.value = layouts;
         availableLayouts.value = Object.keys(layouts);
     });
+
 });
 
 

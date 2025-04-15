@@ -34,20 +34,55 @@
                 </div>
             </div>
             <div v-else class="d-flex flex-column" style="height: 100%;">
+
+
                 <!-- Flex container for a single-row layout -->
                 <div class="d-flex align-items-center flex-wrap gap-1">
 
                     <BButton v-for="(category, index) in allCategories" :key="category" class="category-button"
                         :class="['category-button', { 'is-recording': toggleState[category] }]"
                         :style="{ backgroundColor: categoryColors[index % categoryColors.length] }"
-                        @click="toggleTag(category)">
+                        @click="toggleTag(category)" :disabled="showTagList">
                         {{ toggleState[category] ? 'Stop ' : 'Start ' }}'{{ category }}'</BButton>
 
+
+                    <div class="ms-auto">
+                        <BFormCheckbox v-model="showTagList" switch class="mr-2">Show List</BFormCheckbox>
+                    </div>
                 </div>
 
-
-                <Chart ref="chartRef" :option="chartOption" class="chart-dimensions" :autoresize="{ throttle: 100 }"
-                    @click="handleOnChartClick" @zr:click="handleOnZrChartClick" />
+                <div v-if="showTagList" class="mt-3">
+                    <BTableSimple hover small responsive selectable select-mode="single">
+                        <BThead variant="light">
+                            <BTr>
+                                <BTh>Category</BTh>
+                                <BTh>Start Time (s)</BTh>
+                                <BTh>End Time (s)</BTh>
+                                <BTh>Duration (s)</BTh>
+                                <BTh>Note</BTh>
+                            </BTr>
+                        </BThead>
+                        <BTbody>
+                            <BTr v-for="(tag, index) in availableTags" :key="tag.id + index"
+                                @click="selectTagFromList(tag)" :active="selectedTagFromList?.id === tag.id"
+                                :rowSelected="selectedTagFromList?.id === tag.id">
+                                <BTd v-for="(value, i) in [
+                                    tag.category,
+                                    tag.startTime.toFixed(2),
+                                    tag.endTime.toFixed(2),
+                                    (tag.endTime - tag.startTime).toFixed(2),
+                                    tag.note || '-'
+                                ]" :key="i" :style="{
+                                    backgroundColor: getColorWithAlpha(getColorByCategory(allCategories.indexOf(tag.category)))
+                                }">
+                                    {{ value }}
+                                </BTd>
+                            </BTr>
+                        </BTbody>
+                    </BTableSimple>
+                </div>
+                <Chart v-else ref="chartRef" :option="chartOption" class="chart-dimensions"
+                    :autoresize="{ throttle: 100 }" @click="handleOnChartClick" @zr:click="handleOnZrChartClick" />
 
                 <div v-if="selectedTag" class="mt-1">
 
@@ -112,7 +147,10 @@ import {
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import type { EChartsOption, CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams, CustomSeriesRenderItemReturn } from 'echarts';
-import { BButton, BRow, BCol, BListGroup, BListGroupItem, BFormSelect, BFormInput } from "bootstrap-vue-next";
+import {
+    BButton, BRow, BCol, BListGroup, BListGroupItem, BFormSelect, BFormInput, BFormCheckbox,
+    BTableSimple, BThead, BTr, BTh, BTbody, BTd
+} from "bootstrap-vue-next";
 
 import { useVideoControl } from '../../composables/useVideoControl';
 import { Tag, TagCategory } from '../../../services/restclient';
@@ -195,7 +233,14 @@ interface TagViewModel {
     isFloating: boolean;
 }
 
+const showTagList = ref(false);
+const selectedTagFromList = ref<TagViewModel | null>(null);
 
+const selectTagFromList = (tag: TagViewModel) => {
+    selectedTagFromList.value = tag;
+    selectedTag.value = { ...tag }; // Update the selected tag for editing
+    setFormData(tag);
+};
 
 const chartRef = ref<typeof Chart | null>(null);
 const chartOption = ref<EChartsOption>({});
@@ -217,10 +262,21 @@ const categoryColors = [
 ];
 
 
-function getColorByCategory(categoryIndex: number): string {
-
+const getColorByCategory = (categoryIndex: number): string => {
     return categoryColors[categoryIndex] || categoryColors[categoryColors.length - 1]; // default to last color if not found
+}
 
+const getColorWithAlpha = (hex: string, alpha = 0.3) => {
+    // Remove hash if present
+    hex = hex.replace('#', '');
+
+    // Parse r, g, b
+    const bigint = parseInt(hex, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 
@@ -236,6 +292,8 @@ function renderTagItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRe
     const labelId = api.value(3) as string;
     const note = api.value(4) as string;
     const isFloating = api.value(5) as unknown as boolean;
+
+    const isSelected = selectedTag.value?.id === labelId; // Check if the label is selected
 
 
     const isInstantaneous = endTime - startTime < 2; // Check if the label is (almost) instantaneous
@@ -266,31 +324,76 @@ function renderTagItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRe
     const itemStyle = {
         fill: getColorByCategory(parseInt(category)),
         opacity: isFloating ? 0.5 : 1,
+        // stroke: isSelected ? 'red' : 'black',
+        // lineWidth: isSelected ? 2 : 0,
+        shadowColor: isSelected ? 'rgba(0, 0, 0, 0.5)' : 'none',
+        shadowBlur: isSelected ? 10 : 0,
+        shadowOffsetX: isSelected ? 5 : 0,
+        shadowOffsetY: isSelected ? 5 : 0,
+        stroke: isSelected && isInstantaneous ? 'red' : null, // Red border for instantaneous
+        lineWidth: isSelected && isInstantaneous ? 2 : null,
     };
 
     if (isInstantaneous) {
-        return {
-            type: 'polygon',
-            shape: {
-                points: [
-                    [startPoint[0], yPosition + barHeight / 2 - 5],
-                    [startPoint[0] + 5, yPosition + barHeight / 2],
-                    [startPoint[0], yPosition + barHeight / 2 + 5],
-                    [startPoint[0] - 5, yPosition + barHeight / 2],
-                ],
-            },
-            style: itemStyle,
-        } as CustomSeriesRenderItemReturn;
-    } else {
-        return {
-            type: 'rect',
-            transition: ['shape'],
-            shape: rectShape,
-            style: itemStyle,
-            id: labelId,
-        } as CustomSeriesRenderItemReturn
+        // return {
+        //     type: 'polygon',
+        //     shape: {
+        //         points: [
+        //             [startPoint[0], yPosition + barHeight / 2 - 5],
+        //             [startPoint[0] + 5, yPosition + barHeight / 2],
+        //             [startPoint[0], yPosition + barHeight / 2 + 5],
+        //             [startPoint[0] - 5, yPosition + barHeight / 2],
+        //         ],
+        //     },
+        //     style: itemStyle,
+        // } as CustomSeriesRenderItemReturn;
 
+        if (isInstantaneous) {
+            const hitAreaSize = 10;
+            const diamondSize = 15;
+            return {
+                type: 'group',
+                children: [
+                    {
+                        type: 'polygon', // visible marker
+                        shape: {
+                            points: [
+                                [startPoint[0], yPosition + barHeight / 2 - diamondSize],
+                                [startPoint[0] + diamondSize, yPosition + barHeight / 2],
+                                [startPoint[0], yPosition + barHeight / 2 + diamondSize],
+                                [startPoint[0] - diamondSize, yPosition + barHeight / 2],
+                            ],
+                        },
+                        style: itemStyle,
+                    },
+                    {
+                        // an invisible hit area
+                        // to capture clicks
+                        type: 'circle', 
+                        shape: {
+                            cx: startPoint[0],
+                            cy: yPosition + barHeight / 2,
+                            r: hitAreaSize,
+                        },
+                        style: {
+                            opacity: 0.0, // Make it invisible
+                        },
+                    },
+                ],
+            } as CustomSeriesRenderItemReturn;
+        }
     }
+
+
+    return {
+        type: 'rect',
+        transition: ['shape'],
+        shape: rectShape,
+        style: itemStyle,
+        id: labelId,
+    } as CustomSeriesRenderItemReturn
+
+
 }
 
 
@@ -701,6 +804,7 @@ const setFormData = (label: TagViewModel) => {
 }
 
 const handleOnZrChartClick = (params: any) => {
+    console.log("Clicked on zr chart:", params);
     if (!params.target) {
         // Click on blank. Do something.
         const chart = chartRef.value;
@@ -715,7 +819,7 @@ const handleOnZrChartClick = (params: any) => {
 }
 
 const handleOnChartClick = (params: any) => {
-    // console.log("Clicked on chart:", params);
+    console.log("Clicked on chart:", params);
     if (params.componentType === 'series' && params.componentSubType === 'custom') {
         // Identify the clicked label
 
@@ -727,6 +831,8 @@ const handleOnChartClick = (params: any) => {
         if (found) {
             selectedTag.value = { ...found };
             setFormData(found);
+            // redraw the chart
+            chartOption.value = createChartOption();
         }
     }
 }
@@ -764,6 +870,7 @@ const saveTag = async () => {
                 availableTags.value[index].startTime = formData.start;
                 availableTags.value[index].endTime = formData.end;
                 availableTags.value[index].category = formData.category;
+                availableTags.value[index].note = formData.note;
 
 
                 showToast?.({
@@ -874,7 +981,12 @@ const loadProjectTags = async () => {
     }
 };
 
-
+const handleKeydown = (event: KeyboardEvent) => {
+    console.log("Key pressed:", event.key);
+    if (event.key === 'Delete' && selectedTag.value) {
+        deleteTag()
+    }
+}
 
 let subscription: Subscription | null = null;
 
@@ -892,7 +1004,13 @@ onMounted(async () => {
         let chartNeedsUpdate = false;
         availableTags.value.forEach((tag) => {
             if (tag.isFloating) {
-                tag.endTime = time;
+                const isFuture = time > tag.startTime;
+                if (isFuture) {
+                    tag.endTime = time;
+                }
+                else {
+                    tag.startTime = time;
+                }
                 chartNeedsUpdate = true;
             }
         });
@@ -901,17 +1019,21 @@ onMounted(async () => {
             chartOption.value = createChartOption();
         }
     });
+
+
+    document.addEventListener('keydown', handleKeydown);
 });
 
 onUnmounted(() => {
     subscription?.unsubscribe();
+
+    document.removeEventListener('keydown', handleKeydown);
 });
 
 
 </script>
 
-<style scoped>
-/* Styles extracted from inline style attributes */
+<style lang="scss" scoped>
 .full-size-container {
     width: 100%;
     height: 100%;
@@ -926,38 +1048,61 @@ onUnmounted(() => {
 }
 
 .category-button {
-    /* Static styles extracted from the dynamic :style binding */
     border: none;
     color: #fff;
-    /* Background color remains dynamic via :style */
     transition: opacity 0.3s ease;
-    /* Optional: Smoother transition if animation stops */
+    position: relative;
+    transition: transform 0.3s ease;
+
+    &.is-recording {
+        animation: pulse-ring 1.5s infinite;
+        border: 2px solid red;
+        color: white;
+    }
 }
 
-/* Define the animation */
-@keyframes pulse-opacity {
+.recording-icon {
+    margin-right: 0.5em;
+    width: 1em;
+    height: 1em;
+    background-color: red;
+    border-radius: 50%;
+    display: inline-block;
+    animation: blink 1s infinite;
+}
+
+
+
+@keyframes pulse-ring {
     0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4);
+    }
+
+    70% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    }
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
         opacity: 1;
     }
 
     50% {
-        opacity: 0.6;
+        opacity: 0.3;
     }
-
-    /* Adjust opacity for desired effect */
-    100% {
-        opacity: 1;
-    }
-}
-
-/* Apply the animation to the button when the class is present */
-.category-button.is-recording {
-    animation: pulse-opacity 1.5s ease-in-out infinite;
-    /* Adjust duration/timing as needed */
 }
 
 .chart-dimensions {
-    /* Extracted from :style binding as values were static */
     width: 100%;
     height: 80%;
 }
@@ -974,7 +1119,6 @@ onUnmounted(() => {
     width: 250px;
 }
 
-/* Add fade transition styles if they weren't defined elsewhere */
 .fade-enter-active,
 .fade-leave-active {
     transition: opacity 0.5s ease;

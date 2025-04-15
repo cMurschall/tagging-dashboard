@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, inject } from 'vue';
-import { ApiPath, TestDriveVideoInfo, isDevMode } from '../../services/utilities';
+import { ApiPath, TestDriveVideoInfo, isDevMode, clamp } from '../../services/utilities';
 import { Observable } from './../../observable';
 import { useVideoControl } from './../../composables/useVideoControl'
 import videojs from "video.js";
@@ -27,13 +27,14 @@ import { SetCardTitleFn } from '../../plugins/AppPlugins';
 
 
 
+
 // Register the component with Video.js, so it can be used in players.
 videojs.registerComponent('FrameByFrameButton', FrameByFrameButton);
 
 
 
 // Inject the function from the parent
-const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => {});
+const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => { });
 
 interface VideoPlayerProps {
   videoInfo: TestDriveVideoInfo,
@@ -148,7 +149,7 @@ watch(() => props.videoInfo.videoFileName, (newValue) => {
 
 onMounted(() => {
   const { videoRef, setSeekTo } = useVideoControl()
-  
+
   if (!videoElement.value) {
     console.error('Video element not found');
     return;
@@ -165,9 +166,24 @@ onMounted(() => {
     // Define the actual seekTo logic
     setSeekTo((simulationTime: number) => {
       if (videoPlayer.value) {
-        const newTime = simulationTime - (props?.videoInfo?.videoSimulationTimeStartS ?? 0)
-        console.log('Seeking video to:', newTime, 'seconds');
-        videoPlayer.value.currentTime(newTime);
+        const videoTime = simulationTime - (props?.videoInfo?.videoSimulationTimeStartS ?? 0)
+        console.log('Seeking video to:', videoTime, 'seconds');
+
+
+        // Ensure the new time is within the video duration
+        const duration = videoPlayer.value.duration();
+        if (!duration) {
+          console.warn('Video duration is not available yet.');
+          return;
+        }
+        const clampedTime = clamp(videoTime, 0, duration);
+        videoPlayer.value.currentTime(clampedTime);
+
+        // if the video is paused, update the time immediately
+        // This is to ensure that the time is updated even if the video is paused
+        if (videoPlayer.value.paused()) {
+          updateTime();
+        }
       }
     });
 
@@ -227,7 +243,7 @@ onBeforeUnmount(() => {
     videoPlayer.value.dispose();
     videoPlayer.value = undefined;
   }
-  if(simulationTimeObservable){
+  if (simulationTimeObservable) {
     simulationTimeObservable.next(0); // Reset the observable when the component is destroyed
   }
 })

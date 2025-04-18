@@ -1,3 +1,4 @@
+import asyncio
 import time
 import logging
 from threading import Event
@@ -10,7 +11,7 @@ from ...dependencies import get_testdata_manager
 logger = logging.getLogger(__name__)
 
 
-def process_projects(stop_event: Event):
+def process_projects(stop_event: Event, loop: asyncio.AbstractEventLoop):
     while not stop_event.is_set():
         service = get_testdata_manager()
 
@@ -18,6 +19,7 @@ def process_projects(stop_event: Event):
 
         for test_drive in test_drive_data:
             if test_drive.is_live:
+                # Skip live test drives for now, as they are handled separately
                 continue
 
             start = time.time()

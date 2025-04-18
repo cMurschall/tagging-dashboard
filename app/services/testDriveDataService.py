@@ -241,12 +241,9 @@ class TestDriveDataService:
         test_drive.test_drive_tag_info.tag_file_name = tag_file.name
         test_drive.test_drive_tag_info.tag_file_full_path = str(tag_file.resolve())
 
-        #
-        temp_file_name = "live_data_temp.csv"
-        header = LiveDataRow.get_field_mapping()
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False, newline='') as tmpfile:
-            writer = csv.DictWriter(tmpfile, fieldnames=[field for field in LiveDataRow.__annotations__])
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False, newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=[field for field in LiveDataRow.__annotations__])
             writer.writeheader()
-            temp_path = Path(tmpfile.name)
-            test_drive.test_drive_data_info.csv_file_name = tmpfile.name
+            temp_path = Path(f.name)
+            test_drive.test_drive_data_info.csv_file_name = f.name
             test_drive.test_drive_data_info.csv_file_full_path = str(temp_path.resolve())

@@ -1,30 +1,56 @@
+import asyncio
+import csv
 import time
 import logging
+from dataclasses import asdict
 from threading import Event
-from ...dependencies import get_testdata_manager
 
-logger = logging.getLogger(__name__)
+# from ..dataSources.pantheraDataSource import start_process
+from ..dataSources.simulatedPantheraDataSource import start_process
+from ...dependencies import get_testdata_manager, get_connection_manager
+from ...models.liveDataRow import LiveDataRow
+
+logger = logging.getLogger('uvicorn.error')
 
 
-def process_projects(stop_event: Event):
+def process_live_data(stop_event: Event, loop: asyncio.AbstractEventLoop):
+    live_data_source = None
     while not stop_event.is_set():
         service = get_testdata_manager()
 
-        test_drive_data = service.get_testdrives()
+        test_drive_data = service.get_active_testdrive()
 
-        for test_drive in test_drive_data:
-            start = time.time()
-            # updated_video = analyze_video(test_drive.test_drive_video_info)
-            # updated_data = analyze_data(test_drive.test_drive_data_info)
-            # updated_tags = analyze_tags(test_drive.test_drive_tag_info)
-            end = time.time()
+        has_live_test_drive = test_drive_data is not None and test_drive_data.is_live
+        if has_live_test_drive:
+            if live_data_source is None:
 
-            # update_needed = updated_video or updated_data or updated_tags
-            # if update_needed:
-            #     service.update_testdrive(test_drive)
-            #     logger.info(f"Time to update project: {end - start}")
+                data_buffer = []
 
-        sleep_with_event(stop_event, 10)
+                def new_live_data_arrived(data: LiveDataRow):
+                    logger.info('New live data arrived.')
+                    # send data to websocket
+                    asyncio.run_coroutine_threadsafe(
+                        get_connection_manager().broadcast_json(asdict(data)),
+                        loop
+                    )
+
+                    data_buffer.append(data)
+                    if len(data_buffer) > 10:
+                        logger.info('Data buffer is full, processing data...')
+
+                        csv_file = test_drive_data.test_drive_data_info.csv_file_full_path
+                        with open(csv_file, 'a', newline='') as f:
+                            writer = csv.DictWriter(f, fieldnames=[field for field in LiveDataRow.__annotations__])
+                            for row in data_buffer:
+                                writer.writerow(asdict(row))  # Convert dataclass instance to dictionary
+                        data_buffer.clear()
+
+                live_data_source = start_process(new_live_data_arrived)
+
+        elif live_data_source is not None:
+            live_data_source = None
+
+        sleep_with_event(stop_event, 5)
 
 
 def sleep_with_event(stop_event, duration):

@@ -20,9 +20,15 @@ logger = logging.getLogger('uvicorn.error')
 
 def start_background_tasks(background_threads, stop_event):
     from .services.backgroundTasks.projectDataUpdater import process_projects
+    from app.services.backgroundTasks.liveDataProcess import process_live_data
 
-    process_projects_thread = Thread(target=process_projects, args=(stop_event,), daemon=True)
+    loop = asyncio.get_event_loop()
+
+    process_projects_thread = Thread(target=process_projects, args=(stop_event, loop), daemon=True)
     background_threads.append(process_projects_thread)
+
+    process_live_data_thread = Thread(target=process_live_data, args=(stop_event, loop), daemon=True)
+    background_threads.append(process_live_data_thread)
 
     # loop over all background threads and start them
     for thread in background_threads:
@@ -82,11 +88,6 @@ for route in app.routes:
         pass
         # route.operation_id = route.name  # in this case, 'read_items'
 
-# Serve static files
-# Note: We must mount the static files at last, because otherwise it overrides all / routes
-if "pytest" not in sys.modules:
-    app.mount("/", StaticFiles(directory="app/static", html=True), name="static")
-
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -98,6 +99,12 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         get_connection_manager().disconnect(websocket)
 
+
+# Serve static files
+# Note: We must mount the static files at last, because otherwise it overrides all / routes
+# Yes - also the websocket routes
+if "pytest" not in sys.modules:
+    app.mount("/", StaticFiles(directory="app/static", html=True), name="static")
 
 # or from commandline:
 # python.exe -m uvicorn app.main:app --reload --port 8888 --log-level debug

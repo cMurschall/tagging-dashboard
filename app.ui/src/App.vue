@@ -142,10 +142,12 @@ import TagTimeline from './components/plugins/TagTimeline.vue';
 import gridItemManager, { GridManagerItem } from './managers/gridItemManager';
 import layoutManager from './managers/layoutManager';
 import { Subscription } from './observable';
-import { BToastOrchestrator } from 'bootstrap-vue-next';
+import { BToastOrchestrator, useToastController } from 'bootstrap-vue-next';
 import pluginManager from './managers/pluginManager';
 import { TestDriveProjectInfo } from './services/utilities';
 
+
+const { show: showToast } = useToastController();
 
 const mainGrid = ref<typeof MainGrid | null>(null);
 
@@ -186,6 +188,8 @@ onMounted(async () => {
         layoutsData.value = layouts;
         availableLayouts.value = Object.keys(layouts);
     });
+
+    pluginManager.setShowToast(showToast);
 
 });
 

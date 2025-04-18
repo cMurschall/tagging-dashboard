@@ -2,7 +2,7 @@
 import { Observable } from "../observable";
 import { TestDriveProjectInfo } from "../services/utilities";
 import { DataManager, EmptyDataManager } from "./dataManager";
-import gridManager, { GridManager } from './gridItemManager';
+import gridManager, { GridManager, GridManagerItem } from './gridItemManager';
 
 import VideoPlayer from './../components/plugins/VideoPlayer.vue';
 import ListView from './../components/plugins/ListView.vue';
@@ -11,13 +11,14 @@ import ScatterPlot from './../components/plugins/ScatterPlot.vue';
 import TestGridItem from './../components/plugins/TestGridItem.vue';
 import TagTimeline from './../components/plugins/TagTimeline.vue';
 import { ApiDataManager } from "./apiDataManager";
+import { ShowToastFn } from "../plugins/AppPlugins";
 
 
 export interface PluginServices {
     simulationTime: Observable<number>;
     getProjectInfo: () => TestDriveProjectInfo | undefined;
-    getDataManager: () => DataManager
-
+    getDataManager: () => DataManager,
+    showToast: ShowToastFn;
 }
 
 export type PluginType = 'ListView' | 'VideoPlayer' | 'Gauge' | 'ScatterPlot' | 'TestGridItem' | 'TagTimeline';
@@ -25,6 +26,10 @@ export type PluginType = 'ListView' | 'VideoPlayer' | 'Gauge' | 'ScatterPlot' | 
 
 
 export class PluginManager {
+
+
+
+    private showToast: ShowToastFn = () => { };
 
     private gridItemManager: GridManager;
 
@@ -62,6 +67,11 @@ export class PluginManager {
 
 
 
+
+    public setShowToast(showToast: ShowToastFn) {
+        this.showToast = showToast;
+    }
+
     public setCurrentProject(project: TestDriveProjectInfo | undefined): void {
         if (!project) {
             // all data managers back to empty
@@ -82,26 +92,24 @@ export class PluginManager {
 
 
 
-    private registerComponents() {
-        this.gridItemManager.setComponentMap({
-            ListView: () => (ListView),
-            VideoPlayer: () => (VideoPlayer),
-            Gauge: () => (Gauge),
-            ScatterPlot: () => (ScatterPlot),
-            TestGridItem: () => (TestGridItem),
-            TagTimeline: () => (TagTimeline),
-        });
+
+    public restorePlugin(plugin: GridManagerItem): void {
+
+        const service = this.getCurrentService(plugin.component as PluginType);
+        // preserve and merge the dependencies
+        plugin.dependencies = {
+            ...plugin.dependencies,
+            pluginService: service
+        };
+
+        this.gridItemManager.addNewItem(plugin);
     }
 
 
-    public showPlugin(pluginName: PluginType): void {
+    public showPlugin(pluginName: PluginType, props: Record<string, any>): void {
 
-        const service = {
-            simulationTime: this.simulationTimeObservable,
-            getProjectInfo: (): TestDriveProjectInfo | undefined => this.loadedProject,
-            getDataManager: () => this.dataManagers[pluginName]
-        };
-
+        const service = this.getCurrentService(pluginName);
+   
         const newItem = {
             id: pluginName + '_' + crypto.randomUUID(),
             // spread x and y from the gridItemManager
@@ -110,7 +118,7 @@ export class PluginManager {
             h: this.pluginSizes[pluginName].h,
             component: pluginName,
             title: pluginName,
-            props: {},
+            props: props,
             dependencies: {
                 pluginService: service
             }
@@ -131,6 +139,29 @@ export class PluginManager {
         }
 
         this.gridItemManager.addNewItem(newItem);
+    }
+
+
+
+    private registerComponents() {
+        this.gridItemManager.setComponentMap({
+            ListView: () => (ListView),
+            VideoPlayer: () => (VideoPlayer),
+            Gauge: () => (Gauge),
+            ScatterPlot: () => (ScatterPlot),
+            TestGridItem: () => (TestGridItem),
+            TagTimeline: () => (TagTimeline),
+        });
+    }
+
+
+    private getCurrentService(pluginType: PluginType): PluginServices {
+        return {
+            simulationTime: this.simulationTimeObservable,
+            getProjectInfo: () => this.loadedProject,
+            getDataManager: () => this.dataManagers[pluginType],
+            showToast: this.showToast,
+        };
     }
 
 

@@ -94,6 +94,7 @@ class ProjectController:
             tag_path = os.path.join(settings.TAG_PATH, tag_file_name)
 
             testdrive = TestDriveProjectInfo(
+                is_live=False,
                 test_drive_data_info=TestDriveDataInfo(csv_file_name=payload.csv_file_name,
                                                        csv_file_full_path=os.path.normpath(csv_path)),
                 test_drive_video_info=TestDriveVideoInfo(video_file_name=payload.video_file_name,
@@ -128,12 +129,16 @@ class ProjectController:
         @self.router.post("/activate/{testdrive_id}", response_model=TestDriveResponse)
         async def activate_testdrive(testdrive_id: int,
                                      background_tasks: BackgroundTasks,
-                                     service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+                                     service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
+                                     settings: Settings = Depends(get_settings)):
             activated_testdrive = service.activate_testdrive(testdrive_id)
             if activated_testdrive is None:
                 raise HTTPException(status_code=404, detail=f"Testdrive with id {testdrive_id} not found")
 
-            background_tasks.add_task(service.load_csv_data(activated_testdrive.test_drive_data_info))
+            if activated_testdrive.is_live:
+                service.create_new_live_data(activated_testdrive, settings)
+            else:
+                background_tasks.add_task(service.load_csv_data, activated_testdrive.test_drive_data_info)
             return {"testdrive": activated_testdrive}
 
         @self.router.post("/deactivate", response_model=TestDriveResponse)

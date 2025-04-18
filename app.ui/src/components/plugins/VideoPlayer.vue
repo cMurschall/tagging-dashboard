@@ -7,37 +7,41 @@
     <div v-if="error" class="alert alert-danger mt-3">
       {{ error }}
     </div>
-    <div v-if="isDevMode()">
+    <!-- <div v-if="isDevMode()">
       <span>{{ currentSimulationTimeString }}</span>
       <pre>{{ props.videoInfo }}</pre>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
 import { ApiPath, TestDriveVideoInfo, isDevMode, clamp } from '../../services/utilities';
-import { Observable } from './../../observable';
 import { useVideoControl } from './../../composables/useVideoControl'
 import videojs from "video.js";
 import "videojs-sprite-thumbnails";
 import Player from 'video.js/dist/types/player';
 import { FrameByFrameButton } from '../../services/frameByFrameButton';
 import { SetCardTitleFn } from '../../plugins/AppPlugins';
-
-
+import { PluginServices } from '../../managers/pluginManager';
 
 
 // Register the component with Video.js, so it can be used in players.
 videojs.registerComponent('FrameByFrameButton', FrameByFrameButton);
 
 
-
 // Inject the function from the parent
 const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => { });
 
+const pluginService = inject<PluginServices>('pluginService');
+if (!pluginService) {
+  throw new Error('Plugin service not found!');
+}
+
+
+
 interface VideoPlayerProps {
-  videoInfo: TestDriveVideoInfo,
+  // videoInfo: TestDriveVideoInfo,
   // simulationTimeObservable: Observable<number>
 }
 
@@ -77,13 +81,6 @@ const videoOptions = ref<PlayerOptions>({
 
 const error = ref<string | undefined>(undefined)
 const currentSimulationTimeString = ref<string>('');
-
-
-
-const simulationTimeObservable = inject<Observable<number>>('simulationTimeObservable');
-if (!simulationTimeObservable) {
-  throw new Error('simulationTimeObservable not provided');
-}
 
 
 
@@ -136,15 +133,15 @@ const handleError = () => {
   error.value = "Unable to load the video. Please try again.";
 }
 
-// Updated watch to avoid calling `loadVideo` prematurely
-watch(() => props.videoInfo.videoFileName, (newValue) => {
-  // Call loadVideo only if the video player is initialized
-  if (newValue && videoPlayer.value) {
-    loadVideo(props.videoInfo);
-  }
-},
-  { immediate: false } // Remove immediate to avoid preemptive execution
-);
+// // Updated watch to avoid calling `loadVideo` prematurely
+// watch(() => pluginService.getProjectInfo()?.testDriveVideoInfo.videoFileName, (newValue) => {
+//   // Call loadVideo only if the video player is initialized
+//   if (newValue && videoPlayer.value) {
+//     loadVideo(props.videoInfo);
+//   }
+// },
+//   { immediate: false } // Remove immediate to avoid preemptive execution
+// );
 
 
 onMounted(() => {
@@ -166,7 +163,9 @@ onMounted(() => {
     // Define the actual seekTo logic
     setSeekTo((simulationTime: number) => {
       if (videoPlayer.value) {
-        const videoTime = simulationTime - (props?.videoInfo?.videoSimulationTimeStartS ?? 0)
+        const simulationStart = pluginService.getProjectInfo()?.testDriveVideoInfo?.videoSimulationTimeStartS ?? 0;
+
+        const videoTime = simulationTime - simulationStart
         console.log('Seeking video to:', videoTime, 'seconds');
 
 
@@ -191,7 +190,8 @@ onMounted(() => {
     // const roundingPrecisionMs = 300; // Define the rounding precision in milliseconds
     const updateTime = () => {
       const currentTime = videoPlayer.value?.currentTime() ?? 0;
-      synchronizeData(currentTime, props.videoInfo.videoSimulationTimeStartS ?? 0);
+      const simulationStart = pluginService.getProjectInfo()?.testDriveVideoInfo?.videoSimulationTimeStartS ?? 0;
+      synchronizeData(currentTime, simulationStart);
     };
 
 
@@ -202,19 +202,19 @@ onMounted(() => {
 
 
     videoPlayer.value?.getChild('ControlBar')?.addChild('FrameByFrameButton', {
-      fps: props?.videoInfo?.videoFrameRate,
+      fps: pluginService.getProjectInfo()?.testDriveVideoInfo?.videoFrameRate,
       value: +10
     });
     videoPlayer.value?.getChild('ControlBar')?.addChild('FrameByFrameButton', {
-      fps: props?.videoInfo?.videoFrameRate,
-      value: (props?.videoInfo?.videoFrameRate ?? 30)
+      fps: pluginService.getProjectInfo()?.testDriveVideoInfo?.videoFrameRate,
+      value: (pluginService.getProjectInfo()?.testDriveVideoInfo?.videoFrameRate ?? 30)
     });
     videoPlayer.value?.getChild('ControlBar')?.addChild('FrameByFrameButton', {
-      fps: props?.videoInfo?.videoFrameRate,
-      value: -1 * (props?.videoInfo?.videoFrameRate ?? 30)
+      fps: pluginService.getProjectInfo()?.testDriveVideoInfo?.videoFrameRate,
+      value: -1 * (pluginService.getProjectInfo()?.testDriveVideoInfo?.videoFrameRate ?? 30)
     });
     videoPlayer.value?.getChild('ControlBar')?.addChild('FrameByFrameButton', {
-      fps: props?.videoInfo?.videoFrameRate,
+      fps: pluginService.getProjectInfo()?.testDriveVideoInfo?.videoFrameRate,
       value: -10
     });
 
@@ -224,12 +224,10 @@ onMounted(() => {
       videoPlayer.value?.getChild('ControlBar')?.removeChild(volumePanel);
     }
 
-
-
-
     // Ensure loadVideo is called only after the video player is ready
-    if (props.videoInfo) {
-      loadVideo(props.videoInfo);
+    const videoInfo = pluginService.getProjectInfo()?.testDriveVideoInfo;
+    if (videoInfo) {
+      loadVideo(videoInfo);
     }
   }) as VideoPlayer; // Cast the player to the custom VideoPlayer type
 
@@ -243,8 +241,8 @@ onBeforeUnmount(() => {
     videoPlayer.value.dispose();
     videoPlayer.value = undefined;
   }
-  if (simulationTimeObservable) {
-    simulationTimeObservable.next(0); // Reset the observable when the component is destroyed
+  if (pluginService.simulationTime) {
+    pluginService.simulationTime.next(0); // Reset the observable when the component is destroyed
   }
 })
 
@@ -260,7 +258,8 @@ const synchronizeData = (currentSecond: number, simulationStart: number) => {
     const simulationTime_Seconds = simulationTimeInSeconds % 60;
     const simulationTime_Milliseconds = simulationTimeInSeconds * 1000 % 1000;
 
-    const frameCount = Math.floor(simulationTimeInSeconds * (props.videoInfo.videoFrameRate ?? 30));
+    const videoFps = pluginService.getProjectInfo()?.testDriveVideoInfo?.videoFrameRate ?? 30;
+    const frameCount = Math.floor(simulationTimeInSeconds * videoFps);
 
     const timeString = `${simulationTime_Minutes.toFixed(0).padStart(2, '0')}:${simulationTime_Seconds.toFixed(0).padStart(2, '0')}.${simulationTime_Milliseconds.toFixed(0).padStart(3, '0')}`;
 
@@ -268,7 +267,7 @@ const synchronizeData = (currentSecond: number, simulationStart: number) => {
 
   }
 
-  simulationTimeObservable.next(simulationTimeInSeconds);
+  pluginService.simulationTime.next(simulationTimeInSeconds);
 
 }
 

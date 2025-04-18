@@ -1,6 +1,6 @@
 import { Observable } from "../observable";
 
-export interface GridManagerItem<T = Record<string, any>> {
+export interface GridManagerItem {
     id: string;
     x?: number;
     y?: number;
@@ -9,7 +9,7 @@ export interface GridManagerItem<T = Record<string, any>> {
     noMove?: boolean;
     component?: string;
     title?: string;
-    props?: T;
+    props?: Record<string, any> | undefined;
     pluginState?: Record<string, any> | undefined;
     dependencies?: Record<string, any> | undefined;
 }
@@ -40,9 +40,7 @@ export class GridManager {
         this.componentMap[key] = componentFactory;
     }
 
-    public addNewItem<T extends Record<string, any>>(
-        item: Omit<GridManagerItem<T>, 'props'> & { props: T }
-    ): void {
+    public addNewItem(item: GridManagerItem): void {
         if (this.GridManagerItems.find((i) => i.id === item.id)) {
             console.error(`Error: item with id ${item.id} already exists`);
             return;
@@ -56,7 +54,7 @@ export class GridManager {
         GridManager.newItemObservable.next(item);
     }
 
-    public updateItemById<T extends Record<string, any>>(id: string, item: Partial<Omit<GridManagerItem<T>, 'props'> & { props: T }>): void {
+    public updateItemById(id: string, item: Partial<Omit<GridManagerItem, 'props'>> & { props?: Partial<GridManagerItem['props']> }): void {
         const index = this.GridManagerItems.findIndex((i) => i.id === id);
         if (index === -1) {
             console.error(`Error: item with id ${id} does not exist`);

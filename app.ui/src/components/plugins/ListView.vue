@@ -105,12 +105,13 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, inject, watch } from 'vue';
-import { DataManager, TimeseriesDataPoint } from '../../managers/dataManager';
+import { TimeseriesDataPoint } from '../../managers/dataManager';
 import { Subscription } from '../../observable';
 import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue } from "../../services/utilities";
 import { BCol, BFormSelect, BRow, BButton, BFormInput, BTr, BTd, BTh, BTableSimple, BThead, BTbody } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import gridManager from '../../managers/gridItemManager';
+import { PluginServices } from '../../managers/pluginManager';
 
 
 
@@ -153,11 +154,11 @@ interface BFormSelectColumnInfo {
     value: ColumnInfo;
 }
 
-
-const dataManager = inject<DataManager>('dataManager');
-if (!dataManager) {
-    throw new Error('dataManager not provided');
+const pluginService = inject<PluginServices>('pluginService');
+if (!pluginService) {
+  throw new Error('Plugin service not found!');
 }
+
 
 
 
@@ -196,7 +197,7 @@ onMounted(async () => {
 
     await loadColumns();
 
-    subscription = dataManager.measurement$.subscribe((data) => {
+    subscription = pluginService.getDataManager().measurement$.subscribe((data) => {
         displayData.value = data;
         console.log('Data received:', data);
     });
@@ -205,7 +206,7 @@ onMounted(async () => {
 
 
     // load the new columns
-    await dataManager.initialize(initialColumnNames);
+    await pluginService.getDataManager().initialize(initialColumnNames);
 
 
 });
@@ -219,13 +220,13 @@ onUnmounted(() => {
 watch(pluginState, async (newValue) => {
 
     // if new columns are added, load them
-    const actualColumnNames = dataManager.getColumnNames() as string[];
+    const actualColumnNames = pluginService.getDataManager().getColumnNames() as string[];
     const newColumnNames = newValue.columnDataInfos.map((x) => x.selectedColumn?.name).filter((x) => x !== undefined) as string[];
     // check if the values are not the same
     const areArraysSame = areArraysSameUnordered(actualColumnNames, newColumnNames);
     if (!areArraysSame) {
         // load the new columns
-        await dataManager.initialize(newColumnNames);
+        await pluginService.getDataManager().initialize(newColumnNames);
     }
 
 

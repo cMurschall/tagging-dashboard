@@ -54,7 +54,7 @@ GET http://127.0.0.1:8888/api/v1/project/all
 GET http://127.0.0.1:8888/api/v1/project/active
 
 ### Activate Project
-POST http://127.0.0.1:8888/api/v1/project/activate/2
+POST http://127.0.0.1:8888/api/v1/project/activate/0
 
 ### Deactiveate  Project
 POST http://127.0.0.1:8888/api/v1/project/deactivate

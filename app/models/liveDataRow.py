@@ -4,7 +4,7 @@ from typing import Type, List, Dict, Any
 
 
 @dataclass
-class LoggingRow:
+class LiveDataRow:
     timestamp: float = field(default=0.0)
     brakes_vol: float = field(default=0.0, metadata={'panthera_name': 'brakes_vol', 'panthera_type': 'float'})
     brakes: float = field(default=0.0, metadata={'panthera_name': 'brakes', 'panthera_type': 'float'})
@@ -161,18 +161,18 @@ class LoggingRow:
     def get_field_mapping():
         mapping = {
             f.metadata.get("panthera_name"): f.name
-            for f in fields(LoggingRow)
+            for f in fields(LiveDataRow)
             if "panthera_name" in f.metadata
         }
         return {**mapping, 'timestamp': 'timestamp'}
 
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "LoggingRow":
+    def from_dict(data: Dict[str, Any]) -> "LiveDataRow":
         """
         Create a LoggingRow instance from a dictionary using panthera_name metadata.
         """
         # Prepare field mapping: panthera_name -> dataclass field name
-        field_mapping = LoggingRow.get_field_mapping()
+        field_mapping = LiveDataRow.get_field_mapping()
 
         # Prepare data for the dataclass
         parsed_data = {}
@@ -180,16 +180,16 @@ class LoggingRow:
             if key in field_mapping:
                 field_name = field_mapping[key]
                 field_type = next(
-                    f for f in fields(LoggingRow) if f.name == field_name
+                    f for f in fields(LiveDataRow) if f.name == field_name
                 ).type
 
                 # Apply custom parsing for specific field types
                 if field_type == List[float]:  # Parse lists of floats
-                    parsed_data[field_name] = LoggingRow.parse_vector(value)
+                    parsed_data[field_name] = LiveDataRow.parse_vector(value)
                 elif field_type == float:  # Parse floats
                     parsed_data[field_name] = float(value)
                 elif field_type == int:  # Parse ints
-                    if "." in value: # this is an extra for car0_mask_objects
+                    if "." in value:  # this is an extra for car0_mask_objects
                         parsed_data[field_name] = int(float(value))
                     else:
                         parsed_data[field_name] = int(value)
@@ -199,17 +199,17 @@ class LoggingRow:
                     parsed_data[field_name] = value
 
         # Create and return the dataclass instance
-        return LoggingRow(**parsed_data)
+        return LiveDataRow(**parsed_data)
 
     @staticmethod
     def parse_vector(value: str) -> List[float]:
         return list(map(float, value.split(",")))
 
     @staticmethod
-    def create_random_instance() -> "LoggingRow":
+    def create_random_instance() -> "LiveDataRow":
 
         random_data = {}
-        for f in fields(LoggingRow):
+        for f in fields(LiveDataRow):
             field_name = f.name
             field_type = f.type
 
@@ -222,4 +222,4 @@ class LoggingRow:
             else:
                 raise ValueError(f"Unsupported field type: {field_type} for field {field_name}")
 
-        return LoggingRow(**random_data)
+        return LiveDataRow(**random_data)

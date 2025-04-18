@@ -1,17 +1,15 @@
-from .mockPanthera import MockPanthera as pt
-
 from dataclasses import asdict
-
+import panthera as pt
 import sys
 import csv
 
-from ...models.loggingRow import LoggingRow
+from ...models.liveDataRow import LiveDataRow
 
 
 class Process(pt.Process):
     """ The process class handles all communication with the simulator. """
 
-    def __init__(self, sdk):
+    def __init__(self, sdk, update_measurement_callback=None):
         """ Constructor """
         super().__init__(sdk, sys.argv)
         # Step at 10Hz
@@ -20,6 +18,8 @@ class Process(pt.Process):
         self.t = None
         self.counter = 0
         self.prevState = "stopped"
+
+        self.update_measurement_callback = update_measurement_callback
 
         self.field_dict = {}
 
@@ -30,7 +30,6 @@ class Process(pt.Process):
         # Manually send the signals (to reduce latency, send them as soon as their values are set)
         # Done with the `self.SendSignals()` call
         self.StepHandlesSendSignals(False)
-        self.has_written_header = False
 
     def Run(self):
         """ Main function """
@@ -44,7 +43,7 @@ class Process(pt.Process):
 
     def ReadSignals(self):
         if self.GetState() != pt.ProcessState_Run: return
-        model = LoggingRow()
+        model = LiveDataRow()
         Process.safe_assign(model, "brakes_vol", self.field_dict["brakes_vol"], lambda x: float(x.GetFloat()))
         Process.safe_assign(model, "brakes", self.field_dict["brakes"], lambda x: float(x.GetFloat()))
         Process.safe_assign(model, "car0_brake_position", self.field_dict["car0_brake_position"],
@@ -192,12 +191,8 @@ class Process(pt.Process):
         Process.safe_assign(model, "wheel_raw_torque_adas", self.field_dict["wheel_raw_torque_adas"],
                             lambda x: int(x.GetInt()))
 
-        with open("log.csv", mode='w') as f:
-            writer = csv.DictWriter(f, fieldnames=[field for field in LoggingRow.__annotations__])
-            if not self.has_written_header:
-                self.has_written_header = True
-                writer.writeheader()
-            writer.writerow(asdict(model))  # Convert dataclass instance to dictionary
+        if self.update_measurement_callback:
+            self.update_measurement_callback(model)
 
     def FindFields(self):
         ns = self.GetNamedStructInterfaceToProcess().GetNamedStruct()
@@ -369,3 +364,9 @@ class Process(pt.Process):
             print(field_name)
             return None
         return field
+
+
+def start_process(update_measurement_callback=None):
+    sdk = pt.Initialize("python_application")
+    process = Process(sdk, update_measurement_callback)
+    process.Run()

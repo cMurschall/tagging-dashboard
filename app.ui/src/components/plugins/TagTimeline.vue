@@ -154,9 +154,10 @@ import {
 
 import { useVideoControl } from '../../composables/useVideoControl';
 import { Tag, TagCategory } from '../../../services/restclient';
-import { safeFetch, TagApiClient as client, TestDriveProjectInfo } from '../../services/utilities';
+import { safeFetch, TagApiClient as client } from '../../services/utilities';
 import { Observable, Subscription } from '../../observable';
 import { SetCardTitleFn, ShowToastFn } from '../../plugins/AppPlugins';
+import { PluginServices } from '../../managers/pluginManager';
 
 
 
@@ -177,7 +178,11 @@ const { seekTo } = useVideoControl();
 
 // Inject the function from the parent
 const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => { });
-const showToast = inject<ShowToastFn>('showToast');
+const pluginService = inject<PluginServices>('pluginService');
+if (!pluginService) {
+    throw new Error('Plugin service not found!');
+}
+
 
 type PluginState = {
 
@@ -191,8 +196,6 @@ interface TagTimelineProps {
     showMenu: boolean;
     id: string;
     pluginState?: PluginState;
-
-    projectInfo?: TestDriveProjectInfo,
 }
 
 
@@ -217,12 +220,6 @@ const props = withDefaults(defineProps<TagTimelineProps>(), {
 });
 
 const pluginState = ref<PluginState>(structuredClone(props.pluginState));
-
-const simulationTimeObservable = inject<Observable<number>>('simulationTimeObservable');
-if (!simulationTimeObservable) {
-    throw new Error('simulationTimeObservable not provided');
-}
-
 
 interface TagViewModel {
     id: string;
@@ -335,19 +332,6 @@ function renderTagItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRe
     };
 
     if (isInstantaneous) {
-        // return {
-        //     type: 'polygon',
-        //     shape: {
-        //         points: [
-        //             [startPoint[0], yPosition + barHeight / 2 - 5],
-        //             [startPoint[0] + 5, yPosition + barHeight / 2],
-        //             [startPoint[0], yPosition + barHeight / 2 + 5],
-        //             [startPoint[0] - 5, yPosition + barHeight / 2],
-        //         ],
-        //     },
-        //     style: itemStyle,
-        // } as CustomSeriesRenderItemReturn;
-
         if (isInstantaneous) {
             const hitAreaSize = 10;
             const diamondSize = 15;
@@ -369,7 +353,7 @@ function renderTagItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRe
                     {
                         // an invisible hit area
                         // to capture clicks
-                        type: 'circle', 
+                        type: 'circle',
                         shape: {
                             cx: startPoint[0],
                             cy: yPosition + barHeight / 2,
@@ -402,12 +386,17 @@ function renderTagItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRe
 const createChartOption = (): EChartsOption => {
     const labels = availableTags.value;
 
+    const projectInfo = pluginService.getProjectInfo();
+    if (!projectInfo) {
+        console.error('Project info not found!');
+        return {};
+    }
 
-    const minDataTime = props.projectInfo?.testDriveDataInfo?.dataSimulationTimeStartS ?? 0;
-    const maxDataTime = props.projectInfo?.testDriveDataInfo?.dataSimulationTimeEndS ?? 0;
+    const minDataTime = projectInfo.testDriveDataInfo?.dataSimulationTimeStartS ?? 0;
+    const maxDataTime = projectInfo.testDriveDataInfo?.dataSimulationTimeEndS ?? 0;
 
-    const minVideoTime = props.projectInfo?.testDriveVideoInfo?.videoSimulationTimeEndS ?? 0;
-    const maxVideoTime = props.projectInfo?.testDriveVideoInfo?.videoSimulationTimeEndS ?? 0;
+    const minVideoTime = projectInfo.testDriveVideoInfo?.videoSimulationTimeEndS ?? 0;
+    const maxVideoTime = projectInfo.testDriveVideoInfo?.videoSimulationTimeEndS ?? 0;
 
 
     let minLabelTime = labels[0]?.startTime ?? 0;
@@ -601,7 +590,7 @@ const addTagCategory = async () => {
     }));
     if (error) {
         console.error('Error adding category:', error);
-        showToast?.({
+        pluginService.showToast?.({
             props: {
                 title: `Error adding category: ${trimmed}`,
                 body: error.message,
@@ -620,7 +609,7 @@ const addTagCategory = async () => {
         const newCategories = response.categories.filter((c: TagCategory) => !availableTagCategories.value.some((existing: TagCategory) => existing.id === c.id));
         availableTagCategories.value.push(...newCategories);
 
-        showToast?.({
+        pluginService.showToast?.({
             props: {
                 title: `Category added: ${trimmed}`,
                 body: `Category ${trimmed} has been added.`,
@@ -652,7 +641,7 @@ const deleteTagCategory = async (category: TagCategory) => {
     }));
     if (error) {
         console.error('Error deleting category:', error);
-        showToast?.({
+        pluginService.showToast?.({
             props: {
                 title: `Error deleting category: ${item.name}`,
                 body: error.message,
@@ -669,7 +658,7 @@ const deleteTagCategory = async (category: TagCategory) => {
     // Remove the category from the availableTagCategories
     availableTagCategories.value.splice(index, 1);
 
-    showToast?.({
+    pluginService.showToast?.({
         props: {
             title: `Category deleted: ${item.name}`,
             body: `Category ${item.name} has been deleted.`,
@@ -744,7 +733,7 @@ const stopNewTag = async (category: string) => {
         }));
         if (error) {
             console.error('Error adding tag:', error);
-            showToast?.({
+            pluginService.showToast?.({
                 props: {
                     title: `Error adding tag: ${floatingTag.category}`,
                     body: error.message,
@@ -760,7 +749,7 @@ const stopNewTag = async (category: string) => {
             floatingTag.id = response.tag.id?.toString() ?? floatingTag.id;
 
 
-            showToast?.({
+            pluginService.showToast?.({
                 props: {
                     title: `Tag added: ${floatingTag.category}`,
                     body: `Tag ${floatingTag.category} has been added.`,
@@ -854,7 +843,7 @@ const saveTag = async () => {
 
             if (error) {
                 console.error('Error updating tag:', error);
-                showToast?.({
+                pluginService.showToast?.({
                     props: {
                         title: `Error updating tag: ${formData.category}`,
                         body: error.message,
@@ -873,7 +862,7 @@ const saveTag = async () => {
                 availableTags.value[index].note = formData.note;
 
 
-                showToast?.({
+                pluginService.showToast?.({
                     props: {
                         title: `Tag updated: ${formData.category}`,
                         body: `Tag ${formData.category} has been updated.`,
@@ -905,7 +894,7 @@ const deleteTag = async () => {
             }));
             if (error) {
                 console.error('Error deleting tag:', error);
-                showToast?.({
+                pluginService.showToast?.({
                     props: {
                         title: `Error deleting tag: ${selectedTag.value.category}`,
                         body: error.message,
@@ -917,7 +906,7 @@ const deleteTag = async () => {
                 });
             } else if (response && response.success) {
                 availableTags.value.splice(index, 1);
-                showToast?.({
+                pluginService.showToast?.({
                     props: {
                         title: `Tag deleted: ${selectedTag.value.category} (${selectedTag.value.startTime}s - ${selectedTag.value.endTime}s)`,
                         body: `Tag ${selectedTag.value.category} has been deleted.`,
@@ -998,7 +987,7 @@ onMounted(async () => {
     await loadProjectTagCategories();
     chartOption.value = createChartOption();
 
-    subscription = simulationTimeObservable.subscribe((time) => {
+    subscription = pluginService.simulationTime.subscribe((time) => {
         currentSimulationTime.value = time;
         // update all floating tags to the current time
         let chartNeedsUpdate = false;

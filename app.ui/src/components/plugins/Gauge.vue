@@ -53,12 +53,12 @@
         <BRow class="mb-2">
           <BCol cols="6">
             <BFormGroup label="Detail formatter:">
-              <BFormInput v-model="pluginState.gaugeFormat" type="text"      style="font-family: monospace ;"/>
+              <BFormInput v-model="pluginState.gaugeFormat" type="text" style="font-family: monospace ;" />
             </BFormGroup>
           </BCol>
           <BCol cols="6">
             <BFormGroup label="Math js converter:">
-              <BFormInput v-model="pluginState.gaugeConverter" type="text"     style="font-family: monospace ;" />
+              <BFormInput v-model="pluginState.gaugeConverter" type="text" style="font-family: monospace ;" />
             </BFormGroup>
           </BCol>
         </BRow>
@@ -79,20 +79,27 @@ import VChart from "vue-echarts";
 import { use } from "echarts/core";
 import { GaugeChart } from "echarts/charts";
 import { SVGRenderer } from "echarts/renderers";
-import { DataManager, TimeseriesDataPoint } from "../../managers/dataManager";
+import { TimeseriesDataPoint } from "../../managers/dataManager";
 import { Subscription } from "../../observable";
 import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue, IDENTITY_EXPRESSION } from "../../services/utilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import gridManager from "../../managers/gridItemManager";
 import { SetCardTitleFn } from "../../plugins/AppPlugins";
+import { PluginServices } from "../../managers/pluginManager";
 
 use([GaugeChart, SVGRenderer]);
 
 
 
 // Inject the function from the parent
-const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => {});
+const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => { });
+
+const pluginService = inject<PluginServices>('pluginService');
+if (!pluginService) {
+  throw new Error('Plugin service not found!');
+}
+
 
 type PluginState = {
   gaugeMin: number;
@@ -203,11 +210,6 @@ const availableColumns = ref<BFormSelectColumnInfo[]>([]);
 let resizeObserver: ResizeObserver | null = null;
 let subscription: Subscription | undefined;
 
-const dataManager = inject<DataManager>('dataManager');
-if (!dataManager) {
-  throw new Error('dataManager not provided');
-}
-
 
 const filteredColumns = computed(() => {
   return availableColumns.value.filter((c) => c.text.toLowerCase().includes(searchQuery.value.toLowerCase()));
@@ -239,7 +241,7 @@ watch(pluginState, async (newValue) => {
 
   // check if the selected column is different from the old value
   if (selectedColumnUpdated && newValue.selectedColumn) {
-    await dataManager.initialize([newValue.selectedColumn.name]);
+    await pluginService.getDataManager().initialize([newValue.selectedColumn.name]);
     // gaugeOption.value.series[0].data[0].name = newVal.selectedColumn.name;
     setCardTitle(newValue.selectedColumn.name);
 
@@ -272,14 +274,14 @@ onMounted(async () => {
 
   // check if we have a selected column
   if (pluginState.value.selectedColumn) {
-    await dataManager.initialize([pluginState.value.selectedColumn.name]);
+    await pluginService.getDataManager().initialize([pluginState.value.selectedColumn.name]);
     // gaugeOption.value.series[0].data[0].name = pluginState.value.selectedColumn.name;
     setCardTitle(pluginState.value.selectedColumn.name);
   } else {
     setCardTitle('No column selected');
   }
 
-  subscription = dataManager.measurement$.subscribe((measurements: TimeseriesDataPoint) => {
+  subscription = pluginService.getDataManager().measurement$.subscribe((measurements: TimeseriesDataPoint) => {
     console.log('Received measurements:', measurements);
     // check if measurements has our selected column name
     if (!pluginState.value.selectedColumn || !measurements.values[pluginState.value.selectedColumn.name]) {

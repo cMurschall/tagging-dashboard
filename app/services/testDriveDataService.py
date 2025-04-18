@@ -1,14 +1,23 @@
+import csv
+import importlib
 import json
 import logging
 import os
+import re
+import tempfile
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
 
 from pydantic import ValidationError
 import pandas as pd
 
+from app.models.liveDataRow import LiveDataRow
 from app.models.testDriveDataInfo import TestDriveDataInfo
+from app.models.testDriveMetaData import TestDriveMetaData
 from app.models.testDriveProjectInfo import TestDriveProjectInfo
+from app.models.testDriveTagInfo import TestDriveTagInfo
+from app.settings import Settings
 
 
 class TestDriveDataService:
@@ -75,6 +84,12 @@ class TestDriveDataService:
                     self.logger.error(f"Failed to parse data: {e}")
                 except json.JSONDecodeError as e:
                     self.logger.error(f"Failed to load JSON: {e}")
+
+        if self.has_live_data() or True:
+            live_project_info = self.create_live_data_project(self.storage_path)
+            if live_project_info:
+                # push live project to the start of the list
+                self.test_drive_data_store = {0: live_project_info, **self.test_drive_data_store}
 
         self.logger.info(f"Loaded {len(self.test_drive_data_store)} test drives")
 
@@ -158,15 +173,80 @@ class TestDriveDataService:
         if testdrive_id not in self.test_drive_data_store:
             return None
         self.active_testdrive_id = testdrive_id
+
+        # check if the test drive is live
+        testdrive = self.test_drive_data_store[testdrive_id]
+        if testdrive.is_live:
+            self.logger.info(f"Live drive {testdrive.id} activated")
+
         return self.get_active_testdrive()
 
     def deactivate_testdrive(self) -> TestDriveProjectInfo | None:
         """
         Deactivate the active test drive.
-        :return:
+        :return: The deactivated test drive or None if no active test drive was set.
         """
         if self.active_testdrive_id is None:
             return None
         testdrive = self.get_active_testdrive()
         self.active_testdrive_id = None
         return testdrive
+
+    def has_live_data(self) -> bool:
+        """
+        Check if the live data module is available.
+        :return: True if the module is available, False otherwise.
+        """
+        return True
+        module_name = "panthera"
+        spec = importlib.util.find_spec(module_name)
+        return spec is not None and spec.loader is not None
+
+    def create_live_data_project(self, tag_storage_path: str) -> TestDriveProjectInfo | None:
+        """
+        Get the live data project.
+        :return: The live data project or None if not available.
+        """
+        if not self.has_live_data():
+            return None
+
+        live_project_info = TestDriveProjectInfo(
+            id=0,
+            is_live=True,
+            creation_date=datetime.now(),
+            test_drive_meta_info=TestDriveMetaData(
+                route_name="live route",
+                driver_name="live driver",
+                vehicle_name="live vehicle",
+                notes=""
+            )
+        )
+        return live_project_info
+
+    def create_new_live_data(self, test_drive: TestDriveProjectInfo, settings: Settings):
+        def get_next_live_tag_file(storage_path: Path) -> Path:
+            pattern = re.compile(r"live_tags_(\d+)\.csv$")
+            max_index = 0
+
+            for file in storage_path.glob("live_tags_*.csv"):
+                match = pattern.match(file.name)
+                if match:
+                    index = int(match.group(1))
+                    max_index = max(max_index, index)
+
+            next_index = max_index + 1
+            return storage_path / f"live_tags_{next_index}.csv"
+
+        tag_file = get_next_live_tag_file(Path(settings.TAG_PATH))
+        test_drive.test_drive_tag_info.tag_file_name = tag_file.name
+        test_drive.test_drive_tag_info.tag_file_full_path = str(tag_file.resolve())
+
+        #
+        temp_file_name = "live_data_temp.csv"
+        header = LiveDataRow.get_field_mapping()
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False, newline='') as tmpfile:
+            writer = csv.DictWriter(tmpfile, fieldnames=[field for field in LiveDataRow.__annotations__])
+            writer.writeheader()
+            temp_path = Path(tmpfile.name)
+            test_drive.test_drive_data_info.csv_file_name = tmpfile.name
+            test_drive.test_drive_data_info.csv_file_full_path = str(temp_path.resolve())

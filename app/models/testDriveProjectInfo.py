@@ -11,6 +11,8 @@ from ..models.testDriveMetaData import TestDriveMetaData
 class TestDriveProjectInfo(BaseModel):
     id: int = Field(-1, title="Test Drive ID", description="The unique identifier of the test drive")
 
+    is_live: bool = Field(False, title="Is Live", description="Indicates if the test drive is live")
+
     creation_date: Optional[datetime] = Field(default_factory=datetime.now, title="Creation date",
                                               description="The date and time the test drive project was created")
 

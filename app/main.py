@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .api import router as global_router
 from .api.v1 import router as v1_router
-from .dependencies import get_player, get_connection_manager, get_testdata_manager, get_settings
+from .dependencies import get_connection_manager, get_testdata_manager, get_settings
 
 logger = logging.getLogger('uvicorn.error')
 

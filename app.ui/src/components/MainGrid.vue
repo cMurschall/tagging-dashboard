@@ -18,8 +18,6 @@ import { GridItemHTMLElement, GridStack, GridStackNode } from 'gridstack';
 import CardWrapper from './CardWrapper.vue';
 import { pinia, bootstrap } from "./../plugins/AppPlugins";
 import gridManager, { GridManagerItem, GridManager } from './../managers/gridItemManager';
-import { useToastController } from 'bootstrap-vue-next';
-
 
 
 export default defineComponent({
@@ -38,7 +36,6 @@ export default defineComponent({
             const layoutData = grid.save();
             return layoutData;
         };
-        const { show: showToast } = useToastController();
 
 
         onMounted(() => {
@@ -73,28 +70,6 @@ export default defineComponent({
                 }
                 return null;
             };
-            // grid.el.addEventListener('mousedown', (event: MouseEvent) => {
-            //     // Check if Ctrl key is pressed and grid instance exists
-
-            //     const targetItem = getGridItemElement(event.target);
-
-            //     const isItemCurrentlyNoMove = targetItem?.gridstackNode?.noMove === true; // Check if explicitly set to true
-            //     if (!grid) {
-            //         return;
-            //     }
-
-            //     if (event.ctrlKey) {
-
-
-            //         // Ensure we are targeting a valid grid item
-            //         if (targetItem) {
-            //             console.log('Ctrl + Mousedown detected on item:', targetItem.getAttribute('gs-id') || targetItem.id);
-
-            //             // Temporarily enable moving for this specific item
-            //             grid.update(targetItem, { noMove: !isItemCurrentlyNoMove, });
-            //         }
-            //     }
-            // });
 
 
 
@@ -103,7 +78,6 @@ export default defineComponent({
                 console.log('Resizestop:', { event, node: el.gridstackNode });
 
                 if (el.gridstackNode && el.gridstackNode.id) {
-
                     gridManager.updateItemById(el.gridstackNode.id.toString(), {
                         w: el.gridstackNode.w ?? 0,
                         h: el.gridstackNode.h ?? 0,
@@ -117,19 +91,17 @@ export default defineComponent({
                 console.log('Drag end:', { event, node: el.gridstackNode });
 
                 if (el.gridstackNode && el.gridstackNode.id) {
-
                     gridManager.updateItemById(el.gridstackNode.id.toString(), {
                         x: el.gridstackNode.x ?? 0,
                         y: el.gridstackNode.y ?? 0,
                     });
                 }
-
-
             });
 
 
             // 2) GridStack's render callback:
             GridStack.renderCB = (contentEl: HTMLElement, w: GridStackNode) => {
+
                 const widget = w as GridManagerItem;
 
                 console.log('Grid render CB', widget);
@@ -153,9 +125,7 @@ export default defineComponent({
                             for (const key in gridStoreItem.dependencies) {
                                 provide(key, readonly(markRaw(gridStoreItem.dependencies[key])));
                             }
-                            provide('showToast', showToast);
                         }
-
 
                         // If user clicks remove in the card header, remove from store
                         const handleRemove = () => {
@@ -196,6 +166,7 @@ export default defineComponent({
                 // we share the same plugins with the parent app
                 subApp.use(bootstrap);
                 subApp.use(pinia);
+
 
                 // Mount the child sub-app into the .grid-stack-item-content
                 const vm = subApp.mount(contentEl);

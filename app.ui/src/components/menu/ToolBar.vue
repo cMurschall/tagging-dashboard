@@ -68,7 +68,7 @@
                 <div v-if="selectedLayoutToRename">
                     <div class="mb-3">
                         <label for="renameLayoutName" class="form-label">New Layout Name for "{{ selectedLayoutToRename
-                        }}":</label>
+                            }}":</label>
                         <BFormInput id="renameLayoutName" v-model="renameLayoutName" placeholder="Enter new name">
                         </BFormInput>
                     </div>
@@ -90,10 +90,9 @@ import { Observable } from '../../observable';
 import { ApiDataManager } from './../../managers/apiDataManager';
 import gridItemManager from './../../managers/gridItemManager';
 import layoutManager, { StoredLayoutItem } from './../../managers/layoutManager';
-import { TestDriveProjectInfo } from '../../services/utilities';
-import { DataManager } from '../../managers/dataManager';
-import getPluginManagerInstance, { PluginManager } from '../../managers/pluginManager';
-import gridManager from './../../managers/gridItemManager';
+
+import pluginManager from '../../managers/pluginManager';
+
 
 const simulationTimeObservable = new Observable<number>(0);
 
@@ -118,129 +117,28 @@ const layoutsData = ref<Record<string, StoredLayoutItem[]>>({});
 let subscription: { unsubscribe: () => void } | null = null;
 
 
-
 const handleAddTagLine = () => {
-    gridItemManager.addNewItem({
-        component: 'TagTimeline',
-        x: 0,
-        y: 0,
-        w: 6,
-        h: 7,
-        noMove: true,
-        id: 'tag-timeline',
-        title: 'Tag Timeline',
-        props: {
-            projectInfo: projectStore.loadedProject || {}
-            // simulationTimeObservable
-        },
-        dependencies: {
-            simulationTimeObservable
-        }
-    });
+    pluginManager.showPlugin('TagTimeline', {});
 };
-
-
 
 const handleAddVideo = () => {
-
-
-    gridItemManager.addNewItem({
-        component: 'VideoPlayer',
-        x: 3,
-        y: 0,
-        w: 6,
-        h: 7,
-        noMove: true,
-        id: 'video-player',
-        title: 'Video Player',
-        props: {
-            videoInfo: projectStore.loadedProject?.testDriveVideoInfo || {},
-            // simulationTimeObservable
-        },
-        dependencies: {
-            simulationTimeObservable
-        }
-    });
+    pluginManager.showPlugin('VideoPlayer', {});
 };
 
-
-
 const handleAddGauge = () => {
-    const dataManager = new ApiDataManager();
-    dataManager.subscribeToTimestamp(simulationTimeObservable);
-    gridItemManager.addNewItem({
-        component: 'Gauge',
-        x: 0,
-        y: 0,
-        w: 3,
-        h: 5,
-        noMove: true,
-        id: 'gauge-' + crypto.randomUUID(),
-        title: '',
-        props: {
-        },
-        dependencies: {
-            dataManager
-        }
-    });
+    pluginManager.showPlugin('Gauge', {});
 };
 
 const handleAddList = () => {
-    const dataManager = new ApiDataManager();
-    dataManager.subscribeToTimestamp(simulationTimeObservable);
-    gridItemManager.addNewItem({
-        component: 'ListView',
-        x: 0,
-        y: 0,
-        w: 3,
-        h: 5,
-        noMove: true,
-        id: 'list-' + crypto.randomUUID(),
-        title: '',
-        props: {
-        },
-        dependencies: {
-            dataManager
-        }
-    });
+    pluginManager.showPlugin('ListView', {});
 };
 
-
 const handleAddScatter = () => {
-    const dataManager = new ApiDataManager();
-    dataManager.subscribeToTimestamp(simulationTimeObservable);
-    gridItemManager.addNewItem({
-        component: 'ScatterPlot',
-        x: 0,
-        y: 0,
-        w: 7,
-        h: 4,
-        noMove: true,
-        id: 'scatter-' + crypto.randomUUID(),
-        title: '',
-        props: {
-        },
-        dependencies: {
-            dataManager
-        }
-    });
+    pluginManager.showPlugin('ScatterPlot', {});
 };
 
 const handleAddTestGridItem = () => {
-    const { x, y } = gridItemManager.suggestFreeSpace(5, 4);
-
-    gridItemManager.addNewItem({
-        component: 'TestGridItem',
-        x: x,
-        y: y,
-        w: 5,
-        h: 4,
-        noMove: true,
-        id: 'test-grid-item' + crypto.randomUUID(),
-        title: 'Test Grid Item',
-        props: {
-        }
-    });
+    pluginManager.showPlugin('TestGridItem', {});
 };
 
 
@@ -303,35 +201,11 @@ const handleRestoreLayout = (layoutName: string) => {
 
     for (const item of layoutToRestore) {
 
-
-
         let componentProps: any = {
             pluginState: item.pluginState,
         };
 
-        let componentDependencies: any = {};
-
-        if (item.component === 'VideoPlayer') {
-            componentProps.videoInfo = projectStore.loadedProject?.testDriveVideoInfo || {};
-            componentDependencies.simulationTimeObservable = simulationTimeObservable;
-        }
-        else if (item.component === 'TagTimeline') {
-            componentProps.projectInfo = projectStore.loadedProject || {};
-            componentDependencies.simulationTimeObservable = simulationTimeObservable;
-        }
-
-
-        else {
-
-            const dataManager = new ApiDataManager();
-
-            dataManager.subscribeToTimestamp(simulationTimeObservable);
-            componentDependencies.dataManager = dataManager;
-        }
-
-
-
-        gridItemManager.addNewItem({
+        pluginManager.restorePlugin({
             component: item.component,
             x: item.x,
             y: item.y,
@@ -340,11 +214,7 @@ const handleRestoreLayout = (layoutName: string) => {
             noMove: true,
             id: item.id,
             title: item.title,
-            props: componentProps,
-            dependencies: componentDependencies
-        });
-
-
+            props: componentProps });
     }
 };
 

@@ -8,10 +8,7 @@ from fastapi.responses import StreamingResponse, FileResponse, Response
 
 from pydantic import BaseModel
 
-from ...dependencies import get_player, get_settings, get_testdata_manager
-from ...services.dataSources.csvDataSource import CSVDataSource
-from ...services.dataSources.simulatedNetworkDataSource import SimulatedNetworkStreamDataSource
-from ...services.player import Player
+from ...dependencies import get_settings, get_testdata_manager
 from ...services.testDriveDataService import TestDriveDataService
 from ...settings import Settings
 

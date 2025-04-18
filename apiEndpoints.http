@@ -54,7 +54,7 @@ GET http://127.0.0.1:8888/api/v1/project/all
 GET http://127.0.0.1:8888/api/v1/project/active
 
 ### Activate Project
-POST http://127.0.0.1:8888/api/v1/project/activate/0
+POST http://127.0.0.1:8888/api/v1/project/activate/1
 
 ### Deactiveate  Project
 POST http://127.0.0.1:8888/api/v1/project/deactivate
@@ -62,6 +62,8 @@ POST http://127.0.0.1:8888/api/v1/project/deactivate
 ### Get CSV file column names
 GET http://127.0.0.1:8888/api/v1/player/columns
 
+### Activate Project
+POST http://127.0.0.1:8888/api/v1/project/activate/1
 
 ### Get CSV file data as json
 GET http://127.0.0.1:8888/api/v1/player/data/json?

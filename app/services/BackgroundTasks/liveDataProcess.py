@@ -5,6 +5,7 @@ import logging
 from dataclasses import asdict
 from threading import Event
 
+from ..bufferedCsvWriter import BufferedCsvWriter
 # from ..dataSources.pantheraDataSource import start_process
 from ..dataSources.simulatedPantheraDataSource import start_process
 from ...dependencies import get_testdata_manager, get_connection_manager
@@ -23,34 +24,35 @@ def process_live_data(stop_event: Event, loop: asyncio.AbstractEventLoop):
         has_live_test_drive = test_drive_data is not None and test_drive_data.is_live
         if has_live_test_drive:
             if live_data_source is None:
-
-                data_buffer = []
+                csv_file = test_drive_data.test_drive_data_info.csv_file_full_path
+                buffered_writer = BufferedCsvWriter(csv_file, stop_event)
 
                 def new_live_data_arrived(data: LiveDataRow):
-                    logger.info('New live data arrived.')
+                    logger.info("LiveDataArrived")
                     # send data to websocket
                     asyncio.run_coroutine_threadsafe(
                         get_connection_manager().broadcast_json(asdict(data)),
                         loop
                     )
-
-                    data_buffer.append(data)
-                    if len(data_buffer) > 10:
-                        logger.info('Data buffer is full, processing data...')
-
-                        csv_file = test_drive_data.test_drive_data_info.csv_file_full_path
-                        with open(csv_file, 'a', newline='') as f:
-                            writer = csv.DictWriter(f, fieldnames=[field for field in LiveDataRow.__annotations__])
-                            for row in data_buffer:
-                                writer.writerow(asdict(row))  # Convert dataclass instance to dictionary
-                        data_buffer.clear()
+                    # Queue for writing
+                    buffered_writer.enqueue(asdict(data))
 
                 live_data_source = start_process(new_live_data_arrived)
 
         elif live_data_source is not None:
+
+            # Stop writing thread
+            buffered_writer.shutdown()
+            live_data_source.stop()
             live_data_source = None
 
         sleep_with_event(stop_event, 5)
+
+    if live_data_source is not None:
+        # Stop writing thread
+        buffered_writer.shutdown()
+        live_data_source.stop()
+        live_data_source = None
 
 
 def sleep_with_event(stop_event, duration):

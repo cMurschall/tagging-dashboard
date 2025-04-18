@@ -28,42 +28,83 @@ class TestDriveDataService:
         self.active_testdrive_id = None
         self.active_testdrive_df = None
 
+        self.current_project_info = TestDriveProjectInfo()
+
         self.logger = logging.getLogger('uvicorn.error')
         self._load_data()
 
-    def load_csv_data(self, data_info: TestDriveDataInfo):
-        file_path = Path(data_info.csv_file_full_path)
+    def load_csv_data(self, project_info: TestDriveProjectInfo):
+
+        if project_info.is_live:
+            self.current_project_info = project_info
+            self.logger.warning("Cannot load CSV data for live test drive")
+            return
+        file_path = Path(project_info.test_drive_data_info.csv_file_full_path)
         if not file_path.exists():
             self.logger.warning(f"CSV file does not exist: {file_path}")
             return
 
-        self.active_testdrive_df = pd.read_csv(data_info.csv_file_full_path, skiprows=[1])
+        self.current_project_info = project_info
+        self.active_testdrive_df = pd.read_csv(project_info.test_drive_data_info.csv_file_full_path, skiprows=[1])
 
     def get_csv_data_columns(self):
+
+        if self.current_project_info.is_live:
+            csv_file = self.current_project_info.test_drive_data_info.csv_file_full_path
+            if not os.path.exists(csv_file):
+                self.logger.warning(f"CSV file does not exist: {csv_file}")
+                return []
+
+            # read first row to get column names
+            df = pd.read_csv(csv_file, nrows=2)
+            # check if we have columns
+            if df.empty:
+                self.logger.warning("CSV file is empty")
+                return []
+            columns = df.dtypes.items()
+            return columns
+
         if self.active_testdrive_df is None:
             return []
         return self.active_testdrive_df.dtypes.items()
 
-    def get_csv_data(self, columns: List[str]) -> pd.DataFrame:
+    def get_csv_data(self, requested_columns: List[str]) -> pd.DataFrame:
         # Column selection
-        if not columns:
+        if not requested_columns:
             self.logger.warning("No columns specified for data selection, returning empty DataFrame")
             return pd.DataFrame()
 
-        if 'timestamp' not in columns:
-            columns.append('timestamp')  # always include timestamp
+        if 'timestamp' not in requested_columns:
+            requested_columns.append('timestamp')  # always include timestamp
+
+        if self.current_project_info.is_live:
+            csv_file = self.current_project_info.test_drive_data_info.csv_file_full_path
+            if not os.path.exists(csv_file):
+                self.logger.warning(f"CSV file does not exist: {csv_file}")
+                return pd.DataFrame()
+
+            # Read only the header
+            available_columns = pd.read_csv(csv_file, nrows=0).columns
+            # Keep only valid columns
+            valid_columns = [col for col in requested_columns if col in available_columns]
+
+            if not valid_columns:
+                return pd.DataFrame()  # Or raise warning/log if needed
+
+            df = pd.read_csv(csv_file, usecols=valid_columns)
+            return df
 
             # Get set of columns in the DataFrame
         valid_columns_set = set(self.active_testdrive_df.columns)
         # Filter out invalid columns
-        valid_columns_list = [col for col in columns if col in valid_columns_set]
+        valid_columns = [col for col in requested_columns if col in valid_columns_set]
 
         # If no valid columns remain, return an empty dataframe or handle otherwise
-        if not valid_columns_list:
+        if not valid_columns:
             self.logger.warning("No valid columns specified for data selection, returning empty DataFrame")
             return pd.DataFrame()
 
-        df = self.active_testdrive_df[valid_columns_list]
+        df = self.active_testdrive_df[valid_columns]
         return df
 
     def _load_data(self):
@@ -152,6 +193,9 @@ class TestDriveDataService:
         :return:
         """
         if testdrive_id not in self.test_drive_data_store:
+            return None
+        if testdrive_id == 0:
+            self.logger.warning("Cannot delete live test drive")
             return None
         testdrive = self.test_drive_data_store[testdrive_id]
         del self.test_drive_data_store[testdrive_id]

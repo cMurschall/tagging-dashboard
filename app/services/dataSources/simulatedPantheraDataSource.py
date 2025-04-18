@@ -20,7 +20,7 @@ class MockProcess:
     def stop(self):
         self._stop_event.set()
         if self._thread is not None:
-            self._thread.join()
+            self._thread.join(timeout=5)
 
     def _run_loop(self):
         while not self._stop_event.is_set():

@@ -1,4 +1,5 @@
 import asyncio
+
 import logging
 import sys
 
@@ -24,10 +25,10 @@ def start_background_tasks(background_threads, stop_event):
 
     loop = asyncio.get_event_loop()
 
-    process_projects_thread = Thread(target=process_projects, args=(stop_event, loop), daemon=True)
+    process_projects_thread = Thread(target=process_projects, args=(stop_event, loop,), daemon=True)
     background_threads.append(process_projects_thread)
 
-    process_live_data_thread = Thread(target=process_live_data, args=(stop_event, loop), daemon=True)
+    process_live_data_thread = Thread(target=process_live_data, args=(stop_event, loop,), daemon=True)
     background_threads.append(process_live_data_thread)
 
     # loop over all background threads and start them
@@ -44,9 +45,17 @@ async def lifespan(fastapi_app: FastAPI):
     start_background_tasks(background_threads, stop_event)
     logger.info(f"Starting {len(background_threads)} background tasks.")
     yield
+    # Cleanup
+    logger.info("Stopping background tasks...")
     stop_event.set()
+    # Wait for all threads to finish
+
+    logger.info(f"All background tasks stopped.")
     for thread in background_threads:
-        thread.join()
+        logger.info(f"Stopping background task {thread.name}...")
+        thread.join(timeout=5)
+        if thread.is_alive():
+            logger.warning(f"Thread {thread.name} did not stop cleanly!")
 
 
 app = FastAPI(title=get_settings().APP_NAME, debug=get_settings().DEBUG, lifespan=lifespan)
@@ -98,6 +107,8 @@ async def websocket_endpoint(websocket: WebSocket):
             await asyncio.sleep(20)  # should be okay so clients may not time out and close the connection
     except WebSocketDisconnect:
         get_connection_manager().disconnect(websocket)
+    finally:
+        get_connection_manager().disconnect(websocket)
 
 
 # Serve static files
@@ -105,6 +116,9 @@ async def websocket_endpoint(websocket: WebSocket):
 # Yes - also the websocket routes
 if "pytest" not in sys.modules:
     app.mount("/", StaticFiles(directory="app/static", html=True), name="static")
+
+import atexit
+import threading
 
 # or from commandline:
 # python.exe -m uvicorn app.main:app --reload --port 8888 --log-level debug

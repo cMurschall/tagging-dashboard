@@ -137,8 +137,8 @@ class ProjectController:
 
             if activated_testdrive.is_live:
                 service.create_new_live_data(activated_testdrive, settings)
-            else:
-                background_tasks.add_task(service.load_csv_data, activated_testdrive.test_drive_data_info)
+
+            background_tasks.add_task(service.load_csv_data, activated_testdrive)
             return {"testdrive": activated_testdrive}
 
         @self.router.post("/deactivate", response_model=TestDriveResponse)

@@ -27,9 +27,7 @@ export type PluginType = 'ListView' | 'VideoPlayer' | 'Gauge' | 'ScatterPlot' | 
 
 export class PluginManager {
 
-
-
-    private showToast: ShowToastFn = () => { };
+    private showToast: ShowToastFn = () => '';
 
     private gridItemManager: GridManager;
 
@@ -81,11 +79,19 @@ export class PluginManager {
         }
 
         // for now we only support the api data manager
-        for (const key in this.dataManagers) {
-            const dataManager = new ApiDataManager();
-            dataManager.subscribeToTimestamp(this.simulationTimeObservable);
-            this.dataManagers[key as PluginType] = dataManager;
+
+        if (project?.isLive) {
+
         }
+        else {
+            for (const key in this.dataManagers) {
+                const dataManager = new ApiDataManager();
+                dataManager.subscribeToTimestamp(this.simulationTimeObservable);
+                this.dataManagers[key as PluginType] = dataManager;
+            }
+        }
+
+
 
         this.loadedProject = project;
     }
@@ -109,7 +115,7 @@ export class PluginManager {
     public showPlugin(pluginName: PluginType, props: Record<string, any>): void {
 
         const service = this.getCurrentService(pluginName);
-   
+
         const newItem = {
             id: pluginName + '_' + crypto.randomUUID(),
             // spread x and y from the gridItemManager

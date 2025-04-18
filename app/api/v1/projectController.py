@@ -77,12 +77,12 @@ class ProjectController:
             return {"files": video_files}
 
         @self.router.get("/all", response_model=AllTestDrivesResponse)
-        async def get_all_testdrives(service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+        async def get_all_testdrives(service: TestDriveDataService = Depends(get_testdata_manager)):
             return {"testdrives": service.get_testdrives()}
 
         @self.router.post("/create", response_model=TestDriveResponse)
         async def create_testdrive(payload: CreateProjectPayload,
-                                   service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
+                                   service: TestDriveDataService = Depends(get_testdata_manager),
                                    settings: Settings = Depends(get_settings)):
 
             video_path = os.path.join(settings.VIDEO_PATH, payload.video_file_name)
@@ -111,25 +111,25 @@ class ProjectController:
 
         @self.router.patch("/update", response_model=TestDriveResponse)
         async def update_testdrive(testdrive: TestDriveProjectInfo,
-                                   service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+                                   service: TestDriveDataService = Depends(get_testdata_manager)):
             created_testdrive = service.update_testdrive(testdrive)
             return {"testdrive": created_testdrive}
 
         @self.router.delete("/delete", response_model=TestDriveResponse)
         async def delete_testdrive(testdrive_id: int,
-                                   service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+                                   service: TestDriveDataService = Depends(get_testdata_manager)):
             created_testdrive = service.delete_testdrive(testdrive_id)
             return {"testdrive": created_testdrive}
 
         @self.router.get("/active", response_model=OptionalTestDriveResponse)
-        async def get_active_testdrive(service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+        async def get_active_testdrive(service: TestDriveDataService = Depends(get_testdata_manager)):
             active_testdrive = service.get_active_testdrive()
             return {"testdrive": active_testdrive}
 
         @self.router.post("/activate/{testdrive_id}", response_model=TestDriveResponse)
         async def activate_testdrive(testdrive_id: int,
                                      background_tasks: BackgroundTasks,
-                                     service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
+                                     service: TestDriveDataService = Depends(get_testdata_manager),
                                      settings: Settings = Depends(get_settings)):
             activated_testdrive = service.activate_testdrive(testdrive_id)
             if activated_testdrive is None:
@@ -142,7 +142,7 @@ class ProjectController:
             return {"testdrive": activated_testdrive}
 
         @self.router.post("/deactivate", response_model=TestDriveResponse)
-        async def deactivate_testdrive(service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+        async def deactivate_testdrive(service: TestDriveDataService = Depends(get_testdata_manager)):
             deactivated_testdrive = service.deactivate_testdrive()
             if deactivated_testdrive is None:
                 raise HTTPException(status_code=404, detail="No active testdrive found")

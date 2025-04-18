@@ -53,8 +53,8 @@ class TagController:
     def _define_routes(self):
         @self.router.get("/all", response_model=AllTagListResponse)
         async def get_all_tags(
-                test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
-                tag_service: TestDriveTagService = Depends(lambda: get_tagdata_manager())):
+                test_drive_service: TestDriveDataService = Depends(get_testdata_manager),
+                tag_service: TestDriveTagService = Depends(get_tagdata_manager)):
             active_testdrive = test_drive_service.get_active_testdrive()
             if not active_testdrive:
                 return {"tags": []}
@@ -65,8 +65,8 @@ class TagController:
         @self.router.post("/create", response_model=TagResponse)
         async def add_tag(
                 payload: CreateTagPayload,
-                test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
-                tag_service: TestDriveTagService = Depends(lambda: get_tagdata_manager())):
+                test_drive_service: TestDriveDataService = Depends(get_testdata_manager),
+                tag_service: TestDriveTagService = Depends(get_tagdata_manager)):
             active_testdrive = test_drive_service.get_active_testdrive()
             if not active_testdrive:
                 raise HTTPException(status_code=404, detail="No active test drive found")
@@ -79,8 +79,8 @@ class TagController:
         @self.router.get("/get_by_id/{id}", response_model=TagResponse)
         async def get_tag_by_guid(
                 id: str,
-                test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
-                tag_service: TestDriveTagService = Depends(lambda: get_tagdata_manager())):
+                test_drive_service: TestDriveDataService = Depends(get_testdata_manager),
+                tag_service: TestDriveTagService = Depends(get_tagdata_manager)):
             active_testdrive = test_drive_service.get_active_testdrive()
             if not active_testdrive:
                 raise HTTPException(status_code=404, detail="No active test drive found")
@@ -91,8 +91,8 @@ class TagController:
         @self.router.delete("/delete/{id}", response_model=DeleteResponse)
         async def delete_tag(
                 id: str,
-                test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
-                tag_service: TestDriveTagService = Depends(lambda: get_tagdata_manager())):
+                test_drive_service: TestDriveDataService = Depends(get_testdata_manager),
+                tag_service: TestDriveTagService = Depends(get_tagdata_manager)):
             active_testdrive = test_drive_service.get_active_testdrive()
             if not active_testdrive:
                 raise HTTPException(status_code=404, detail="No active test drive found")
@@ -104,8 +104,8 @@ class TagController:
         async def update_tag(
                 id: str,
                 payload: UpdateTagPayload,
-                test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager()),
-                tag_service: TestDriveTagService = Depends(lambda: get_tagdata_manager())):
+                test_drive_service: TestDriveDataService = Depends(get_testdata_manager),
+                tag_service: TestDriveTagService = Depends(get_tagdata_manager)):
             active_testdrive = test_drive_service.get_active_testdrive()
             if not active_testdrive:
                 raise HTTPException(status_code=404, detail="No active test drive found")
@@ -116,7 +116,7 @@ class TagController:
 
         @self.router.get("/category/all", response_model=AllCategoriesResponse)
         async def get_all_tag_categories(
-                test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+                test_drive_service: TestDriveDataService = Depends(get_testdata_manager)):
             active_testdrive = test_drive_service.get_active_testdrive()
             if not active_testdrive:
                 return {"categories": []}
@@ -125,7 +125,7 @@ class TagController:
         @self.router.post("/category", response_model=AllCategoriesResponse)
         async def add_tag_category(
                 payload: CreateNewTagCategoryPayload,
-                test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+                test_drive_service: TestDriveDataService = Depends(get_testdata_manager)):
             if not payload.name:
                 raise HTTPException(status_code=400, detail="Category name is required")
 
@@ -149,7 +149,7 @@ class TagController:
         @self.router.delete("/category/{category_id}", response_model=AllCategoriesResponse)
         async def delete_tag_category(
                 category_id: int,
-                test_drive_service: TestDriveDataService = Depends(lambda: get_testdata_manager())):
+                test_drive_service: TestDriveDataService = Depends(get_testdata_manager)):
             active_testdrive = test_drive_service.get_active_testdrive()
             if not active_testdrive:
                 raise HTTPException(status_code=404, detail="No active test drive found")

@@ -79,25 +79,27 @@
             </BModal>
         </BDropdown>
 
+
+
+        <div class="ms-auto text-end pe-2">
+            <div class="fw-semibold text-muted">Simulation time</div>
+            <div class="fs-5">{{ currentSimulationTimeSecond.toFixed(2) }}s</div>
+        </div>
+
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
-import { useProjectStore } from './../../stores/projectStore';
-import { EmptySubscription, Observable, Subscription } from '../../observable';
-import { ApiDataManager } from './../../managers/apiDataManager';
-import gridItemManager from './../../managers/gridItemManager';
-import layoutManager, { StoredLayoutItem } from './../../managers/layoutManager';
+import { EmptySubscription, Subscription } from '../../observable';
+import { getGridManager } from './../../managers/gridItemManager';
+import  {getLayoutManager,  StoredLayoutItem } from './../../managers/layoutManager';
 
-import pluginManager from '../../managers/pluginManager';
+import { getPluginManager } from '../../managers/pluginManager';
 
 
-const simulationTimeObservable = new Observable<number>(0);
-
-
-const projectStore = useProjectStore();
+const currentSimulationTimeSecond = ref(0);
 
 
 const availableLayouts = ref<string[]>([]);
@@ -114,43 +116,54 @@ const showRenameLayoutModal = ref(false);
 
 
 const layoutsData = ref<Record<string, StoredLayoutItem[]>>({});
-let subscription: Subscription = EmptySubscription;
+let layoutSubscription: Subscription = EmptySubscription;
+let simulationTimeSubscription: Subscription = EmptySubscription;
 
 
 const handleAddTagLine = () => {
-    pluginManager.showPlugin('TagTimeline', {});
+    getPluginManager().showPlugin('TagTimeline', {});
 };
 
 const handleAddVideo = () => {
-    pluginManager.showPlugin('VideoPlayer', {});
+    getPluginManager().showPlugin('VideoPlayer', {});
 };
 
 const handleAddGauge = () => {
-    pluginManager.showPlugin('Gauge', {});
+    getPluginManager().showPlugin('Gauge', {});
 };
 
 const handleAddList = () => {
-    pluginManager.showPlugin('ListView', {});
+    getPluginManager().showPlugin('ListView', {});
 };
 
 const handleAddScatter = () => {
-    pluginManager.showPlugin('ScatterPlot', {});
+    getPluginManager().showPlugin('ScatterPlot', {});
 };
 
 const handleAddTestGridItem = () => {
-    pluginManager.showPlugin('TestGridItem', {});
+    getPluginManager().showPlugin('TestGridItem', {});
 };
 
 
 
 onMounted(async () => {
     // Fetch the initial layout data when the component is mounted
-    availableLayouts.value = layoutManager.getLayoutNames();
-    subscription = layoutManager.layouts$.subscribe((layouts) => {
+    availableLayouts.value = getLayoutManager().getLayoutNames();
+    layoutSubscription = getLayoutManager().layouts$.subscribe((layouts) => {
         layoutsData.value = layouts;
         availableLayouts.value = Object.keys(layouts);
     });
 
+    simulationTimeSubscription = getPluginManager().simulationTimeObservable.subscribe((time) => {
+        currentSimulationTimeSecond.value = time;
+    });
+
+});
+
+onUnmounted(() => {
+    // Clean up subscriptions when the component is unmounted
+    layoutSubscription.unsubscribe();
+    simulationTimeSubscription.unsubscribe();
 });
 
 
@@ -180,20 +193,20 @@ const handleSaveLayout = (newLayoutName: string | null, updateLayoutName: string
         return `Layout ${index}`;
     }
 
-    const existingNames = Object.keys(layoutManager.getLayoutNames());
+    const existingNames = Object.keys(getLayoutManager().getLayoutNames());
     const defaultLayoutName = getNextAvailableLayoutName(existingNames);
 
     const layoutName = newLayoutName || updateLayoutName || defaultLayoutName;
-    const items = gridItemManager.getGridItems().map(item => ({ ...item }));
-    layoutManager.saveLayout(layoutName, items);
+    const items = getGridManager().getGridItems().map(item => ({ ...item }));
+    getLayoutManager().saveLayout(layoutName, items);
 };
 
 
 const handleRestoreLayout = (layoutName: string) => {
 
-    gridItemManager.removeAllItems();
+    getGridManager().removeAllItems();
 
-    const layoutToRestore = layoutManager.getLayout(layoutName);
+    const layoutToRestore = getLayoutManager().getLayout(layoutName);
     if (!layoutToRestore) {
         console.error(`Layout "${layoutName}" not found.`);
         return;
@@ -205,7 +218,7 @@ const handleRestoreLayout = (layoutName: string) => {
             pluginState: item.pluginState,
         };
 
-        pluginManager.restorePlugin({
+        getPluginManager().restorePlugin({
             component: item.component,
             x: item.x,
             y: item.y,
@@ -214,18 +227,19 @@ const handleRestoreLayout = (layoutName: string) => {
             noMove: true,
             id: item.id,
             title: item.title,
-            props: componentProps });
+            props: componentProps
+        });
     }
 };
 
 const handleDeleteLayout = (layoutName: string) => {
-    layoutManager.removeLayout(layoutName);
-    availableLayouts.value = layoutManager.getLayoutNames();
+    getLayoutManager().removeLayout(layoutName);
+    availableLayouts.value = getLayoutManager().getLayoutNames();
 };
 
 const handleRenameSelectedLayout = () => {
     if (selectedLayoutToRename.value && renameLayoutName.value) {
-        layoutManager.renameLayout(selectedLayoutToRename.value, renameLayoutName.value);
+        getLayoutManager().renameLayout(selectedLayoutToRename.value, renameLayoutName.value);
         selectedLayoutToRename.value = null;
         renameLayoutName.value = '';
         showRenameLayoutModal.value = false;

@@ -91,7 +91,6 @@ import type {
   TooltipComponentOption
 } from 'echarts/components'
 import { SeriesOption } from "echarts";
-import gridManager from "../../managers/gridItemManager";
 import { SetCardTitleFn } from "../../plugins/AppPlugins";
 import { PluginServices } from "../../managers/pluginManager";
 
@@ -425,11 +424,7 @@ watch(pluginState, async (newValue) => {
   const allMeasurements = pluginService.getDataManager().getAllMeasurements();
   updateChartData(allMeasurements);
 
-
-  // update the gridmanager with the new plugin state
-  gridManager.updateItemById(props.id, {
-    pluginState: newValue
-  });
+  pluginService.savePluginState(props.id, newValue);
 
 }, { deep: true, immediate: true });
 

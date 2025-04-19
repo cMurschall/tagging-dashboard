@@ -139,11 +139,11 @@ import ScatterPlot from './components/plugins/ScatterPlot.vue';
 import TestGridItem from './components/plugins/TestGridItem.vue';
 import TagTimeline from './components/plugins/TagTimeline.vue';
 
-import gridItemManager, { GridManagerItem } from './managers/gridItemManager';
-import layoutManager from './managers/layoutManager';
+import { getGridManager, GridManagerItem } from './managers/gridItemManager';
+import {getLayoutManager} from './managers/layoutManager';
 import { EmptySubscription, Subscription } from './observable';
 import { BToastOrchestrator, useToastController } from 'bootstrap-vue-next';
-import pluginManager from './managers/pluginManager';
+import { getPluginManager } from './managers/pluginManager';
 import { TestDriveProjectInfo } from './services/utilities';
 
 
@@ -157,7 +157,7 @@ const projectStore = useProjectStore();
 
 
 
-gridItemManager.setComponentMap({
+getGridManager().setComponentMap({
     ListView: () => markRaw(ListView),
     VideoPlayer: () => markRaw(VideoPlayer),
     Gauge: () => markRaw(Gauge),
@@ -172,24 +172,24 @@ let subscription: Subscription = EmptySubscription;
 
 watch(() => projectStore.loadedProject, (newProject) => {
     if (!newProject) {
-        pluginManager.setCurrentProject(undefined);
+        getPluginManager().setCurrentProject(undefined);
         return;
     }
     const rawProject = toRaw(newProject);
     const clonedProject = JSON.parse(JSON.stringify(rawProject)) as TestDriveProjectInfo;
-    pluginManager.setCurrentProject(clonedProject);
+    getPluginManager().setCurrentProject(clonedProject);
 }, { immediate: true });
 
 
 onMounted(async () => {
 
     await projectStore.initializeStore();
-    subscription = layoutManager.layouts$.subscribe((layouts) => {
+    subscription = getLayoutManager().layouts$.subscribe((layouts) => {
         layoutsData.value = layouts;
         availableLayouts.value = Object.keys(layouts);
     });
 
-    pluginManager.setShowToast(showToast);
+    getPluginManager().setShowToast(showToast);
 
 });
 

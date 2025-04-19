@@ -84,7 +84,6 @@ import { EmptySubscription, Subscription } from "../../observable";
 import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue, IDENTITY_EXPRESSION } from "../../services/utilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
-import gridManager from "../../managers/gridItemManager";
 import { SetCardTitleFn } from "../../plugins/AppPlugins";
 import { PluginServices } from "../../managers/pluginManager";
 
@@ -247,10 +246,11 @@ watch(pluginState, async (newValue) => {
 
     lastSelectedColumn = newValue.selectedColumn;
   }
+
+
   // update the gridmanager with the new plugin state
-  gridManager.updateItemById(props.id, {
-    pluginState: { ...newValue }
-  });
+  pluginService.savePluginState(props.id, newValue);
+
 }, { deep: true });
 
 

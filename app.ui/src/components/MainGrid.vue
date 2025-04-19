@@ -17,7 +17,7 @@ import {
 import { GridItemHTMLElement, GridStack, GridStackNode } from 'gridstack';
 import CardWrapper from './CardWrapper.vue';
 import { pinia, bootstrap } from "./../plugins/AppPlugins";
-import gridManager, { GridManagerItem, GridManager } from './../managers/gridItemManager';
+import {getGridManager, GridManagerItem, GridManager } from './../managers/gridItemManager';
 
 
 export default defineComponent({
@@ -78,7 +78,7 @@ export default defineComponent({
                 console.log('Resizestop:', { event, node: el.gridstackNode });
 
                 if (el.gridstackNode && el.gridstackNode.id) {
-                    gridManager.updateItemById(el.gridstackNode.id.toString(), {
+                    getGridManager().updateItemById(el.gridstackNode.id.toString(), {
                         w: el.gridstackNode.w ?? 0,
                         h: el.gridstackNode.h ?? 0,
                     });
@@ -91,7 +91,7 @@ export default defineComponent({
                 console.log('Drag end:', { event, node: el.gridstackNode });
 
                 if (el.gridstackNode && el.gridstackNode.id) {
-                    gridManager.updateItemById(el.gridstackNode.id.toString(), {
+                    getGridManager().updateItemById(el.gridstackNode.id.toString(), {
                         x: el.gridstackNode.x ?? 0,
                         y: el.gridstackNode.y ?? 0,
                     });
@@ -110,7 +110,7 @@ export default defineComponent({
 
                 // The store's component map (component name -> definition)
                 const compName = widget.component as string;
-                const compDef = gridManager.getComponentMap()[compName]();
+                const compDef = getGridManager().getComponentMap()[compName]();
                 if (!compDef) {
                     contentEl.textContent = `Unknown component: ${compName}`;
                     return;
@@ -122,7 +122,7 @@ export default defineComponent({
                     setup() {
 
                         // Iterate over dependencies and provide each one:
-                        const gridStoreItem = gridManager.getGridItems().find(item => item.id === widget.id);
+                        const gridStoreItem = getGridManager().getGridItems().find(item => item.id === widget.id);
                         if (gridStoreItem) {
                             for (const key in gridStoreItem.dependencies) {
                                 provide(key, readonly(markRaw(gridStoreItem.dependencies[key])));
@@ -132,7 +132,7 @@ export default defineComponent({
                         // If user clicks remove in the card header, remove from store
                         const handleRemove = () => {
                             if (widget.id) {
-                                gridManager.removeItemById(widget.id.toString());
+                                getGridManager().removeItemById(widget.id.toString());
                             }
                         };
 
@@ -176,7 +176,7 @@ export default defineComponent({
             };
 
             // 4) Load the store items initially
-            grid.load(gridManager.getGridItems());
+            grid.load(getGridManager().getGridItems());
 
         });
 

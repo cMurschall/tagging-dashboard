@@ -2,7 +2,7 @@
 import { EmptySubscription, Observable, Subscription } from "../observable";
 import { TestDriveProjectInfo, WebSocketBasePath } from "../services/utilities";
 import { DataManager, EmptyDataManager } from "./dataManager";
-import gridManager, { GridManager, GridManagerItem } from './gridItemManager';
+import { getGridManager, GridManager, GridManagerItem } from './gridItemManager';
 
 import VideoPlayer from './../components/plugins/VideoPlayer.vue';
 import ListView from './../components/plugins/ListView.vue';
@@ -14,6 +14,7 @@ import { ApiDataManager } from "./apiDataManager";
 import { ShowToastFn } from "../plugins/AppPlugins";
 import { WebSocketDataConnection } from "../services/webSocketDataConnection";
 import { WebsocketDataManager } from "./websocketDataManager";
+import { WebSocketSimulationTimeConnection } from "../services/WebSocketSimulationTimeConnection";
 
 
 export interface PluginServices {
@@ -21,6 +22,7 @@ export interface PluginServices {
     getProjectInfo: () => TestDriveProjectInfo | undefined;
     getDataManager: () => DataManager,
     showToast: ShowToastFn;
+    savePluginState: (id: string, state: Record<string, any>) => void;
 }
 
 export type PluginType = 'ListView' | 'VideoPlayer' | 'Gauge' | 'ScatterPlot' | 'TestGridItem' | 'TagTimeline';
@@ -32,6 +34,7 @@ export class PluginManager {
     private showToast: ShowToastFn = () => '';
 
     private webSocketDataConnection: WebSocketDataConnection;
+    private webSocketSimulationTimeConnection: WebSocketSimulationTimeConnection;
 
     private gridItemManager: GridManager;
 
@@ -58,6 +61,7 @@ export class PluginManager {
 
     private loadedProject: TestDriveProjectInfo | undefined = undefined;
     private websocketClockSubscription: Subscription = EmptySubscription
+    private websocketSimulationTimeSubscription: Subscription = EmptySubscription
 
 
     // constructor
@@ -67,6 +71,11 @@ export class PluginManager {
         this.registerComponents();
 
         this.webSocketDataConnection = new WebSocketDataConnection(WebSocketBasePath + '/data');
+        this.webSocketSimulationTimeConnection = new WebSocketSimulationTimeConnection(WebSocketBasePath + '/simulationTime');
+
+        this.websocketSimulationTimeSubscription = this.simulationTimeObservable.subscribe((time) => {
+            this.webSocketSimulationTimeConnection.sendCurrentTimeStamp(time);
+        });
     }
 
 
@@ -87,9 +96,9 @@ export class PluginManager {
 
         this.websocketClockSubscription.unsubscribe();
 
-        // for now we only support the api data manager
 
-        if (project?.isLive) {
+        const isLiveProject = project?.isLive
+        if (isLiveProject) {
             this.websocketClockSubscription = this.webSocketDataConnection.data$.subscribe((data) => {
                 this.simulationTimeObservable.next(data.timestamp);
             });
@@ -107,12 +116,8 @@ export class PluginManager {
             }
         }
 
-
-
         this.loadedProject = project;
     }
-
-
 
 
     public restorePlugin(plugin: GridManagerItem): void {
@@ -183,6 +188,17 @@ export class PluginManager {
             getProjectInfo: () => this.loadedProject,
             getDataManager: () => this.dataManagers[pluginType],
             showToast: this.showToast,
+            savePluginState: (id: string, state: Record<string, any>) => {
+                const item = this.gridItemManager.getGridItems().find(i => i.id === id);
+                if (!item) {
+                    console.warn(`Plugin state update failed: no item found with id '${id}'`);
+                    return;
+                }
+
+                this.gridItemManager.updateItemById(id, {
+                    pluginState: { ...state },
+                });
+            }
         };
     }
 
@@ -190,6 +206,12 @@ export class PluginManager {
 }
 
 
-const pluginManager = new PluginManager(gridManager);
 // Export a function to get the singleton instance
-export default pluginManager;
+let instance: PluginManager | undefined;
+
+export const getPluginManager = (): PluginManager => {
+    if (!instance) {
+        instance = new PluginManager(getGridManager());
+    }
+    return instance;
+}

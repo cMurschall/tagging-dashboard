@@ -1,6 +1,35 @@
 import { Observable } from "../observable";
 import { GridManagerItem } from "./gridItemManager";
 
+
+export interface LayoutStorage {
+    load(): Promise<Record<string, StoredLayoutItem[]>>;
+    save(layouts: Record<string, StoredLayoutItem[]>): Promise<void>;
+}
+
+export class LocalStorageLayoutStorage implements LayoutStorage {
+    constructor(private key: string = 'grid-layouts', private storage: Storage = localStorage) { }
+
+    async load(): Promise<Record<string, StoredLayoutItem[]>> {
+        try {
+            const item = this.storage.getItem(this.key);
+            return item ? JSON.parse(item) : {};
+        } catch (e) {
+            console.error("Failed to load layouts:", e);
+            return {};
+        }
+    }
+
+    async save(layouts: Record<string, StoredLayoutItem[]>): Promise<void> {
+        try {
+            const str = JSON.stringify(layouts);
+            this.storage.setItem(this.key, str);
+        } catch (e) {
+            console.error("Failed to save layouts:", e);
+        }
+    }
+}
+
 export interface LayoutManagerConfig {
     storageKey?: string;
     storage?: Storage;
@@ -23,56 +52,25 @@ export interface StoredLayoutItem {
 export class LayoutManager {
 
     private _layouts = new Observable<Record<string, StoredLayoutItem[]>>({});
-    private storageKey: string;
-    private storage: Storage | null;
+    private storage: LayoutStorage;
 
-    constructor(config: LayoutManagerConfig = {}) {
-        this.storageKey = config.storageKey || 'grid-layouts';
-        this.storage = config.storage || (typeof localStorage !== 'undefined' ? localStorage : null);
+    constructor(storage: LayoutStorage) {
+        this.storage = storage;
         this.loadFromStorage();
     }
+    private async loadFromStorage() {
+        const layouts = await this.storage.load();
+        this._layouts.next(layouts);
+    }
 
-    private saveToStorage(): void {
-        if (this.storage) {
-            const currentValue = this._layouts.getValue();
-            if (currentValue) {
-                const simplifiedLayouts: Record<string, StoredLayoutItem[]> = {};
-                for (const layoutName in currentValue) {
-                    simplifiedLayouts[layoutName] = currentValue[layoutName].map(item => ({
-                        id: item.id,
-                        x: item.x,
-                        y: item.y,
-                        w: item.w,
-                        h: item.h,
-                        component: item.component,
-                        title: item.title,
-                        pluginState: item.pluginState,
-                    }));
-                }
-                console.log("Saving layouts to storage:", simplifiedLayouts); // Log the simplified structure
-                this.storage.setItem(this.storageKey, JSON.stringify(simplifiedLayouts));
-            }
-        }
+    private async saveToStorage() {
+        await this.storage.save(this._layouts.getValue() ?? {});
     }
 
 
-    private loadFromStorage(): void {
-        if (this.storage) {
-            const storedLayouts = this.storage.getItem(this.storageKey);
-            if (storedLayouts) {
-                try {
-                    const parsedLayouts: Record<string, StoredLayoutItem[]> = JSON.parse(storedLayouts);
-                    this._layouts.next(parsedLayouts);
-                } catch (error) {
-                    console.error("Error loading layouts from storage:", error);
-                    this._layouts.next({});
-                }
-            }
-        }
-    }
 
 
-    public saveLayout(name: string, items: GridManagerItem<Record<string, any>>[]): void {
+    public saveLayout(name: string, items: GridManagerItem[]): void {
         const simplifiedItems: StoredLayoutItem[] = items.map(item => ({
             id: item.id,
             x: item.x,
@@ -127,8 +125,20 @@ export class LayoutManager {
             console.error(`Error: Layout with name "${oldName}" not found.`);
         }
     }
+
+    public clearAllLayouts(): void {
+        this._layouts.next({});
+        this.saveToStorage();
+    }
 }
 
-const layoutManager = new LayoutManager();
 
-export default layoutManager;
+// Export a function to get the singleton instance
+let instance: LayoutManager | undefined;
+
+export const getLayoutManager = (): LayoutManager => {
+    if (!instance) {
+        instance = new LayoutManager(new LocalStorageLayoutStorage('grid-layouts', localStorage));
+    }
+    return instance;
+}

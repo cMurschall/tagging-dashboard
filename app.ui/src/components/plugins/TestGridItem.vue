@@ -15,7 +15,6 @@
 <script lang="ts">
 import { defineComponent, inject, PropType } from 'vue';
 import { useVideoControl } from '../../composables/useVideoControl';
-import gridManager from '../../managers/gridItemManager';
 import { SetCardTitleFn } from '../../plugins/AppPlugins';
 import { PluginServices } from '../../managers/pluginManager';
 
@@ -54,7 +53,7 @@ export default defineComponent({
     }
   },
   setup() {
-    const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => {});
+    const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => { });
     const pluginService = inject<PluginServices>('pluginService');
     if (!pluginService) {
       throw new Error('Plugin service not found!');
@@ -63,7 +62,8 @@ export default defineComponent({
 
     return {
       updateTitle: () => setCardTitle('Updated Title from Child ' + Math.random().toFixed(2)),
-      seekTo
+      seekTo,
+      pluginService
     };
   },
   mounted() {
@@ -80,9 +80,7 @@ export default defineComponent({
   watch: {
     pluginState: {
       handler(newValue) {
-        gridManager.updateItemById(this.id, {
-          pluginState: { ...newValue }
-        });
+        this.pluginService.savePluginState(this.id, newValue);
       },
       deep: true
     }

@@ -99,7 +99,7 @@ export class ApiDataManager extends DataManager {
         return;
       }
 
-      
+
       const nearest = this.timestampLookup.lookup(timestamp);
       if (!nearest) {
         // console.warn('No nearest data point found for timestamp:', timestamp);
@@ -119,9 +119,12 @@ export class ApiDataManager extends DataManager {
   }
 
   getColumnNames(): ColumnDefinition[] {
+
     if (this.timeseriesData.timestamps.length === 0) {
       return [];
     }
+
+    
     const definitions: ColumnDefinition[] = [];
 
     // Scalars

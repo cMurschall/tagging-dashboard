@@ -248,6 +248,8 @@ export class TimestampLookup {
     private getDataPoint(index: number): TimeseriesDataPoint {
         const timestamp = this.table.timestamps[index];
         const values: Record<string, number | number[]> = {};
+
+        
         // Scalars
         for (const key in this.table.scalarValues) {
             values[key] = this.table.scalarValues[key][index];

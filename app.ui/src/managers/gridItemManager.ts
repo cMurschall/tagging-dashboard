@@ -157,7 +157,11 @@ export class GridManager {
     }
 }
 
+let instance: GridManager | undefined;
 
-const gridManager = new GridManager();
-
-export default gridManager;
+export const getGridManager = (): GridManager => {
+    if (!instance) {
+        instance = new GridManager();
+    }
+    return instance;
+}

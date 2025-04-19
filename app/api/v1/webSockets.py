@@ -39,6 +39,6 @@ class WebSockets:
                         # Broadcast to other connected clients
                         await connection_manager.broadcast_json({
                             "timestamp": data["timestamp"]
-                        })
+                        }, sender=websocket)
             except WebSocketDisconnect:
                 connection_manager.disconnect(websocket)

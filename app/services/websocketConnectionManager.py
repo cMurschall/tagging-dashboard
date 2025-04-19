@@ -18,9 +18,10 @@ class WebsocketConnectionManager:
         for connection in self.active_connections:
             await connection.send_text(message)
 
-    async def broadcast_json(self, message: Any):
+    async def broadcast_json(self, message: dict, sender: WebSocket = None):
         for connection in self.active_connections:
-            await connection.send_json(message)
+            if connection != sender:
+                await connection.send_json(message)
 
     async def broadcast_bytes(self, message: bytes):
         for connection in self.active_connections:

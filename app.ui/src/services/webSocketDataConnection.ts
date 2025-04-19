@@ -1,6 +1,7 @@
 import { TimeseriesDataPoint } from "../managers/dataManager";
+import { BaseWebSocketConnection } from "./baseWebSocketConnection";
 
-import { BaseWebSocketConnection } from "./BaseWebSocketConnection";
+
 
 export class WebSocketDataConnection extends BaseWebSocketConnection<TimeseriesDataPoint>  {
   protected handleMessage(data: string): void {
@@ -20,7 +21,3 @@ export class WebSocketDataConnection extends BaseWebSocketConnection<TimeseriesD
   }
 
 }
-
-
-
-

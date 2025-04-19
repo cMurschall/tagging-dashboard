@@ -4,7 +4,7 @@ import { Observable } from "./../observable";
 import { WebSocketDataConnection } from "../services/webSocketDataConnection";
 import { ApiDataManager } from "./apiDataManager";
 import { TimestampLookup } from "../services/timestampLookup";
-import { BufferedTimeseriesTableWriter } from "./BufferedTimeseriesTableWriter";
+import { BufferedTimeseriesTableWriter } from "./bufferedTimeseriesTableWriter";
 
 export class WebsocketDataManager extends DataManager {
 

@@ -44,7 +44,7 @@ export default defineComponent({
                 return;
             }
 
-            // 1) Initialize GridStack on the container
+            // Initialize GridStack on the container
             grid = GridStack.init(
                 {
                     float: true,
@@ -54,25 +54,7 @@ export default defineComponent({
                 },
                 gridContainer.value as HTMLElement
             );
-            // Function to find the grid item element from an event target
-            const getGridItemElement = (target: EventTarget | null): GridItemHTMLElement | null => {
-                if (!(target instanceof Element)) {
-                    return null;
-                }
-                // Use closest to find the parent grid item element
-                // Use type assertion or type guarding if needed, but closest often returns Element | null
-                const item = target.closest<HTMLElement>('.grid-stack-item');
-
-                // Verify it's the correct type expected by GridStack (runtime check)
-                // GridItemHTMLElement is HTMLElement + gridstackNode property
-                if (item && typeof (item as any).gridstackNode !== 'undefined') {
-                    return item as GridItemHTMLElement;
-                }
-                return null;
-            };
-
-
-
+    
 
             grid.on('resizestop', (event: Event, el: GridItemHTMLElement) => {
                 console.log('Resizestop:', { event, node: el.gridstackNode });
@@ -99,7 +81,7 @@ export default defineComponent({
             });
 
 
-            // 2) GridStack's render callback:
+            // GridStack's render callback:
             GridStack.renderCB = (contentEl: HTMLElement, w: GridStackNode) => {
                 w.noMove = true; // Prevent moving the item with drag and drop
 
@@ -175,7 +157,9 @@ export default defineComponent({
                 shadowDom.set(widget.id, { app: subApp, vm });
             };
 
-            // 4) Load the store items initially
+
+
+            // Load the store items initially
             grid.load(getGridManager().getGridItems());
 
         });

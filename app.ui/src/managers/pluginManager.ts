@@ -14,7 +14,7 @@ import { ApiDataManager } from "./apiDataManager";
 import { ShowToastFn } from "../plugins/AppPlugins";
 import { WebSocketDataConnection } from "../services/webSocketDataConnection";
 import { WebsocketDataManager } from "./websocketDataManager";
-import { WebSocketSimulationTimeConnection } from "../services/WebSocketSimulationTimeConnection";
+import { WebSocketSimulationTimeConnection } from "../services/webSocketSimulationTimeConnection";
 
 
 export interface PluginServices {
@@ -201,8 +201,6 @@ export class PluginManager {
             }
         };
     }
-
-
 }
 
 

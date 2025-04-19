@@ -1,10 +1,10 @@
 import { TimeseriesDataPoint } from "../managers/dataManager";
-import { BaseWebSocketConnection } from "./BaseWebSocketConnection";
+import { BaseWebSocketConnection } from "./baseWebSocketConnection";
 
 
 export class WebSocketSimulationTimeConnection extends BaseWebSocketConnection<TimeseriesDataPoint> {
 
-  
+
   protected handleMessage(data: string): void {
     // If simulation time doesn't emit meaningful data, you might ignore this
   }

@@ -141,7 +141,7 @@ const projectStore = useProjectStore()
 
 
 // Create a factory function to provide default values
-function createDefaultProjectPayload(): CreateProjectPayload {
+const createDefaultProjectPayload = (): CreateProjectPayload => {
     return {
         csvFileName: '',
         videoFileName: '',

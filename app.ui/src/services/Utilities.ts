@@ -47,7 +47,7 @@ export type { TestDriveProjectInfoOutput as TestDriveProjectInfo, CreateProjectP
 
 
 
-export function throttle<T extends (...args: any[]) => void>(func: T, limit: number): T {
+export const throttle = <T extends (...args: any[]) => void>(func: T, limit: number): T => {
   let lastCall = 0;
   return function (this: any, ...args: any[]) {
     const now = Date.now();
@@ -218,7 +218,7 @@ export interface TimestampStatistics {
 }
 
 
-export function getTimestampStatistics(table: TimeseriesTable): TimestampStatistics {
+export const getTimestampStatistics = (table: TimeseriesTable): TimestampStatistics => {
   const ts = table.timestamps;
   const count = ts.length;
 

@@ -281,7 +281,7 @@ const getColorWithAlpha = (hex: string, alpha = 0.3) => {
 
 
 // The core rendering logic for the custom series
-function renderTagItem(params: CustomSeriesRenderItemParams, api: CustomSeriesRenderItemAPI): CustomSeriesRenderItemReturn {
+const renderTagItem = (params: CustomSeriesRenderItemParams, api: CustomSeriesRenderItemAPI): CustomSeriesRenderItemReturn => {
 
     const startTime = api.value(0) as number;
     const endTime = api.value(1) as number;

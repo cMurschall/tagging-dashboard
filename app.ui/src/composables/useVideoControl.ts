@@ -13,11 +13,11 @@ const seekToImpl = ref<(time: number) => void>(() => {
 })
 
 // This function never changes, but it delegates to whatever is in `seekToImpl.value`
-function seekTo(time: number) {
+const seekTo = (time: number) => {
   seekToImpl.value(time)
 }
 
-export function useVideoControl() {
+export const useVideoControl = () => {
   return {
     videoRef,
     seekTo,

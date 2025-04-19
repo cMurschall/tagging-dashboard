@@ -106,7 +106,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, inject, watch } from 'vue';
 import { TimeseriesDataPoint } from '../../managers/dataManager';
-import { Subscription } from '../../observable';
+import { EmptySubscription, Subscription } from '../../observable';
 import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue } from "../../services/utilities";
 import { BCol, BFormSelect, BRow, BButton, BFormInput, BTr, BTd, BTh, BTableSimple, BThead, BTbody } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
@@ -156,13 +156,13 @@ interface BFormSelectColumnInfo {
 
 const pluginService = inject<PluginServices>('pluginService');
 if (!pluginService) {
-  throw new Error('Plugin service not found!');
+    throw new Error('Plugin service not found!');
 }
 
 
 
 
-let subscription: Subscription | null = null;
+let subscription: Subscription = EmptySubscription;
 
 
 const availableColumns = ref<BFormSelectColumnInfo[]>([]);
@@ -179,14 +179,38 @@ const handleRemoveRow = (index: number) => {
     pluginState.value.columnDataInfos.splice(index, 1);
 };
 
-const formatValue = (value: number, key: string): string => {
+const formatValue = (value: number | number[], key: string): string => {
     const columnInfo = pluginState.value.columnDataInfos.find((x) => x.selectedColumn?.name === key);
     if (columnInfo) {
-        if (columnInfo.valueConverter) {
-            value = transformMathJsValue(value, columnInfo.valueConverter);
+
+        // Scalar formatting
+        if (typeof value === 'number') {
+            if (columnInfo?.valueConverter) {
+                value = transformMathJsValue(value, columnInfo.valueConverter);
+            }
+            if (columnInfo?.valueFormat) {
+                return formatWithTemplate(value, columnInfo.valueFormat);
+            }
+            return String(value);
         }
-        if (columnInfo.valueFormat) {
-            return formatWithTemplate(value, columnInfo.valueFormat);
+
+        // Array formatting
+        if (Array.isArray(value)) {
+            const formatted = value.map((v) => {
+                let result: number | string = v;
+
+                if (columnInfo?.valueConverter) {
+                    result = transformMathJsValue(v, columnInfo.valueConverter);
+                }
+
+                if (columnInfo?.valueFormat) {
+                    return formatWithTemplate(result, columnInfo.valueFormat);
+                }
+
+                return String(result);
+            });
+
+            return `[${formatted.join(', ')}]`;
         }
     }
     return String(value);
@@ -220,7 +244,7 @@ onUnmounted(() => {
 watch(pluginState, async (newValue) => {
 
     // if new columns are added, load them
-    const actualColumnNames = pluginService.getDataManager().getColumnNames() as string[];
+    const actualColumnNames = pluginService.getDataManager().getColumnNames().map(x => x.name);
     const newColumnNames = newValue.columnDataInfos.map((x) => x.selectedColumn?.name).filter((x) => x !== undefined) as string[];
     // check if the values are not the same
     const areArraysSame = areArraysSameUnordered(actualColumnNames, newColumnNames);
@@ -244,9 +268,10 @@ const loadColumns = async () => {
     if (response) {
 
         const numericColumns = response.columns.filter((c: any) => c.type.includes('int') || c.type.includes('float'));
+        const arrayColumns = response.columns.filter((c: any) => c.type.includes('object') || c.type.includes('array'));
 
         // console.log('Numeric Columns loaded', numericColumns);
-        availableColumns.value = numericColumns.map(x => ({ text: x.name, value: x }));
+        availableColumns.value =  [...numericColumns, ...arrayColumns].map(x => ({ text: x.name, value: x }));
 
 
     }

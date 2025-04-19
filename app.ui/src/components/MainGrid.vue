@@ -101,6 +101,7 @@ export default defineComponent({
 
             // 2) GridStack's render callback:
             GridStack.renderCB = (contentEl: HTMLElement, w: GridStackNode) => {
+                w.noMove = true; // Prevent moving the item with drag and drop
 
                 const widget = w as GridManagerItem;
 
@@ -114,6 +115,7 @@ export default defineComponent({
                     contentEl.textContent = `Unknown component: ${compName}`;
                     return;
                 }
+
 
                 // Create a sub-app that wraps the child component in CardWrapper
                 const subApp = createApp({

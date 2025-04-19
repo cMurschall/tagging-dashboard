@@ -76,7 +76,7 @@ const dateTime = computed(() => {
 })
 
 const handleLoadProject = async () => {
-    if (!props.project.id) {
+    if (props.project.id == null) {
         console.error('Project ID is missing')
         return
     }
@@ -95,7 +95,7 @@ const handleDeleteProject = async () => {
     const { id } = props.project;
     console.log('Deleting project:', id)
 
-    if (!id) {
+    if (id == null) {
         console.error('Project ID is missing')
         return
     }

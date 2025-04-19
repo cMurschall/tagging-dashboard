@@ -3,6 +3,9 @@ export interface Subscription {
   unsubscribe(): void;
 }
 
+export const EmptySubscription: Subscription = {
+  unsubscribe: () => {}
+};
 
 export class Observable<T> {
   private observers: ((value: T) => void)[] = [];

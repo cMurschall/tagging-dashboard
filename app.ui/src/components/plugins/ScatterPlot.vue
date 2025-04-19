@@ -59,7 +59,7 @@
 import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, computed, watch } from "vue";
 import { TimeseriesDataPoint, TimeseriesTable } from "../../managers/dataManager";
-import { Subscription } from "../../observable";
+import { EmptySubscription, Subscription } from "../../observable";
 import {
   safeFetch, PlayerApiClient as client, TimestampStatistics,
   getTimestampStatistics, clamp, transformMathJsValue,
@@ -166,7 +166,7 @@ const defaultExpressionHint = `Enter expression (use '${IDENTITY_EXPRESSION}')`;
 
 
 let currentTimestampStatistics: TimestampStatistics | null = null;
-let subscription: Subscription | null = null;
+let subscription: Subscription = EmptySubscription;
 
 
 interface BFormSelectColumnInfo {
@@ -303,7 +303,7 @@ const updateChartData = (table: TimeseriesTable) => {
   currentTimestampStatistics = getTimestampStatistics(table);
 
   // Check if the table and required column data exist
-  if (!table || !table.timestamps || !table.values) {
+  if (!table || !table.timestamps || !table.scalarValues) {
     console.warn("updateChartData called with invalid table data.");
     return;
   }
@@ -313,8 +313,8 @@ const updateChartData = (table: TimeseriesTable) => {
   const secondaryColName = pluginState.value?.selectedYColumnRight?.name;
 
 
-  const primaryValues = primaryColName ? table.values[primaryColName] : undefined;
-  const secondaryValues = secondaryColName ? table.values[secondaryColName] : undefined;
+  const primaryValues = primaryColName ? table.scalarValues[primaryColName] : undefined;
+  const secondaryValues = secondaryColName ? table.scalarValues[secondaryColName] : undefined;
 
   // Initialize data arrays for ECharts series
   const primaryData: Float64Array = new Float64Array(table.timestamps.length * 2);
@@ -494,7 +494,10 @@ onMounted(async () => {
         ? pluginState.value.yAxisExpressionLeft
         : pluginState.value.yAxisExpressionRight;
 
-      yValue = measurement.values[columnName] ?? 0;
+      const v = measurement.values[columnName] ?? 0;
+      if (typeof v === 'number') {
+        yValue = v
+      }
 
       if (expression) {
         yValue = transformMathJsValue(yValue, expression);
@@ -522,7 +525,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
   subscription?.unsubscribe();
-
 });
 
 const loadColumns = async () => {

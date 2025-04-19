@@ -155,7 +155,7 @@ import {
 import { useVideoControl } from '../../composables/useVideoControl';
 import { Tag, TagCategory } from '../../../services/restclient';
 import { safeFetch, TagApiClient as client } from '../../services/utilities';
-import { Observable, Subscription } from '../../observable';
+import { EmptySubscription, Observable, Subscription } from '../../observable';
 import { SetCardTitleFn, ShowToastFn } from '../../plugins/AppPlugins';
 import { PluginServices } from '../../managers/pluginManager';
 
@@ -977,7 +977,7 @@ const handleKeydown = (event: KeyboardEvent) => {
     }
 }
 
-let subscription: Subscription | null = null;
+let subscription: Subscription = EmptySubscription;
 
 const currentSimulationTime = ref(0);
 

@@ -1,6 +1,6 @@
 
-import { Observable } from "../observable";
-import { TestDriveProjectInfo } from "../services/utilities";
+import { EmptySubscription, Observable, Subscription } from "../observable";
+import { TestDriveProjectInfo, WebSocketBasePath } from "../services/utilities";
 import { DataManager, EmptyDataManager } from "./dataManager";
 import gridManager, { GridManager, GridManagerItem } from './gridItemManager';
 
@@ -12,6 +12,8 @@ import TestGridItem from './../components/plugins/TestGridItem.vue';
 import TagTimeline from './../components/plugins/TagTimeline.vue';
 import { ApiDataManager } from "./apiDataManager";
 import { ShowToastFn } from "../plugins/AppPlugins";
+import { WebSocketDataConnection } from "../services/webSocketDataConnection";
+import { WebsocketDataManager } from "./websocketDataManager";
 
 
 export interface PluginServices {
@@ -28,6 +30,8 @@ export type PluginType = 'ListView' | 'VideoPlayer' | 'Gauge' | 'ScatterPlot' | 
 export class PluginManager {
 
     private showToast: ShowToastFn = () => '';
+
+    private webSocketDataConnection: WebSocketDataConnection;
 
     private gridItemManager: GridManager;
 
@@ -53,6 +57,7 @@ export class PluginManager {
 
 
     private loadedProject: TestDriveProjectInfo | undefined = undefined;
+    private websocketClockSubscription: Subscription = EmptySubscription
 
 
     // constructor
@@ -60,6 +65,8 @@ export class PluginManager {
         this.gridItemManager = gridItemManager;
 
         this.registerComponents();
+
+        this.webSocketDataConnection = new WebSocketDataConnection(WebSocketBasePath + '/data');
     }
 
 
@@ -78,10 +85,19 @@ export class PluginManager {
             }
         }
 
+        this.websocketClockSubscription.unsubscribe();
+
         // for now we only support the api data manager
 
         if (project?.isLive) {
-
+            this.websocketClockSubscription = this.webSocketDataConnection.data$.subscribe((data) => {
+                this.simulationTimeObservable.next(data.timestamp);
+            });
+            for (const key in this.dataManagers) {
+                const dataManager = new WebsocketDataManager(this.webSocketDataConnection)
+                dataManager.subscribeToTimestamp(this.simulationTimeObservable);
+                this.dataManagers[key as PluginType] = dataManager;
+            }
         }
         else {
             for (const key in this.dataManagers) {

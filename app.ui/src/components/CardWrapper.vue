@@ -105,8 +105,10 @@ export default defineComponent({
       emit('move-lock-changed', isMoveLocked.value);
     };
 
-    return { title: cardTitle, showMenu, isMoveLocked, handleToggleMoveLock};
-  },
+
+
+    return { title: cardTitle, showMenu, isMoveLocked, handleToggleMoveLock };
+  }
 });
 </script>
 

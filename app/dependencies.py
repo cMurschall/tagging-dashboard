@@ -4,15 +4,20 @@ from .services.testDriveTagService import TestDriveTagService
 from .services.websocketConnectionManager import WebsocketConnectionManager
 from .settings import Settings
 
-connection_manager_instance = WebsocketConnectionManager()
+connection_manager_data_instance = WebsocketConnectionManager()
+connection_manager_simulation_time_instance = WebsocketConnectionManager()
 testdata_manager = TestDriveDataService()
 tagdata_manager = TestDriveTagService()
 
 settings = Settings()
 
 
-def get_connection_manager() -> WebsocketConnectionManager:
-    return connection_manager_instance
+def get_connection_manager_data() -> WebsocketConnectionManager:
+    return connection_manager_data_instance
+
+
+def get_connection_manager_simulation_time() -> WebsocketConnectionManager:
+    return connection_manager_simulation_time_instance
 
 
 def get_testdata_manager() -> TestDriveDataService:

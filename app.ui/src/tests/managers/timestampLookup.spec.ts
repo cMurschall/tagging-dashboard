@@ -16,7 +16,7 @@ describe('TimestampLookup', () => {
   const table = toDenseTable(dataPoints);
 
   it('should return null if the table is empty', () => {
-    const emptyTable: TimeseriesTable = { timestamps: new Float64Array([]), values: {} };
+    const emptyTable: TimeseriesTable = { timestamps: new Float64Array([]), scalarValues: {}, vectorValues: {} };
     const lookup = new TimestampLookup(emptyTable);
     expect(lookup.lookup(1500)).toBeNull();
   });

@@ -52,7 +52,7 @@ export class RandomDataManager extends DataManager {
             }
         }
 
-        return { timestamps, values };
+        return { timestamps, scalarValues: values };
     }
 
 

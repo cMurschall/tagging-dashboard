@@ -5,10 +5,11 @@ import logging
 from dataclasses import asdict
 from threading import Event
 
+from pyarrow import timestamp
+
 from ..bufferedCsvWriter import BufferedCsvWriter
-# from ..dataSources.pantheraDataSource import start_process
 from ..dataSources.simulatedPantheraDataSource import start_process
-from ...dependencies import get_testdata_manager, get_connection_manager
+from ...dependencies import get_testdata_manager, get_connection_manager_data, get_connection_manager_simulation_time
 from ...models.liveDataRow import LiveDataRow
 
 logger = logging.getLogger('uvicorn.error')
@@ -31,7 +32,13 @@ def process_live_data(stop_event: Event, loop: asyncio.AbstractEventLoop):
                     logger.info("LiveDataArrived")
                     # send data to websocket
                     asyncio.run_coroutine_threadsafe(
-                        get_connection_manager().broadcast_json(asdict(data)),
+                        get_connection_manager_data().broadcast_json(asdict(data)),
+                        loop
+                    )
+                    asyncio.run_coroutine_threadsafe(
+                        get_connection_manager_simulation_time().broadcast_json({
+                            "timestamp": data.timestamp
+                        }),
                         loop
                     )
                     # Queue for writing

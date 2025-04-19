@@ -89,7 +89,7 @@ export class TimestampLookup {
         if (this.rowCount === 0) {
             return null;
         }
-        if(this.rowCount === 1) {
+        if (this.rowCount === 1) {
             return this.getDataPoint(0); // Return the only data point available
         }
         // If data wasn't sorted, return null or handle as an error state
@@ -222,7 +222,7 @@ export class TimestampLookup {
                 // console.log(`Binary search found exact match at index ${mid} after ${counter} iterations.`);
                 return mid;
             }
-        
+
 
             if (midTs < targetTs) {
                 left = mid + 1;
@@ -247,9 +247,15 @@ export class TimestampLookup {
   */
     private getDataPoint(index: number): TimeseriesDataPoint {
         const timestamp = this.table.timestamps[index];
-        const values: Record<string, number> = {};
-        for (const key in this.table.values) {
-            values[key] = this.table.values[key][index];
+        const values: Record<string, number | number[]> = {};
+        // Scalars
+        for (const key in this.table.scalarValues) {
+            values[key] = this.table.scalarValues[key][index];
+        }
+
+        // Vectors: collect all components into an array
+        for (const [key, components] of Object.entries(this.table.vectorValues)) {
+            values[key] = components.map((arr) => arr[index]);
         }
         return { timestamp, values };
     }

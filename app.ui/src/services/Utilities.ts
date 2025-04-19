@@ -19,8 +19,10 @@ export async function safeFetch<T>(fetchFunction: () => Promise<T>): Promise<[Er
 }
 
 export const IDENTITY_EXPRESSION = 'value';
+
 export const BasePath = 'http://localhost:8888';
 export const ApiPath = BasePath + '/api/v1';
+export const WebSocketBasePath = "ws://127.0.0.1:8888/api/v1/ws"
 
 
 export const ProjectApiClient = new RestClient.ProjectEndpointApi(new RestClient.Configuration({
@@ -186,14 +188,19 @@ export const toDenseTable = (dataPoints: TimeseriesDataPoint[]): TimeseriesTable
       if (!values[key]) {
         values[key] = [];
       }
-      values[key].push(dp.values[key]);
+      if (typeof dp.values[key] === 'number') {
+        values[key].push(dp.values[key]);
+      }
+      if (Array.isArray(dp.values[key])) {
+        values[key].push(...dp.values[key]);
+      }
     }
   }
   const denseValues: Record<string, Float64Array> = {};
   for (const key in values) {
     denseValues[key] = new Float64Array(values[key]);
   }
-  return { timestamps, values: denseValues };
+  return { timestamps, scalarValues: denseValues, vectorValues: {} };
 }
 
 

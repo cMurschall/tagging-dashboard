@@ -80,7 +80,7 @@ import { use } from "echarts/core";
 import { GaugeChart } from "echarts/charts";
 import { SVGRenderer } from "echarts/renderers";
 import { TimeseriesDataPoint } from "../../managers/dataManager";
-import { Subscription } from "../../observable";
+import { EmptySubscription, Subscription } from "../../observable";
 import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue, IDENTITY_EXPRESSION } from "../../services/utilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
@@ -208,7 +208,7 @@ const availableColumns = ref<BFormSelectColumnInfo[]>([]);
 
 
 let resizeObserver: ResizeObserver | null = null;
-let subscription: Subscription | undefined;
+let subscription: Subscription = EmptySubscription;
 
 
 const filteredColumns = computed(() => {
@@ -282,7 +282,7 @@ onMounted(async () => {
   }
 
   subscription = pluginService.getDataManager().measurement$.subscribe((measurements: TimeseriesDataPoint) => {
-    console.log('Received measurements:', measurements);
+    // console.log('Received measurements:', measurements);
     // check if measurements has our selected column name
     if (!pluginState.value.selectedColumn || !measurements.values[pluginState.value.selectedColumn.name]) {
       return;
@@ -290,6 +290,12 @@ onMounted(async () => {
     // Use the gauge data.
 
     let x = measurements.values[pluginState.value.selectedColumn?.name ?? ''];
+    // check if the value is a number and not an array
+    if (typeof x !== 'number') {
+      console.warn('Value is not a number:', x);
+      return;
+    }
+
     if (pluginState.value.gaugeConverter) {
       x = transformMathJsValue(x, pluginState.value.gaugeConverter);
     }

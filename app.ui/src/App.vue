@@ -141,7 +141,7 @@ import TagTimeline from './components/plugins/TagTimeline.vue';
 
 import gridItemManager, { GridManagerItem } from './managers/gridItemManager';
 import layoutManager from './managers/layoutManager';
-import { Subscription } from './observable';
+import { EmptySubscription, Subscription } from './observable';
 import { BToastOrchestrator, useToastController } from 'bootstrap-vue-next';
 import pluginManager from './managers/pluginManager';
 import { TestDriveProjectInfo } from './services/utilities';
@@ -168,7 +168,7 @@ gridItemManager.setComponentMap({
 
 const availableLayouts = ref<string[]>([]);
 const layoutsData = ref<Record<string, GridManagerItem[]>>({});
-let subscription: Subscription | null = null;
+let subscription: Subscription = EmptySubscription;
 
 watch(() => projectStore.loadedProject, (newProject) => {
     if (!newProject) {
@@ -196,9 +196,7 @@ onMounted(async () => {
 
 
 onUnmounted(() => {
-    if (subscription) {
-        subscription.unsubscribe();
-    }
+    subscription.unsubscribe();
 });
 
 

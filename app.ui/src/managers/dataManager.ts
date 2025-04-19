@@ -2,13 +2,23 @@ import { Observable } from "../observable";
 
 export interface TimeseriesDataPoint {
   timestamp: number;
-  values: Record<string, number>;
+  values: Record<string, number | number[]>;
 }
 
 export interface TimeseriesTable {
   timestamps: Float64Array;
-  values: Record<string, Float64Array>;
+
+  scalarValues: Record<string, Float64Array>;
+  vectorValues: Record<string, Float64Array[]>; // each index = 1 timestep
 }
+
+
+export interface ColumnDefinition {
+  name: string;         // e.g. "car0_rpm" or "vehicle_pos"
+  type: "scalar" | "vector";
+  dimension: number;    // 1 for scalar, >1 for vectors
+}
+
 
 export abstract class DataManager {
 
@@ -28,7 +38,7 @@ export abstract class DataManager {
    * Returns the names of all measurements.
    * Example: ['car0_speed', 'car0_rpm']
    */
-  abstract getColumnNames(): string[]
+  abstract getColumnNames(): ColumnDefinition[]
 
   /**
    * User defines which measurements they're interested in.
@@ -46,9 +56,9 @@ export abstract class DataManager {
 export class EmptyDataManager extends DataManager {
   measurement$ = new Observable<TimeseriesDataPoint>();
   getAllMeasurements(): TimeseriesTable {
-    return { timestamps: new Float64Array(), values: {} };
+    return { timestamps: new Float64Array(), scalarValues: {}, vectorValues: {} };
   }
-  getColumnNames(): string[] {
+  getColumnNames(): ColumnDefinition[] {
     return [];
   }
   initialize(_measurementKeys: string[]): Promise<void> {
@@ -57,4 +67,7 @@ export class EmptyDataManager extends DataManager {
   subscribeToTimestamp(_ts$: Observable<number>): void {
   }
 }
+
+
+
 

@@ -86,7 +86,7 @@
 import { onMounted, ref } from 'vue'
 
 import { useProjectStore } from './../../stores/projectStore';
-import { Observable } from '../../observable';
+import { EmptySubscription, Observable, Subscription } from '../../observable';
 import { ApiDataManager } from './../../managers/apiDataManager';
 import gridItemManager from './../../managers/gridItemManager';
 import layoutManager, { StoredLayoutItem } from './../../managers/layoutManager';
@@ -114,7 +114,7 @@ const showRenameLayoutModal = ref(false);
 
 
 const layoutsData = ref<Record<string, StoredLayoutItem[]>>({});
-let subscription: { unsubscribe: () => void } | null = null;
+let subscription: Subscription = EmptySubscription;
 
 
 const handleAddTagLine = () => {

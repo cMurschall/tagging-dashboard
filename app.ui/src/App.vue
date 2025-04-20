@@ -144,7 +144,7 @@ import {getLayoutManager} from './managers/layoutManager';
 import { EmptySubscription, Subscription } from './observable';
 import { BToastOrchestrator, useToastController } from 'bootstrap-vue-next';
 import { getPluginManager } from './managers/pluginManager';
-import { TestDriveProjectInfo } from './services/utilities';
+import { TestDriveProjectInfo } from './services/Tutilities';
 
 
 const { show: showToast } = useToastController();

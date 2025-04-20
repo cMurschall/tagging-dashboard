@@ -30,7 +30,7 @@
 import { computed } from 'vue'
 import { useProjectStore } from './../stores/projectStore';
 
-import { safeFetch, ProjectApiClient as client, TestDriveProjectInfo } from '../services/utilities'
+import { safeFetch, ProjectApiClient as client, TestDriveProjectInfo } from '../services/Tutilities'
 import { useToastController } from 'bootstrap-vue-next';
 
 const { show: showToast } = useToastController();

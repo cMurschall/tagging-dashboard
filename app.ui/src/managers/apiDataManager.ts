@@ -1,7 +1,7 @@
 // ApiDataManager.ts
 import { ColumnDefinition, DataManager, TimeseriesDataPoint, TimeseriesTable } from "./dataManager";
 import { Observable } from "./../observable";
-import { safeFetch, PlayerApiClient as client } from "../services/utilities";
+import { safeFetch, PlayerApiClient as client } from "../services/Tutilities";
 import { TimestampLookup } from "../services/timestampLookup";
 
 
@@ -124,7 +124,7 @@ export class ApiDataManager extends DataManager {
       return [];
     }
 
-    
+
     const definitions: ColumnDefinition[] = [];
 
     // Scalars

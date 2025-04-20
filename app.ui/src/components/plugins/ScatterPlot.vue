@@ -64,7 +64,7 @@ import {
   safeFetch, PlayerApiClient as client, TimestampStatistics,
   getTimestampStatistics, clamp, transformMathJsValue,
   IDENTITY_EXPRESSION
-} from "../../services/utilities";
+} from "../../services/Tutilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import { useVideoControl } from './../../composables/useVideoControl';
@@ -188,10 +188,8 @@ const filteredColumns = computed(() => {
 
 
 // --- ECharts Option ---
+
 const chartOption = ref<EChartsOption>({
-  // title: {
-  //   // text: "Chart Title",
-  // },
   legend: {
     orient: 'vertical',
     right: 10,
@@ -273,6 +271,16 @@ const chartOption = ref<EChartsOption>({
 });
 
 // --- Methods ---
+
+const getLeftSeries = () => {
+  const series = chartOption.value.series as SeriesOption[];
+  return series[0];
+};
+const getRightSeries = () => {
+  const series = chartOption.value.series as SeriesOption[];
+  return series[1];
+};
+
 const handleVChartClick = (params: ElementEvent) => {
 
   if (!params.target) {
@@ -337,62 +345,65 @@ const updateChartData = (table: TimeseriesTable) => {
 
   // Use a single loop to process both primary and secondary data
   for (let i = 0; i < len; i++) {
+
+    // add the x value to the data array
+    const xIndex = i * 2;
+    const YIndex = xIndex + 1;
     if (primaryValues) {
-      primaryData[i * 2] = table.timestamps[i];
+      primaryData[xIndex] = table.timestamps[i];
     }
     if (secondaryValues) {
-      secondaryData[i * 2] = table.timestamps[i];
+      secondaryData[xIndex] = table.timestamps[i];
     }
 
+    // add the y value to the data array
     if (primaryValues) {
       if (pluginState.value.yAxisExpressionLeft) {
-        primaryData[i * 2 + 1] = transformMathJsValue(primaryValues[i], pluginState.value.yAxisExpressionLeft);
+        primaryData[YIndex] = transformMathJsValue(primaryValues[i], pluginState.value.yAxisExpressionLeft);
       } else {
-        primaryData[i * 2 + 1] = primaryValues[i]
+        primaryData[YIndex] = primaryValues[i]
       }
-      // primaryData[i * 2 + 1] = primaryValues[i]
     }
     if (secondaryValues) {
       if (pluginState.value.yAxisExpressionRight) {
-        secondaryData[i * 2 + 1] = transformMathJsValue(secondaryValues[i], pluginState.value.yAxisExpressionRight);
+        secondaryData[YIndex] = transformMathJsValue(secondaryValues[i], pluginState.value.yAxisExpressionRight);
       } else {
-        secondaryData[i * 2 + 1] = secondaryValues[i]
+        secondaryData[YIndex] = secondaryValues[i]
       }
-      // secondaryData[i * 2 + 1] = secondaryValues[i]
     }
   }
 
 
   // Update the chart options with the processed data
-  const series = chartOption.value.series as SeriesOption[];
-  series[0].data = primaryValues ? primaryData : new Float64Array(0);
-  series[1].data = secondaryValues ? secondaryData : new Float64Array(0);
+  const leftData = primaryValues ? primaryData : new Float64Array(0);
+  const rightData = secondaryValues ? secondaryData : new Float64Array(0);
+  getLeftSeries().data = leftData;
+  getRightSeries().data = rightData;
+
 
 
   // Update axis names based on selections
-  series[0].name = primaryColName ? `${primaryColName}` : '';
-  series[1].name = secondaryColName ? `${secondaryColName}` : '';
+  getLeftSeries().name = primaryColName ? `${primaryColName}` : '';
+  getRightSeries().name = secondaryColName ? `${secondaryColName}` : '';
 
-  // Show legend only if a secondary column is selected and has data
-  // chartOption.value.legend.show = !!secondaryColName && secondaryData.length > 0;
 
   console.log(`Processed data points - Primary: ${primaryData ? primaryData.length : 0}, Secondary: ${secondaryData.length}`);
 };
 
 // --- Watchers ---
 watch(pluginState, async (newValue) => {
-  const series = chartOption.value.series as SeriesOption[];
 
   const hasLeftColumn = !!newValue.selectedYColumnLeft;
   const hasRightColumn = !!newValue.selectedYColumnRight;
 
 
-  if (!hasRightColumn) {
-    series[0].data = new Float64Array(0);
+  if (!hasLeftColumn) {
+    getLeftSeries().data = new Float64Array(0);
   }
   if (!hasRightColumn) {
-    series[1].data = new Float64Array(0);
+    getRightSeries().data = new Float64Array(0);
   }
+
   if (!hasLeftColumn && !hasRightColumn) {
     // clear hightlight point
     const zr = chartRef.value?.chart.getZr();
@@ -458,11 +469,54 @@ onMounted(async () => {
 
   // Subscribe to live data updates
   subscription = pluginService.getDataManager().measurement$.subscribe((measurement: TimeseriesDataPoint) => {
+    const vChartsRef = chartRef.value;
+    if (!vChartsRef) { return; }
+
+
+
+    const isLive = pluginService.getProjectInfo()?.isLive
+    if (isLive) {
+
+
+      const leftColumnName = pluginState.value?.selectedYColumnLeft?.name ?? '';
+      const rightColumnName = pluginState.value?.selectedYColumnRight?.name ?? '';
+      if (!leftColumnName && !rightColumnName) {
+        return; // No columns selected, ignore update
+      }
+
+      if (leftColumnName) {
+        const newPoint = [measurement.timestamp, measurement.values[leftColumnName]];
+        try {
+          chartRef.value?.chart.appendData([
+            {
+              seriesIndex: 0,
+              data: [newPoint],
+            },
+          ]);
+        } catch (error) {
+          console.error("Error appending data to chart:", error);
+        }
+      }
+      if (rightColumnName) {
+        const newPoint = [measurement.timestamp, measurement.values[rightColumnName]];
+        chartRef.value?.chart.appendData([
+          {
+            seriesIndex: 1,
+            data: [newPoint],
+          },
+        ]);
+      }
+
+
+      return; // Ignore updates if not live
+    }
+
 
     // check if new timestamp is in the range of the first series. if yes put point on the first series
     if (!currentTimestampStatistics || currentTimestampStatistics?.count == 0) {
       return;
     }
+
 
     const firstTimestamp = currentTimestampStatistics.min;
     const lastTimestamp = currentTimestampStatistics.max;
@@ -500,8 +554,6 @@ onMounted(async () => {
     }
 
 
-    const vChartsRef = chartRef.value;
-    if (!vChartsRef) { return; }
 
 
     const [x, y] = vChartsRef.convertToPixel({ seriesIndex: seriesIndex }, [xValue, yValue]);

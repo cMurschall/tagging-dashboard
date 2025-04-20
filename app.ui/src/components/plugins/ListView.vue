@@ -107,7 +107,7 @@
 import { onMounted, onUnmounted, ref, inject, watch } from 'vue';
 import { TimeseriesDataPoint } from '../../managers/dataManager';
 import { EmptySubscription, Subscription } from '../../observable';
-import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue } from "../../services/utilities";
+import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue } from "../../services/Tutilities";
 import { BCol, BFormSelect, BRow, BButton, BFormInput, BTr, BTd, BTh, BTableSimple, BThead, BTbody } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import { PluginServices } from '../../managers/pluginManager';

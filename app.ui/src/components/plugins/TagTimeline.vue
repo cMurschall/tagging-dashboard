@@ -155,7 +155,7 @@ import {
 
 import { useVideoControl } from '../../composables/useVideoControl';
 import { Tag, TagCategory } from '../../../services/restclient';
-import { safeFetch, TagApiClient as client } from '../../services/utilities';
+import { safeFetch, TagApiClient as client } from '../../services/Tutilities';
 import { EmptySubscription, Subscription } from '../../observable';
 import { PluginServices } from '../../managers/pluginManager';
 
@@ -557,7 +557,7 @@ const createChartOption = (): EChartsOption => {
                 markArea: {
                     silent: true,
                     itemStyle: {
-                        opacity: 0.3
+                        opacity: 0.2
                     },
 
                     data: [
@@ -585,7 +585,7 @@ const createChartOption = (): EChartsOption => {
                 markArea: {
                     silent: true,
                     itemStyle: {
-                        opacity: 0.3
+                        opacity: 0.2
                     },
 
                     data: [

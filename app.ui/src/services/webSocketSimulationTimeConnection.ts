@@ -1,5 +1,5 @@
 import { TimeseriesDataPoint } from "../managers/dataManager";
-import { BaseWebSocketConnection } from "./baseWebSocketConnection";
+import { BaseWebSocketConnection } from "./TbaseWebSocketConnection";
 
 
 export class WebSocketSimulationTimeConnection extends BaseWebSocketConnection<TimeseriesDataPoint> {

@@ -128,9 +128,9 @@ import { inject, ref } from 'vue'
 import { useProjectStore } from './../stores/projectStore';
 
 
-import { CreateProjectPayload } from '../services/utilities';
+import { CreateProjectPayload } from '../services/Tutilities';
 
-import { safeFetch, ProjectApiClient as client } from '../services/utilities';
+import { safeFetch, ProjectApiClient as client } from '../services/Tutilities';
 import { BFormGroup } from 'bootstrap-vue-next';
 import { useToastController } from 'bootstrap-vue-next';
 

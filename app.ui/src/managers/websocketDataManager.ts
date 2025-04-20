@@ -76,15 +76,16 @@ export class WebsocketDataManager extends DataManager {
   }
   async initialize(measurementKeys: string[]): Promise<void> {
     this.measurementKeys = measurementKeys;
-    const apiManager = new ApiDataManager();
-    await apiManager.initialize(measurementKeys)
+    // const apiManager = new ApiDataManager();
+    // await apiManager.initialize(measurementKeys)
 
-    this.timeseriesData = apiManager.getAllMeasurements();
+    // this.timeseriesData = apiManager.getAllMeasurements();
     this.timestampLookup = new TimestampLookup(this.timeseriesData);
   }
 
 
   subscribeToTimestamp(ts$: Observable<number>): void {
+    return;
     ts$.subscribe((timestamp: number) => {
 
       if (this.timeseriesData.timestamps.length === 0) {

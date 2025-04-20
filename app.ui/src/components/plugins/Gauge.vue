@@ -81,7 +81,7 @@ import { GaugeChart } from "echarts/charts";
 import { SVGRenderer } from "echarts/renderers";
 import { TimeseriesDataPoint } from "../../managers/dataManager";
 import { EmptySubscription, Subscription } from "../../observable";
-import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue, IDENTITY_EXPRESSION } from "../../services/utilities";
+import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue, IDENTITY_EXPRESSION } from "../../services/Tutilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import { SetCardTitleFn } from "../../plugins/AppPlugins";

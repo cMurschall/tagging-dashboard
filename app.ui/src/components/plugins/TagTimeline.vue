@@ -144,6 +144,7 @@ import {
     DataZoomComponent,
     MarkLineComponent,
     MarkPointComponent,
+    MarkAreaComponent,
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import type { EChartsOption, CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams, CustomSeriesRenderItemReturn } from 'echarts';
@@ -155,13 +156,13 @@ import {
 import { useVideoControl } from '../../composables/useVideoControl';
 import { Tag, TagCategory } from '../../../services/restclient';
 import { safeFetch, TagApiClient as client } from '../../services/utilities';
-import { EmptySubscription, Observable, Subscription } from '../../observable';
-import { SetCardTitleFn, ShowToastFn } from '../../plugins/AppPlugins';
+import { EmptySubscription, Subscription } from '../../observable';
 import { PluginServices } from '../../managers/pluginManager';
 
 
 
 echarts.use([
+    CanvasRenderer,
     CustomChart,
     LineChart,
     TooltipComponent,
@@ -169,7 +170,7 @@ echarts.use([
     DataZoomComponent,
     MarkLineComponent,
     MarkPointComponent,
-    CanvasRenderer,
+    MarkAreaComponent,
 ]);
 
 
@@ -177,7 +178,6 @@ const { seekTo } = useVideoControl();
 
 
 // Inject the function from the parent
-const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => { });
 const pluginService = inject<PluginServices>('pluginService');
 if (!pluginService) {
     throw new Error('Plugin service not found!');
@@ -392,15 +392,15 @@ const createChartOption = (): EChartsOption => {
         return {};
     }
 
-    const minDataTime = projectInfo.testDriveDataInfo?.dataSimulationTimeStartS ?? 0;
-    const maxDataTime = projectInfo.testDriveDataInfo?.dataSimulationTimeEndS ?? 0;
+    const minDataTime = projectInfo.testDriveDataInfo?.dataSimulationTimeStartS ?? Number.MAX_SAFE_INTEGER;
+    const maxDataTime = projectInfo.testDriveDataInfo?.dataSimulationTimeEndS ?? Number.MIN_SAFE_INTEGER;
 
-    const minVideoTime = projectInfo.testDriveVideoInfo?.videoSimulationTimeEndS ?? 0;
-    const maxVideoTime = projectInfo.testDriveVideoInfo?.videoSimulationTimeEndS ?? 0;
+    const minVideoTime = projectInfo.testDriveVideoInfo?.videoSimulationTimeStartS ?? Number.MAX_SAFE_INTEGER;
+    const maxVideoTime = projectInfo.testDriveVideoInfo?.videoSimulationTimeEndS ?? Number.MIN_SAFE_INTEGER;
 
 
-    let minLabelTime = labels[0]?.startTime ?? 0;
-    let maxLabelTime = labels[0]?.endTime ?? 0;
+    let minLabelTime = labels[0]?.startTime ?? Number.MAX_SAFE_INTEGER;
+    let maxLabelTime = labels[0]?.endTime ?? Number.MIN_SAFE_INTEGER;
 
     labels.forEach((label) => {
         minLabelTime = Math.min(minLabelTime, label.startTime);
@@ -457,6 +457,13 @@ const createChartOption = (): EChartsOption => {
             top: 0,
             containLabel: true, // Ensure category labels are within the grid
         },
+        // grid: {
+        //     left: 0,  // Keep space for Y-axis labels
+        //     right: 0, // Minimal space on the right
+        //     bottom: 0, // Make space for X-axis labels (adjust %)
+        //     top: 0,   // Minimal space at the top (adjust %)
+        //     containLabel: true,
+        // },
         xAxis: {
             type: 'value',
             min: minTime,
@@ -470,7 +477,7 @@ const createChartOption = (): EChartsOption => {
                     color: '#e0e0e0',
                     type: 'dashed',
                 },
-            },
+            }
         },
         yAxis: {
             type: 'category',
@@ -484,6 +491,7 @@ const createChartOption = (): EChartsOption => {
             },
         },
         series: [
+
             {
                 type: 'custom',
                 name: 'Labels',
@@ -539,6 +547,62 @@ const createChartOption = (): EChartsOption => {
                 lineStyle: { opacity: 0 },
                 tooltip: { show: false },
             },
+            {
+                id: 'LoggerOverlay',
+                type: 'line',
+                tooltip: { show: false },
+                silent: true,
+                data: [[null, null]],
+                xAxisIndex: 0,
+                markArea: {
+                    silent: true,
+                    itemStyle: {
+                        opacity: 0.3
+                    },
+
+                    data: [
+                        [
+                            {
+                                name: 'Data Simulation Time range',
+                                xAxis: minDataTime,
+                                y: '10%',
+                            },
+                            {
+                                xAxis: maxDataTime,
+                                y: '37%',
+                            },
+                        ]
+                    ]
+                }
+            },
+            {
+                id: 'VideoOverlay',
+                type: 'line',
+                tooltip: { show: false },
+                silent: true,
+                data: [[null, null]],
+                xAxisIndex: 0,
+                markArea: {
+                    silent: true,
+                    itemStyle: {
+                        opacity: 0.3
+                    },
+
+                    data: [
+                        [
+                            {
+                                name: 'Video Simulation Time range',
+                                xAxis: minVideoTime,
+                                y: '57%',
+                            },
+                            {
+                                xAxis: maxVideoTime,
+                                y: '84%',
+                            },
+                        ]
+                    ]
+                }
+            },
         ],
     };
 };
@@ -571,6 +635,9 @@ watch(allCategories, (newCategories, oldCategories) => {
     newCategories.forEach((category, index) => {
         toggleState.value[category] = false; // Initialize toggle state for each category
     });
+
+    // redraw the chart
+    chartOption.value = createChartOption();
 },);
 
 
@@ -800,7 +867,7 @@ const handleOnZrChartClick = (params: any) => {
         if (!chart) { return; }
 
 
-        const [x, _] = chart.convertFromPixel({ seriesIndex: 1 }, [params.offsetX, params.offsetY]);
+        const [x, _] = chart.convertFromPixel({ seriesIndex: 3 }, [params.offsetX, params.offsetY]);
         console.log("Clicked on chart:", x);
         seekTo(x); // Seek to the clicked time
     }

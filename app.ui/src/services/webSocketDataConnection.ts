@@ -1,5 +1,5 @@
 import { TimeseriesDataPoint } from "../managers/dataManager";
-import { BaseWebSocketConnection } from "./TbaseWebSocketConnection";
+import { BaseWebSocketConnection } from "./baseWebSocketConnection";
 
 
 

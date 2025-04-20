@@ -1,6 +1,6 @@
 // src/stores/appStore.ts
 import { defineStore } from 'pinia';
-import { safeFetch, ProjectApiClient as client, TestDriveProjectInfo } from '../services/Tutilities';
+import { safeFetch, ProjectApiClient as client, TestDriveProjectInfo } from '../services/utilities';
 
 
 export const useProjectStore = defineStore('project', {

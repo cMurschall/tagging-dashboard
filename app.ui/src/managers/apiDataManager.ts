@@ -1,7 +1,7 @@
 // ApiDataManager.ts
 import { ColumnDefinition, DataManager, TimeseriesDataPoint, TimeseriesTable } from "./dataManager";
 import { Observable } from "./../observable";
-import { safeFetch, PlayerApiClient as client } from "../services/Tutilities";
+import { safeFetch, PlayerApiClient as client } from "../services/utilities";
 import { TimestampLookup } from "../services/timestampLookup";
 
 

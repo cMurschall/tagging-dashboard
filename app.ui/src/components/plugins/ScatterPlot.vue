@@ -64,7 +64,7 @@ import {
   safeFetch, PlayerApiClient as client, TimestampStatistics,
   getTimestampStatistics, clamp, transformMathJsValue,
   IDENTITY_EXPRESSION
-} from "../../services/Tutilities";
+} from "../../services/utilities";
 import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import { useVideoControl } from './../../composables/useVideoControl';

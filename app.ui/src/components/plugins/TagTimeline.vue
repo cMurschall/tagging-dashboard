@@ -155,7 +155,7 @@ import {
 
 import { useVideoControl } from '../../composables/useVideoControl';
 import { Tag, TagCategory } from '../../../services/restclient';
-import { safeFetch, TagApiClient as client } from '../../services/Tutilities';
+import { safeFetch, TagApiClient as client } from '../../services/utilities';
 import { EmptySubscription, Subscription } from '../../observable';
 import { PluginServices } from '../../managers/pluginManager';
 

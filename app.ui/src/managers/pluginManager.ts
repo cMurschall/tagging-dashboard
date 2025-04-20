@@ -1,6 +1,6 @@
 
 import { EmptySubscription, Observable, Subscription } from "../observable";
-import { TestDriveProjectInfo, WebSocketBasePath } from "../services/Tutilities";
+import { TestDriveProjectInfo, WebSocketBasePath } from "../services/utilities";
 import { DataManager, EmptyDataManager } from "./dataManager";
 import { getGridManager, GridManager, GridManagerItem } from './gridItemManager';
 

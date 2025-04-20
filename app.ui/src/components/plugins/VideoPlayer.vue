@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
-import { ApiPath, TestDriveVideoInfo, isDevMode, clamp } from '../../services/Tutilities';
+import { ApiPath, TestDriveVideoInfo, isDevMode, clamp } from '../../services/utilities';
 import { useVideoControl } from './../../composables/useVideoControl'
 import videojs from "video.js";
 import "videojs-sprite-thumbnails";

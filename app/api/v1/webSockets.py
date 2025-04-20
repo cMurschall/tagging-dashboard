@@ -15,8 +15,8 @@ class WebSockets:
     def _define_routes(self):
 
         @self.router.websocket("/data")
-        async def heartbeat_ws(websocket: WebSocket,
-                               connection_manager: WebsocketConnectionManager = Depends(get_connection_manager_data)):
+        async def data_ws(websocket: WebSocket,
+                          connection_manager: WebsocketConnectionManager = Depends(get_connection_manager_data)):
 
             await connection_manager.connect(websocket)
             try:
@@ -27,7 +27,7 @@ class WebSockets:
                 connection_manager.disconnect(websocket)
 
         @self.router.websocket("/simulationTime")
-        async def heartbeat_ws(websocket: WebSocket, connection_manager: WebsocketConnectionManager = Depends(
+        async def simulation_time_ws(websocket: WebSocket, connection_manager: WebsocketConnectionManager = Depends(
             get_connection_manager_simulation_time)):
 
             await connection_manager.connect(websocket)

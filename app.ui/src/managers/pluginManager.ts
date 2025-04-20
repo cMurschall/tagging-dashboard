@@ -15,6 +15,7 @@ import { ShowToastFn } from "../plugins/AppPlugins";
 import { WebSocketDataConnection } from "../services/webSocketDataConnection";
 import { WebsocketDataManager } from "./websocketDataManager";
 import { WebSocketSimulationTimeConnection } from "../services/webSocketSimulationTimeConnection";
+import LiveScatterPlot from "../components/plugins/LiveScatterPlot.vue";
 
 
 export interface PluginServices {
@@ -34,7 +35,7 @@ export class PluginManager {
     private showToast: ShowToastFn = () => '';
 
     private webSocketDataConnection: WebSocketDataConnection;
-    private webSocketSimulationTimeConnection: WebSocketSimulationTimeConnection;
+    // private webSocketSimulationTimeConnection: WebSocketSimulationTimeConnection;
 
     private gridItemManager: GridManager;
 
@@ -60,22 +61,21 @@ export class PluginManager {
 
 
     private loadedProject: TestDriveProjectInfo | undefined = undefined;
-    private websocketClockSubscription: Subscription = EmptySubscription
-    private websocketSimulationTimeSubscription: Subscription = EmptySubscription
+
+    // subscriptions and unsubscriptions:  todo
+
 
 
     // constructor
     public constructor(gridItemManager: GridManager) {
         this.gridItemManager = gridItemManager;
 
-        this.registerComponents();
-
         this.webSocketDataConnection = new WebSocketDataConnection(WebSocketBasePath + '/data');
-        this.webSocketSimulationTimeConnection = new WebSocketSimulationTimeConnection(WebSocketBasePath + '/simulationTime');
+        // this.webSocketSimulationTimeConnection = new WebSocketSimulationTimeConnection(WebSocketBasePath + '/simulationTime');
 
-        this.websocketSimulationTimeSubscription = this.simulationTimeObservable.subscribe((time) => {
-            this.webSocketSimulationTimeConnection.sendCurrentTimeStamp(time);
-        });
+        // this.simulationTimeObservable.subscribe((time) => {
+        //     this.webSocketSimulationTimeConnection.sendCurrentTimeStamp(time);
+        // });
     }
 
 
@@ -92,14 +92,18 @@ export class PluginManager {
             for (const key in this.dataManagers) {
                 this.dataManagers[key as PluginType] = new EmptyDataManager();
             }
+            this.loadedProject = undefined;
+            return;
         }
 
-        this.websocketClockSubscription.unsubscribe();
+        this.registerComponents(project);
+
 
 
         const isLiveProject = project?.isLive
         if (isLiveProject) {
-            this.websocketClockSubscription = this.webSocketDataConnection.data$.subscribe((data) => {
+            // unsubscribe from old data connection todo!!
+            this.webSocketDataConnection.data$.subscribe((data) => {
                 this.simulationTimeObservable.next(data.timestamp);
             });
             for (const key in this.dataManagers) {
@@ -170,12 +174,12 @@ export class PluginManager {
 
 
 
-    private registerComponents() {
+    private registerComponents(project: TestDriveProjectInfo) {
         this.gridItemManager.setComponentMap({
             ListView: () => (ListView),
             VideoPlayer: () => (VideoPlayer),
             Gauge: () => (Gauge),
-            ScatterPlot: () => (ScatterPlot),
+            ScatterPlot: () => project.isLive ? (LiveScatterPlot) :  (ScatterPlot) ,
             TestGridItem: () => (TestGridItem),
             TagTimeline: () => (TagTimeline),
         });

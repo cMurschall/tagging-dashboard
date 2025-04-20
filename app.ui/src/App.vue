@@ -124,7 +124,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, markRaw, ref, onUnmounted, watch, toRaw } from 'vue';
+import { onMounted,  ref, onUnmounted, watch, toRaw } from 'vue';
 import { useProjectStore } from './stores/projectStore';
 
 import ToolBar from './components/menu/ToolBar.vue';
@@ -132,14 +132,7 @@ import LeftSideBar from './components/LeftSideBar.vue';
 import MainGrid from './components/MainGrid.vue';
 
 
-import VideoPlayer from './components/plugins/VideoPlayer.vue';
-import ListView from './components/plugins/ListView.vue';
-import Gauge from './components/plugins/Gauge.vue';
-import ScatterPlot from './components/plugins/ScatterPlot.vue';
-import TestGridItem from './components/plugins/TestGridItem.vue';
-import TagTimeline from './components/plugins/TagTimeline.vue';
-
-import { getGridManager, GridManagerItem } from './managers/gridItemManager';
+import {  GridManagerItem } from './managers/gridItemManager';
 import {getLayoutManager} from './managers/layoutManager';
 import { EmptySubscription, Subscription } from './observable';
 import { BToastOrchestrator, useToastController } from 'bootstrap-vue-next';
@@ -155,16 +148,6 @@ const mainGrid = ref<typeof MainGrid | null>(null);
 // Initialize the store
 const projectStore = useProjectStore();
 
-
-
-getGridManager().setComponentMap({
-    ListView: () => markRaw(ListView),
-    VideoPlayer: () => markRaw(VideoPlayer),
-    Gauge: () => markRaw(Gauge),
-    ScatterPlot: () => markRaw(ScatterPlot),
-    TestGridItem: () => markRaw(TestGridItem),
-    TagTimeline: () => markRaw(TagTimeline),
-});
 
 const availableLayouts = ref<string[]>([]);
 const layoutsData = ref<Record<string, GridManagerItem[]>>({});

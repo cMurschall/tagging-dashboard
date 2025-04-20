@@ -241,7 +241,10 @@ class TestDriveDataService:
         Check if the live data module is available.
         :return: True if the module is available, False otherwise.
         """
-        return True
+        is_debug = True
+        if is_debug:
+            self.logger.warning("Debug version: live data module check skipped")
+            return True
         module_name = "panthera"
         spec = importlib.util.find_spec(module_name)
         return spec is not None and spec.loader is not None

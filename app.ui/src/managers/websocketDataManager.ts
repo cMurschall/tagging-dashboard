@@ -11,7 +11,7 @@ export class WebsocketDataManager extends DataManager {
 
   timeseriesData: TimeseriesTable = { timestamps: new Float64Array(), scalarValues: {}, vectorValues: {} };
   measurement$: Observable<TimeseriesDataPoint> = new Observable();
-  timestampLookup: TimestampLookup | undefined;
+  // timestampLookup: TimestampLookup | undefined;
 
 
   private measurementKeys: string[] = [];
@@ -80,7 +80,7 @@ export class WebsocketDataManager extends DataManager {
     // await apiManager.initialize(measurementKeys)
 
     // this.timeseriesData = apiManager.getAllMeasurements();
-    this.timestampLookup = new TimestampLookup(this.timeseriesData);
+    // this.timestampLookup = new TimestampLookup(this.timeseriesData);
   }
 
 

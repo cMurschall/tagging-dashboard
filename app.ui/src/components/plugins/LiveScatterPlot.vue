@@ -87,6 +87,7 @@ import type {
 import { SeriesOption } from "echarts";
 import { SetCardTitleFn } from "../../plugins/AppPlugins";
 import { PluginServices } from "../../managers/pluginManager";
+import { get } from "video.js/dist/types/tech/middleware";
 
 use([
     LegendComponent,
@@ -182,6 +183,11 @@ const filteredColumns = computed(() => {
 });
 
 
+
+const leftSeriesData = ref<number[][]>([]);
+const rightSeriesData = ref<number[][]>([]);
+
+
 // --- ECharts Option ---
 
 const chartOption = ref<EChartsOption>({
@@ -214,7 +220,7 @@ const chartOption = ref<EChartsOption>({
             id: 'SeriesA',
             name: 'A',
             type: 'scatter',
-            data: [],
+            data: leftSeriesData.value,
             symbolSize: 3,
             itemStyle: {
                 opacity: 0.8
@@ -227,7 +233,7 @@ const chartOption = ref<EChartsOption>({
             id: 'SeriesB',
             name: 'B',
             type: 'scatter',
-            data: [],
+            data: rightSeriesData.value,
             symbolSize: 3,
             itemStyle: {
                 opacity: 0.8
@@ -287,10 +293,10 @@ watch(pluginState, async (newValue) => {
 
 
     if (!hasLeftColumn) {
-        getLeftSeries().data = [];
+        leftSeriesData.value = [];
     }
     if (!hasRightColumn) {
-        getLeftSeries().data = [];
+        rightSeriesData.value = [];
     }
 
 
@@ -334,58 +340,48 @@ onMounted(async () => {
         setCardTitle(title);
     }
 
-    const leftBuffer: number[][] = [];
-    const rightBuffer: number[][] = [];
+    let lastTimestamp = 0;
+    let leftBuffer: number[][] = [];
+    let rightBuffer: number[][] = [];
     const flushIntervalMs = 250;
-    let flushTimer: ReturnType<typeof setInterval> | null = null;
 
+
+    // Set up interval to filter data and update chart
     flushTimer = setInterval(() => {
-        const chart = chartRef.value?.chart;
-        if (!chart) return;
-
-        const payload: { seriesIndex: number; data: number[][] }[] = [];
-
-        function prepare(buffer: number[][], seriesIndex: number) {
-            const valid = buffer.filter(([x, y]) =>
-                typeof x === 'number' && typeof y === 'number' && !isNaN(x) && !isNaN(y)
-            );
-
-            if (valid.length === 1) {
-                valid.push([...valid[0]]);
-            }
-
-            if (valid.length >= 2) {
-                payload.push({ seriesIndex, data: valid });
-            }
-
-            buffer.length = 0;
+        const chart = chartRef.value?.chart; // Get the underlying chart instance if needed
+        if (!chart && !chartRef.value?.updateOptions) { // Check if chart or update method exists
+            console.warn("Chart instance or updateOptions not available for update.");
+            return;
         }
 
-        prepare(leftBuffer, 0);
-        prepare(rightBuffer, 1);
+        const leftColumnName = pluginState.value?.selectedYColumnLeft?.name ?? '';
+        const rightColumnName = pluginState.value?.selectedYColumnRight?.name ?? '';
+        if (!leftColumnName && !rightColumnName) return;
 
-        try {
-            for (const p of payload) {
-                chart.appendData(p);
-            }
-            chartRef.value?.resize();
-        } catch (err) {
-            console.error("appendData failed:", err);
-        }
 
-        const nowSec = Date.now() / 1000;
-        const xMin = nowSec - (60 * pluginState.value.retentionMinutes); // 240 seconds ago);
+        const retentionSeconds = 60 * (pluginState.value.retentionMinutes ?? 4);
+        const xMin = lastTimestamp - retentionSeconds; // Earliest simulation time to keep
+
+        leftBuffer = leftBuffer.filter(([ts]) => ts >= xMin);
+        getLeftSeries().data = leftBuffer;
+
+
+        rightBuffer = rightBuffer.filter(([ts]) => ts >= xMin);
+        getRightSeries().data = rightBuffer;
+
 
     }, flushIntervalMs);
 
 
-    // Subscribe to live data updates
     // Subscribe to live data updates
     subscription = pluginService.getDataManager().measurement$.subscribe(
         (measurement: TimeseriesDataPoint) => {
             const leftColumnName = pluginState.value?.selectedYColumnLeft?.name ?? '';
             const rightColumnName = pluginState.value?.selectedYColumnRight?.name ?? '';
             if (!leftColumnName && !rightColumnName) return;
+
+            lastTimestamp = measurement.timestamp;
+
 
             // Buffer left value
             if (leftColumnName) {
@@ -394,7 +390,11 @@ onMounted(async () => {
                     if (pluginState.value.yAxisExpressionLeft) {
                         yLeft = transformMathJsValue(yLeft, pluginState.value.yAxisExpressionLeft);
                     }
+                    // leftBuffer.push([measurement.timestamp, yLeft]);
+                    // const filtered = leftBuffer.filter(([ts]) => ts >= xMin);
+                    // leftBuffer = filtered;
                     leftBuffer.push([measurement.timestamp, yLeft]);
+
                 }
             }
 
@@ -406,6 +406,9 @@ onMounted(async () => {
                     if (pluginState.value.yAxisExpressionRight) {
                         yRight = transformMathJsValue(yRight, pluginState.value.yAxisExpressionRight);
                     }
+
+                    // const filtered = rightBuffer.filter(([ts]) => ts >= xMin);
+                    // rightBuffer = filtered;
                     rightBuffer.push([measurement.timestamp, yRight]);
                 }
             }
@@ -415,7 +418,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
     subscription?.unsubscribe();
-    subscription = EmptySubscription;
     if (flushTimer) {
         clearInterval(flushTimer);
         flushTimer = null;

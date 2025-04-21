@@ -1,0 +1,67 @@
+{
+    "Name": "Fahrsimulator Tagger",
+    "Version": "0.1.0.0",
+    "Author": "Christian Murschall",
+    "Actions": [
+        {
+            "Name": "Tag instantaneous",
+            "UUID": "de.hs-harz.fahrsimulator-tagger.instantaneous",
+            "Icon": "imgs/actions/counter/icon",
+            "Tooltip": "Displays a count, which increments by one on press.",
+            "PropertyInspectorPath": "ui/tagger.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "States": [
+                {
+                    "Image": "imgs/actions/tagger/key",
+                    "TitleAlignment": "middle"
+                }
+            ]
+        },
+        {
+            "Name": "Tag start/stop",
+            "UUID": "de.hs-harz.fahrsimulator-tagger.start-stop",
+            "Icon": "imgs/actions/tagger/icon",
+            "Tooltip": "Displays a count, which increments by one on press.",
+            "PropertyInspectorPath": "ui/tagger.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "States": [
+                {
+                    "Image": "imgs/actions/tagger/key",
+                    "TitleAlignment": "middle"
+                },
+                {
+                    "Image": "imgs/actions/tagger/key_recording",
+                    "TitleAlignment": "middle"
+                }
+            ]
+        }
+    ],
+    "Category": "Fahrsimulator Tagger",
+    "CategoryIcon": "imgs/plugin/category-icon",
+    "CodePath": "bin/plugin.js",
+    "Description": "Tagger für Fahrimulationsdaten",
+    "Icon": "imgs/plugin/marketplace",
+    "SDKVersion": 2,
+    "Software": {
+        "MinimumVersion": "6.4"
+    },
+    "OS": [
+        {
+            "Platform": "mac",
+            "MinimumVersion": "12"
+        },
+        {
+            "Platform": "windows",
+            "MinimumVersion": "10"
+        }
+    ],
+    "Nodejs": {
+        "Version": "20",
+        "Debug": "enabled"
+    },
+    "UUID": "de.hs-harz.fahrsimulator-tagger"
+}

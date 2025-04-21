@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <title>Set time source url</title>
+    <meta charset="utf-8" />
+    <script src="sdpi-components.js"></script>
+</head>
+
+<body>
+    <!--
+        Learn more about property inspector components at https://sdpi-components.dev/docs/components
+    -->
+    <sdpi-item label="Websocket URL">
+        <sdpi-textfield global required setting="websocketUrl" placeholder="ws://127.0.0.1:8888"
+            default="ws://127.0.0.1:8888/api/v1/ws/simulationTime"></sdpi-textfield>
+    </sdpi-item>
+
+
+    <sdpi-item label="Tag Endpoint URL">
+        <sdpi-textfield global required setting="tagEndpointUrl" placeholder="http://127.0.0.1:8888/api/v1/tag/create"
+            default="http://127.0.0.1:8888/api/v1/tag/create"></sdpi-textfield>
+    </sdpi-item>
+
+
+    <sdpi-item label="Tag Category">
+        <sdpi-textfield required setting="tagCategory" placeholder="Tag Category" default=""></sdpi-textfield>
+    </sdpi-item>
+</body>
+
+</html>

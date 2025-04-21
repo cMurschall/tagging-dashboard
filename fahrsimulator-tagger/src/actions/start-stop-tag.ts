@@ -35,15 +35,30 @@ export class StartStopTagger extends SingletonAction<TaggerSettings> {
             //   await ev.action.setTitle("Recording...");
         }
         if (this.buttonState === "Recording") {
+            const isConnected = this.webSocketHandler.isConnected();
+            if (!isConnected) {
+                streamDeck.logger.error("WebSocket is not connected. Cannot post tag.");
+                await ev.action.showAlert();
+                return;
+            }
+
             this.endTime = this.webSocketHandler.getLatestTimestamp();
 
             const hasTimeRange = this.startTime !== null && this.endTime !== null;
             if (hasTimeRange) {
-                await this.tagger.postTag({
+                const success = await this.tagger.postTag({
                     timestamp_start_s: this.startTime!,
                     timestamp_end_s: this.endTime!,
-                    category: ev.payload.settings.tagCategory ?? "default",
+                    category: ev.payload.settings.tagCategory ?? "",
                 });
+                if (success) {
+                    await ev.action.showOk();
+                } else {
+                    await ev.action.showAlert();
+                }
+            } else {
+                streamDeck.logger.error("No timestamp available. Cannot post tag.");
+                await ev.action.showAlert();
             }
             this.startTime = null;
             this.endTime = null;

@@ -6,11 +6,11 @@ export interface TagFields {
     category: string;
 }
 
-export interface TagPayload {
-    tag: TagFields & {
-        notes: string;
-    };
+
+export interface TagPayload extends TagFields {
+    notes: string;
 }
+
 
 
 export class Tagger {
@@ -26,17 +26,18 @@ export class Tagger {
         }
     }
 
-    async postTag({ timestamp_start_s, timestamp_end_s, category, }: TagFields): Promise<void> {
+    async postTag({ timestamp_start_s, timestamp_end_s, category, }: TagFields): Promise<boolean> {
         try {
 
             const payload: TagPayload = {
-                tag: {
-                    timestamp_start_s,
-                    timestamp_end_s,
-                    category,
-                    notes: "", // Default to empty string
-                },
+                timestamp_start_s,
+                timestamp_end_s,
+                category,
+                notes: "", // Default to empty string
             };
+
+            streamDeck.logger.info("Posting tag:", payload);
+            streamDeck.logger.info("API URL:", this.apiUrl);
 
             const response = await fetch(this.apiUrl, {
                 method: "POST",
@@ -48,12 +49,15 @@ export class Tagger {
 
             if (!response.ok) {
                 const text = await response.text();
-                throw new Error(`Failed to post tag: ${response.status} ${text}`);
+                streamDeck.logger.error(`Failed to post tag: ${response.status} ${text}`);
+                return false;
             }
 
             streamDeck.logger.info("Tag posted successfully.");
+            return true;
         } catch (error) {
             streamDeck.logger.error("Error posting tag:", error);
+            return false;
         }
     }
 }

@@ -7,7 +7,7 @@ import { Tagger } from "./tagger";
 
 
 const websocketHandler = new WebSocketHandler("ws://127.0.0.1:8888/api/v1/ws/simulationTime");
-const tagger = new Tagger("127.0.0.1:8888/api/v1/tag/create");
+const tagger = new Tagger("http://127.0.0.1:8888/api/v1/tag/create");
 
 
 type ApplicationSettings = {

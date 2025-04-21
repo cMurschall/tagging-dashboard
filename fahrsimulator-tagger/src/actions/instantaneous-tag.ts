@@ -20,13 +20,29 @@ export class InstantaneousTagger extends SingletonAction<TaggerSettings> {
 
     override async onKeyUp(ev: KeyUpEvent<TaggerSettings>): Promise<void> {
 
+        const isConnected = this.webSocketHandler.isConnected();
+        if (!isConnected) {
+            streamDeck.logger.error("WebSocket is not connected. Cannot post tag.");
+            await ev.action.showAlert();
+            return;
+        }
+
         const currentTimeStamp = this.webSocketHandler.getLatestTimestamp();
         if (currentTimeStamp) {
-            await this.tagger.postTag({
+            const success = await this.tagger.postTag({
                 timestamp_start_s: currentTimeStamp,
                 timestamp_end_s: currentTimeStamp,
-                category: ev.payload.settings.tagCategory ?? "default",
+                category: ev.payload.settings.tagCategory ?? "",
             });
+
+            if (success) {
+                await ev.action.showOk();
+            } else {
+                await ev.action.showAlert();
+            }
+        } else {
+            streamDeck.logger.error("No timestamp available. Cannot post tag.");
+            await ev.action.showAlert();
         }
     }
 }

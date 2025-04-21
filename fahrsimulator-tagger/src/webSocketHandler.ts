@@ -5,12 +5,22 @@ import streamDeck from "@elgato/streamdeck";
 export class WebSocketHandler {
   private socket: WebSocket | null = null;
   private latestTimestamp: number | null = null;
-  private reconnectIntervalMs: number = 5000;
-  private reconnectTimeout: NodeJS.Timeout | null = null;
 
-  constructor(private url: string) { }
+
+  protected reconnectIntervalMs = 2500;
+  private reconnectTimer: any;
+
+  constructor(private url: string) {
+
+    this.url = url;
+    this.connect();
+    this.startReconnectionLoop();
+  }
+
+
 
   connect(): void {
+
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       streamDeck.logger.warn("WebSocket already connected.");
       return;
@@ -19,9 +29,10 @@ export class WebSocketHandler {
     streamDeck.logger.info("Connecting to", this.url);
     this.socket = new WebSocket(this.url);
 
+
+
     this.socket.onopen = () => {
       streamDeck.logger.info("WebSocket connected.");
-      this.clearReconnectTimeout();
     };
 
     this.socket.onmessage = (event: WebSocket.MessageEvent) => {
@@ -32,7 +43,7 @@ export class WebSocketHandler {
           this.send("pong");
         } else if (typeof data === 'object' && data.timestamp) {
           this.latestTimestamp = data.timestamp;
-          streamDeck.logger.info("Updated timestamp:", this.latestTimestamp);
+          // streamDeck.logger.info("Updated timestamp:", this.latestTimestamp);
         }
       } catch (e) {
         streamDeck.logger.error("Failed to process message:", event.data);
@@ -45,7 +56,6 @@ export class WebSocketHandler {
 
     this.socket.onclose = () => {
       streamDeck.logger.info("WebSocket closed. Reconnecting in", this.reconnectIntervalMs, "ms...");
-      this.scheduleReconnect();
     };
   }
 
@@ -54,7 +64,6 @@ export class WebSocketHandler {
       this.socket.close();
       this.socket = null;
     }
-    this.clearReconnectTimeout();
   }
 
   send(data: any): void {
@@ -73,23 +82,26 @@ export class WebSocketHandler {
     if (this.url != newUrl) {
       streamDeck.logger.info("Changing WebSocket URL to:", newUrl);
       this.url = newUrl;
+      this.stopReconnectionLoop();
       this.disconnect();
       this.connect();
+      this.startReconnectionLoop();
     }
   }
 
-  private scheduleReconnect(): void {
-    if (this.reconnectTimeout) return;
-
-    this.reconnectTimeout = setTimeout(() => {
-      this.connect();
+  isConnected(): boolean {
+    return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
+  }
+  protected startReconnectionLoop(): void {
+    this.reconnectTimer = setInterval(() => {
+      if (this.socket.readyState === WebSocket.CLOSED || this.socket.readyState === WebSocket.CLOSING) {
+        console.log(`${this.constructor.name} attempting to reconnect...`);
+        this.connect();
+      }
     }, this.reconnectIntervalMs);
   }
 
-  private clearReconnectTimeout(): void {
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
-    }
+  stopReconnectionLoop(): void {
+    clearInterval(this.reconnectTimer);
   }
 }

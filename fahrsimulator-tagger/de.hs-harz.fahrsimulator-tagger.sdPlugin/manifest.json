@@ -6,8 +6,8 @@
         {
             "Name": "Tag instantaneous",
             "UUID": "de.hs-harz.fahrsimulator-tagger.instantaneous",
-            "Icon": "imgs/actions/counter/icon",
-            "Tooltip": "Displays a count, which increments by one on press.",
+            "Icon": "imgs/actions/tagger/icon",
+            "Tooltip": "Instant Tag - Press to quickly tag a moment in time.",
             "PropertyInspectorPath": "ui/tagger.html",
             "Controllers": [
                 "Keypad"
@@ -23,7 +23,7 @@
             "Name": "Tag start/stop",
             "UUID": "de.hs-harz.fahrsimulator-tagger.start-stop",
             "Icon": "imgs/actions/tagger/icon",
-            "Tooltip": "Displays a count, which increments by one on press.",
+            "Tooltip": "Tag Event - Press once to start tagging, press again to stop and save the tag.",
             "PropertyInspectorPath": "ui/tagger.html",
             "Controllers": [
                 "Keypad"
@@ -40,10 +40,10 @@
             ]
         }
     ],
-    "Category": "Fahrsimulator Tagger",
+    "Category": "HS-Harz",
     "CategoryIcon": "imgs/plugin/category-icon",
     "CodePath": "bin/plugin.js",
-    "Description": "Tagger für Fahrimulationsdaten",
+    "Description": "Tagger for HS-Harz driving simulator",
     "Icon": "imgs/plugin/marketplace",
     "SDKVersion": 2,
     "Software": {

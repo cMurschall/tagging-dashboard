@@ -415,6 +415,7 @@ const createChartOption = (): EChartsOption => {
         maxLabelTime = Math.max(maxLabelTime, label.endTime);
     });
 
+
     const minTime = Math.min(minDataTime, minVideoTime, minLabelTime);
     const maxTime = Math.max(maxDataTime, maxVideoTime, maxLabelTime);
 
@@ -428,9 +429,7 @@ const createChartOption = (): EChartsOption => {
         denseXValues.push([t, 0]);
     }
 
-    const timePadding = (maxTime - minTime) * 0.05;
-
-    return {
+    let options = {
         tooltip: {
             show: true,
             trigger: 'axis',
@@ -475,7 +474,7 @@ const createChartOption = (): EChartsOption => {
         xAxis: {
             type: 'value',
             min: minTime,
-            max: maxTime,
+            max: (pluginService.getProjectInfo()?.isLive ? Math.max(currentSimulationTime.value, maxTime) : maxTime) + 10,
             axisLabel: {
                 formatter: (value: number) => `${value.toFixed(0)}s`,
             },
@@ -547,6 +546,7 @@ const createChartOption = (): EChartsOption => {
             },
             {
                 // DUMMY series to fill the x-range so ECharts can track any x
+                id: 'DenseXValues',
                 type: 'line',
                 encode: { x: 0, y: 1, },
                 data: denseXValues,
@@ -612,7 +612,19 @@ const createChartOption = (): EChartsOption => {
                 }
             },
         ],
-    };
+    } as EChartsOption;
+
+    const isLive = pluginService.getProjectInfo()?.isLive
+    if (isLive) {
+        // we remove the last 2 series, as they are not needed in live mode
+        if (Array.isArray(options.series)) {
+            options.series = options.series.filter((s) => s.id !== 'LoggerOverlay' && s.id !== 'VideoOverlay' && s.id !== 'DenseXValues');
+        }
+        if (options.tooltip && !Array.isArray(options.tooltip)) {
+            options.tooltip.show = false;
+        }
+    }
+    return options;
 };
 
 
@@ -869,8 +881,15 @@ const setFormData = (label: TagViewModel) => {
 
 const handleOnZrChartClick = (params: any) => {
     console.log("Clicked on zr chart:", params);
+
+    // check if we are in live mode
+    const isLive = pluginService.getProjectInfo()?.isLive
+    if (isLive) {
+        return; // do nothing in live mode - we don't want to seek to a new time
+    }
+
     if (!params.target) {
-        // Click on blank. Do something.
+
         const chart = chartRef.value;
         if (!chart) { return; }
 
@@ -1062,9 +1081,11 @@ onMounted(async () => {
     refreshChart();
 
     simulationTimeSubscription = pluginService.simulationTime.subscribe((time) => {
-        currentSimulationTime.value = time;
+
         // update all floating tags to the current time
-        let chartNeedsUpdate = false;
+        const isLive = pluginService.getProjectInfo()?.isLive
+        const couldUpdate = Math.floor(currentSimulationTime.value) < Math.floor(time);
+        let chartNeedsUpdate = isLive && couldUpdate;
         availableTags.value.forEach((tag) => {
             if (tag.isFloating) {
                 const isFuture = time > tag.startTime;
@@ -1081,12 +1102,14 @@ onMounted(async () => {
         if (chartNeedsUpdate) {
             refreshChart();
         }
+
+        currentSimulationTime.value = time;
     });
 
     newTagArrivedSubscription = webSocketTagConnection.data$.subscribe((newTag) => {
         console.log("New tag via webSocket received:", newTag);
 
-        const isNewTagValid = newTag && newTag.id && newTag.category && newTag.timestampEndS  !== undefined && newTag.timestampStartS  !== undefined;
+        const isNewTagValid = newTag && newTag.id && newTag.category && newTag.timestampEndS !== undefined && newTag.timestampStartS !== undefined;
         if (isNewTagValid) {
             const incomingTag: TagViewModel = {
                 id: newTag.id!,
@@ -1096,18 +1119,20 @@ onMounted(async () => {
                 note: newTag.notes,
                 isFloating: false,
             };
+
+            // lets check if we have this tag already in the list
+            const isSameTag = (a: TagViewModel, b: TagViewModel) => {
+                return a.category === b.category && a.startTime === b.startTime && a.endTime === b.endTime;
+            };
+            const isTagAlreadyInList = availableTags.value.some((tag) => isSameTag(tag, incomingTag));
+            if (isTagAlreadyInList) {
+                console.log("Tag already in list:", incomingTag);
+                return;
+            }
+
             availableTags.value.push(incomingTag);
             refreshChart();
-            pluginService.showToast?.({
-                props: {
-                    title: `New tag received: ${incomingTag.category}`,
-                    body: `Tag ${incomingTag.category} has been received.`,
-                    value: 2500,
-                    variant: 'success',
-                    pos: 'top-end',
-
-                }
-            });
+            pluginService.showToast
         }
     });
 

@@ -7,24 +7,25 @@ logger = logging.getLogger('uvicorn.error')
 
 
 class WebsocketConnectionManager:
-    def __init__(self):
+    def __init__(self, name: str):
         self.active_connections: List[WebSocket] = []
+        self.name = name
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
-        logger.info(f"WebSocket connected: {websocket}")
+        logger.info(f"WebSocket {self.name} connected: {websocket}")
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
-            logger.info(f"WebSocket disconnected: {websocket}")
+            logger.info(f"WebSocket {self.name} disconnected: {websocket}")
 
     async def _safe_send(self, connection: WebSocket, send_method, message):
         try:
             await send_method(message)
         except Exception as e:
-            logger.warning(f"Failed to send to connection {connection}: {e}")
+            logger.warning(f"Websocket {self.name}: Failed to send to connection {connection}: {e}")
             self.disconnect(connection)
 
     async def broadcast_text(self, message: str):

@@ -35,11 +35,13 @@ export class PluginManager {
     private showToast: ShowToastFn = () => '';
 
     private webSocketDataConnection: WebSocketDataConnection;
-    // private webSocketSimulationTimeConnection: WebSocketSimulationTimeConnection;
+    private webSocketSimulationTimeConnection: WebSocketSimulationTimeConnection;
 
     private gridItemManager: GridManager;
 
     public readonly simulationTimeObservable = new Observable<number>(0);
+
+    private timeStampSubscription: Subscription =  EmptySubscription
 
     private pluginSizes = {
         ListView: { w: 3, h: 5 },
@@ -71,11 +73,7 @@ export class PluginManager {
         this.gridItemManager = gridItemManager;
 
         this.webSocketDataConnection = new WebSocketDataConnection(WebSocketBasePath + '/data');
-        // this.webSocketSimulationTimeConnection = new WebSocketSimulationTimeConnection(WebSocketBasePath + '/simulationTime');
-
-        // this.simulationTimeObservable.subscribe((time) => {
-        //     this.webSocketSimulationTimeConnection.sendCurrentTimeStamp(time);
-        // });
+        this.webSocketSimulationTimeConnection = new WebSocketSimulationTimeConnection(WebSocketBasePath + '/simulationTime');
     }
 
 
@@ -87,23 +85,29 @@ export class PluginManager {
     }
 
     public setCurrentProject(project: TestDriveProjectInfo | undefined): void {
+
+        this.timeStampSubscription?.unsubscribe();
+
         if (!project) {
             // all data managers back to empty
             for (const key in this.dataManagers) {
                 this.dataManagers[key as PluginType] = new EmptyDataManager();
             }
             this.loadedProject = undefined;
+
+            // clear all plugins
+            this.gridItemManager.removeAllItems();
             return;
         }
 
         this.registerComponents(project);
 
-
-
         const isLiveProject = project?.isLive
         if (isLiveProject) {
             // unsubscribe from old data connection todo!!
-            this.webSocketDataConnection.data$.subscribe((data) => {
+            this.timeStampSubscription = this.webSocketDataConnection.data$.subscribe((data) => {
+                // in a live project we have to set the internal simulation clock  to the current time
+                // every time we receive a new data point
                 this.simulationTimeObservable.next(data.timestamp);
             });
             for (const key in this.dataManagers) {
@@ -113,6 +117,12 @@ export class PluginManager {
             }
         }
         else {
+            this.timeStampSubscription =   this.simulationTimeObservable.subscribe((time) => {
+                // if we have a non live project we can set the time to an arbitrary value.
+                // so we need to inform the simulation time connection about the current time
+                this.webSocketSimulationTimeConnection.sendCurrentTimeStamp(time);
+            });
+
             for (const key in this.dataManagers) {
                 const dataManager = new ApiDataManager();
                 dataManager.subscribeToTimestamp(this.simulationTimeObservable);

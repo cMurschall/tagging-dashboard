@@ -18,17 +18,29 @@ class TestDriveTagService:
             df = pd.read_csv(file_path)
             if df.empty:
                 return f"{id_prefix}1"
-            # Extract the numeric part of the IDs
-            df['numeric_id'] = df['id'].apply(lambda x: int(re.search(r'\d+$', x).group()))
-            # Find the maximum numeric ID
-            max_numeric_id = df['numeric_id'].max()
-            # The next free ID will be one greater than the maximum
+
+            # Only keep IDs that match the pattern and are strings
+            def extract_numeric_id(x):
+                try:
+                    match = re.search(r'\d+$', str(x))
+                    return int(match.group()) if match else None
+                except Exception as e:
+                    self.logger.warning(f"Invalid ID format: {x} ({e})")
+                    return None
+
+            df['numeric_id'] = df['id'].apply(extract_numeric_id)
+            df = df.dropna(subset=['numeric_id'])
+
+            if df.empty:
+                return f"{id_prefix}1"
+
+            max_numeric_id = int(df['numeric_id'].max())
             next_numeric_id = max_numeric_id + 1
             return f"{id_prefix}{next_numeric_id}"
 
         except (FileNotFoundError, pd.errors.EmptyDataError):
             self.logger.info("CSV file not found or empty; starting IDs at 1.")
-            return 1
+            return f"{id_prefix}1"
         except Exception as e:
             self.logger.exception("Unexpected error when determining next ID: %s", e)
             raise

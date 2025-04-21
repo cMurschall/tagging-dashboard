@@ -3,11 +3,12 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from app.dependencies import get_testdata_manager, get_tagdata_manager
+from app.dependencies import get_testdata_manager, get_tagdata_manager, get_connection_manager_tag
 from app.models.tag import Tag
 from app.models.testDriveTagInfo import TagCategory
 from app.services.testDriveDataService import TestDriveDataService
 from app.services.testDriveTagService import TestDriveTagService
+from app.services.websocketConnectionManager import WebsocketConnectionManager
 
 
 class CreateTagPayload(BaseModel):
@@ -66,7 +67,8 @@ class TagController:
         async def add_tag(
                 payload: CreateTagPayload,
                 test_drive_service: TestDriveDataService = Depends(get_testdata_manager),
-                tag_service: TestDriveTagService = Depends(get_tagdata_manager)):
+                tag_service: TestDriveTagService = Depends(get_tagdata_manager),
+                connection_manager: WebsocketConnectionManager = Depends(get_connection_manager_tag)):
             active_testdrive = test_drive_service.get_active_testdrive()
             if not active_testdrive:
                 raise HTTPException(status_code=404, detail="No active test drive found")
@@ -74,6 +76,7 @@ class TagController:
             tag = Tag(**payload.model_dump())
 
             created_tag = tag_service.add_tag(active_testdrive.test_drive_tag_info, tag)
+            await connection_manager.broadcast_json(created_tag.model_dump())
             return {"tag": created_tag}
 
         @self.router.get("/get_by_id/{id}", response_model=TagResponse)

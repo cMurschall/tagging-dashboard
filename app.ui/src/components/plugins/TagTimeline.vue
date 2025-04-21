@@ -155,9 +155,10 @@ import {
 
 import { useVideoControl } from '../../composables/useVideoControl';
 import { Tag, TagCategory } from '../../../services/restclient';
-import { safeFetch, TagApiClient as client } from '../../services/utilities';
+import { safeFetch, TagApiClient as client, WebSocketBasePath } from '../../services/utilities';
 import { EmptySubscription, Subscription } from '../../observable';
 import { PluginServices } from '../../managers/pluginManager';
+import { WebSocketTagConnection } from '../../services/webSocketTagConnection';
 
 
 
@@ -277,7 +278,7 @@ const getColorWithAlpha = (hex: string, alpha = 0.3) => {
 }
 
 
-
+const webSocketTagConnection = new WebSocketTagConnection(WebSocketBasePath + '/tag')
 
 
 // The core rendering logic for the custom series
@@ -381,7 +382,14 @@ const renderTagItem = (params: CustomSeriesRenderItemParams, api: CustomSeriesRe
 }
 
 
-
+const refreshChart = () => {
+    chartOption.value = createChartOption();
+    // resize the chart to fit the container
+    const chart = chartRef.value;
+    if (chart) {
+        chart.resize();
+    }
+};
 
 const createChartOption = (): EChartsOption => {
     const labels = availableTags.value;
@@ -637,7 +645,7 @@ watch(allCategories, (newCategories, oldCategories) => {
     });
 
     // redraw the chart
-    chartOption.value = createChartOption();
+    refreshChart();
 },);
 
 
@@ -777,7 +785,7 @@ const startNewTag = (category: string) => {
         isFloating: true,
     };
     availableTags.value.push(newTag);
-    chartOption.value = createChartOption();
+    refreshChart();
 };
 
 const stopNewTag = async (category: string) => {
@@ -836,7 +844,7 @@ const stopNewTag = async (category: string) => {
         console.warn("No floating tag found for category:", category);
     }
     // redraw the chart
-    chartOption.value = createChartOption();
+    refreshChart();
 };
 
 
@@ -888,7 +896,7 @@ const handleOnChartClick = (params: any) => {
             selectedTag.value = { ...found };
             setFormData(found);
             // redraw the chart
-            chartOption.value = createChartOption();
+            refreshChart();
         }
     }
 }
@@ -944,9 +952,7 @@ const saveTag = async () => {
             }
 
         }
-
-
-        chartOption.value = createChartOption();
+        refreshChart();
     }
 }
 
@@ -988,8 +994,7 @@ const deleteTag = async () => {
             }
         }
     }
-
-    chartOption.value = createChartOption();
+    refreshChart();
 }
 
 const onCancelEditLabel = () => {
@@ -1044,7 +1049,9 @@ const handleKeydown = (event: KeyboardEvent) => {
     }
 }
 
-let subscription: Subscription = EmptySubscription;
+let simulationTimeSubscription: Subscription = EmptySubscription;
+let newTagArrivedSubscription: Subscription = EmptySubscription;
+
 
 const currentSimulationTime = ref(0);
 
@@ -1052,9 +1059,9 @@ onMounted(async () => {
 
     await loadProjectTags()
     await loadProjectTagCategories();
-    chartOption.value = createChartOption();
+    refreshChart();
 
-    subscription = pluginService.simulationTime.subscribe((time) => {
+    simulationTimeSubscription = pluginService.simulationTime.subscribe((time) => {
         currentSimulationTime.value = time;
         // update all floating tags to the current time
         let chartNeedsUpdate = false;
@@ -1072,16 +1079,45 @@ onMounted(async () => {
         });
         // update the chart if any floating tags were updated
         if (chartNeedsUpdate) {
-            chartOption.value = createChartOption();
+            refreshChart();
         }
     });
 
+    newTagArrivedSubscription = webSocketTagConnection.data$.subscribe((newTag) => {
+        console.log("New tag via webSocket received:", newTag);
+
+        const isNewTagValid = newTag && newTag.id && newTag.category && newTag.timestampEndS  !== undefined && newTag.timestampStartS  !== undefined;
+        if (isNewTagValid) {
+            const incomingTag: TagViewModel = {
+                id: newTag.id!,
+                category: newTag.category!,
+                startTime: newTag.timestampStartS!,
+                endTime: newTag.timestampEndS!,
+                note: newTag.notes,
+                isFloating: false,
+            };
+            availableTags.value.push(incomingTag);
+            refreshChart();
+            pluginService.showToast?.({
+                props: {
+                    title: `New tag received: ${incomingTag.category}`,
+                    body: `Tag ${incomingTag.category} has been received.`,
+                    value: 2500,
+                    variant: 'success',
+                    pos: 'top-end',
+
+                }
+            });
+        }
+    });
 
     document.addEventListener('keydown', handleKeydown);
 });
 
 onUnmounted(() => {
-    subscription?.unsubscribe();
+    simulationTimeSubscription?.unsubscribe();
+    newTagArrivedSubscription?.unsubscribe();
+    webSocketTagConnection.close();
 
     document.removeEventListener('keydown', handleKeydown);
 });

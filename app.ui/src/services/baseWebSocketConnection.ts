@@ -52,5 +52,14 @@ export abstract class BaseWebSocketConnection<T> {
     clearInterval(this.reconnectTimer);
   }
 
+
+  close(): void {
+    this.stopReconnectionLoop();
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.close();
+    }
+    console.log(`${this.constructor.name} manually closed`);
+  }
+
   protected abstract handleMessage(data: string): void;
 }

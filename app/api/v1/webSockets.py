@@ -2,7 +2,8 @@ import logging
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 import asyncio
 
-from app.dependencies import get_connection_manager_data, get_connection_manager_simulation_time
+from app.dependencies import get_connection_manager_data, get_connection_manager_simulation_time, \
+    get_connection_manager_tag
 from app.services.websocketConnectionManager import WebsocketConnectionManager
 
 
@@ -29,6 +30,23 @@ class WebSockets:
         @self.router.websocket("/simulationTime")
         async def simulation_time_ws(websocket: WebSocket, connection_manager: WebsocketConnectionManager = Depends(
             get_connection_manager_simulation_time)):
+
+            await connection_manager.connect(websocket)
+            try:
+                while True:
+                    data = await websocket.receive_json()
+                    # Process data only if it's a simulation time update
+                    if "timestamp" in data:
+                        # Broadcast to other connected clients
+                        await connection_manager.broadcast_json({
+                            "timestamp": data["timestamp"]
+                        }, sender=websocket)
+            except WebSocketDisconnect:
+                connection_manager.disconnect(websocket)
+
+        @self.router.websocket("/tag")
+        async def tag_ws(websocket: WebSocket,
+                         connection_manager: WebsocketConnectionManager = Depends(get_connection_manager_tag)):
 
             await connection_manager.connect(websocket)
             try:

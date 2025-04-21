@@ -45,7 +45,8 @@ def process_live_data(stop_event: Event, loop: asyncio.AbstractEventLoop):
                     # Queue for writing
                     buffered_writer.enqueue(asdict(data))
 
-                live_data_source = start_replay_process(new_live_data_arrived)
+                # live_data_source = start_replay_process(new_live_data_arrived)
+                live_data_source = start_simulated_process(new_live_data_arrived)
 
         elif live_data_source is not None:
 

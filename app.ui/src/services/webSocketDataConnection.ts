@@ -1,3 +1,4 @@
+import { Tag } from "../../services/restclient";
 import { TimeseriesDataPoint } from "../managers/dataManager";
 import { BaseWebSocketConnection } from "./baseWebSocketConnection";
 

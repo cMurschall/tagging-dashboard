@@ -1,11 +1,15 @@
 <template>
     <BCard bg-variant="light" text-variant="dark" class="mb-2"
-        :header-bg-variant="isProjectLoaded ? 'warning' : 'light'" :header="props.project.testDriveMetaInfo?.routeName">
+        :header-bg-variant="isProjectLoaded ? 'warning' : 'light'"
+        :header="props.project.testDriveMetaInfo?.routeName">
 
 
 
-        <BCardText>
-            <div>
+        <BCardText >
+            <BAlert variant="warning" :model-value="true" v-if="props.project.isLive">
+                ⚠️ Connect to Panthera Logger
+            </BAlert>
+            <div v-else>
                 <p>Date: {{ dateTime }}</p>
                 <p>Driver: {{ props.project.testDriveMetaInfo?.driverName }}</p>
             </div>
@@ -15,8 +19,8 @@
         <template #footer>
             <div class="d-flex justify-content-between">
                 <BButton @click="handleLoadProject">Load</BButton>
-                <BButton variant="info">Edit</BButton>
-                <BButton variant="danger" @click="handleDeleteProject">Delete</BButton>
+                <BButton v-if="!props.project.isLive" variant="info">Edit</BButton>
+                <BButton v-if="!props.project.isLive" variant="danger" @click="handleDeleteProject">Delete</BButton>
             </div>
         </template>
     </BCard>
@@ -31,7 +35,7 @@ import { computed } from 'vue'
 import { useProjectStore } from './../stores/projectStore';
 
 import { safeFetch, ProjectApiClient as client, TestDriveProjectInfo } from '../services/utilities'
-import { useToastController } from 'bootstrap-vue-next';
+import { useToastController ,BCard,  BCardText, BButton, BAlert } from 'bootstrap-vue-next';
 
 const { show: showToast } = useToastController();
 

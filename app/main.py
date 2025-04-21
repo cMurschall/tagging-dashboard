@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api import router as global_router
 from .api.v1 import router as v1_router
 from .dependencies import get_connection_manager_data, get_connection_manager_simulation_time, get_testdata_manager, \
-    get_settings
+    get_settings, get_connection_manager_tag
 
 logger = logging.getLogger('uvicorn.error')
 

@@ -262,7 +262,7 @@ class TestDriveDataService:
             is_live=True,
             creation_date=datetime.now(),
             test_drive_meta_info=TestDriveMetaData(
-                route_name="live route",
+                route_name="Panthera Data Logger",
                 driver_name="live driver",
                 vehicle_name="live vehicle",
                 notes=""

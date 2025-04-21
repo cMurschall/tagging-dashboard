@@ -54,8 +54,52 @@
                     <BButton variant="danger" size="sm" @click="handleUnloadProject">
                         <i class="bi bi-x-circle me-1"></i> Unload
                     </BButton>
+
                 </BCardHeader>
-                <BCardBody>
+                <BCardBody v-if="projectStore.loadedProject?.isLive">
+                    <BListGroup flush>
+                        <BListGroupItem>
+                            <strong>Live Streaming</strong><br>
+                        </BListGroupItem>
+                        <BListGroupItem v-if="projectStore.loadedProject?.testDriveDataInfo?.csvFileName">
+                            <strong>Data file:</strong><br>
+                            <BButton
+                                    size="sm"
+                                    variant="outline-secondary"
+                                    class="ml-2"
+                                    @click="copyToClipboard(projectStore.loadedProject?.testDriveDataInfo?.csvFileFullPath)">
+                                    📋
+                                </BButton>
+                            {{ projectStore.loadedProject?.testDriveDataInfo?.csvFileName }}
+
+                        </BListGroupItem>
+                        <BListGroupItem v-if="projectStore.loadedProject?.testDriveVideoInfo?.videoFileName">
+                            <strong>Video file:</strong><br>
+                            <BButton
+                                    size="sm"
+                                    variant="outline-secondary"
+                                    class="ml-2"
+                                    @click="copyToClipboard(projectStore.loadedProject?.testDriveVideoInfo?.videoFileFullPath)">
+                                    📋
+                                </BButton>
+                            {{ projectStore.loadedProject?.testDriveVideoInfo?.videoFileName }}
+                        </BListGroupItem>
+                        <BListGroupItem v-if="projectStore.loadedProject?.testDriveTagInfo?.tagFileName">
+                            <strong>Tag file:</strong><br>
+                            <BButton
+                                    size="sm"
+                                    variant="outline-secondary"
+                                    class="ml-2"
+                                    @click="copyToClipboard(projectStore.loadedProject?.testDriveTagInfo?.tagFileFullPath)">
+                                    📋
+                                </BButton>
+                            {{ projectStore.loadedProject?.testDriveTagInfo?.tagFileName }}
+                        </BListGroupItem>
+                    </BListGroup>
+                </BCardBody>
+
+
+                <BCardBody v-else>
                     <BListGroup flush>
                         <BListGroupItem>
                             <strong>Project ID:</strong><br>
@@ -73,30 +117,56 @@
                             <strong>Vehicle:</strong><br>
                             {{ projectStore.loadedProject?.testDriveMetaInfo?.vehicleName }}
                         </BListGroupItem>
-                        <BListGroupItem>
+                        <BListGroupItem v-if="projectStore.loadedProject?.testDriveDataInfo?.averageSpeedMS">
                             <strong>Avg. Speed:</strong><br>
                             {{ ((projectStore.loadedProject?.testDriveDataInfo?.averageSpeedMS ?? 0) * 3.6).toFixed(2)
                             }}
                             km/h
                         </BListGroupItem>
-                        <BListGroupItem>
+                        <BListGroupItem v-if="projectStore.loadedProject?.testDriveDataInfo?.maxSpeedMS">
                             <strong>Top Speed:</strong><br>
                             {{ ((projectStore.loadedProject?.testDriveDataInfo?.maxSpeedMS ?? 0) * 3.6).toFixed(2) }}
                             km/h
                         </BListGroupItem>
-                        <BListGroupItem>
+                        <BListGroupItem v-if="projectStore.loadedProject?.testDriveDataInfo?.drivenDistanceM">
                             <strong>Distance:</strong><br>
                             {{ ((projectStore.loadedProject?.testDriveDataInfo?.drivenDistanceM ?? 0) / 1000
                             ).toFixed(2)
                             }} km
                         </BListGroupItem>
-                        <BListGroupItem>
+                        <BListGroupItem v-if="projectStore.loadedProject?.testDriveDataInfo?.csvFileName">
                             <strong>Data file:</strong><br>
+                            <BButton
+                                    size="sm"
+                                    variant="outline-secondary"
+                                    class="ml-2"
+                                    @click="copyToClipboard(projectStore.loadedProject?.testDriveDataInfo?.csvFileFullPath)">
+                                    📋
+                                </BButton>
                             {{ projectStore.loadedProject?.testDriveDataInfo?.csvFileName }}
+
                         </BListGroupItem>
-                        <BListGroupItem>
+                        <BListGroupItem v-if="projectStore.loadedProject?.testDriveVideoInfo?.videoFileName">
                             <strong>Video file:</strong><br>
+                            <BButton
+                                    size="sm"
+                                    variant="outline-secondary"
+                                    class="ml-2"
+                                    @click="copyToClipboard(projectStore.loadedProject?.testDriveVideoInfo?.videoFileFullPath)">
+                                    📋
+                                </BButton>
                             {{ projectStore.loadedProject?.testDriveVideoInfo?.videoFileName }}
+                        </BListGroupItem>
+                        <BListGroupItem v-if="projectStore.loadedProject?.testDriveTagInfo?.tagFileName">
+                            <strong>Tag file:</strong><br>
+                            <BButton
+                                    size="sm"
+                                    variant="outline-secondary"
+                                    class="ml-2"
+                                    @click="copyToClipboard(projectStore.loadedProject?.testDriveTagInfo?.tagFileFullPath)">
+                                    📋
+                                </BButton>
+                            {{ projectStore.loadedProject?.testDriveTagInfo?.tagFileName }}
                         </BListGroupItem>
                         <BListGroupItem>
                             <strong>Data/Video Overlap:</strong><br>
@@ -124,7 +194,7 @@
 import ProjectListItem from './ProjectListItem.vue';
 import TimelineRange from './TimelineRange.vue'
 
-import { inject, ref } from 'vue'
+import {  ref } from 'vue'
 import { useProjectStore } from './../stores/projectStore';
 
 
@@ -184,7 +254,6 @@ const createNewProject = async () => {
                 value: 2500,
                 variant: 'success',
                 pos: 'top-end',
-
             }
         });
         projectStore.addProject(data.testdrive)
@@ -199,6 +268,26 @@ const handleUnloadProject = async () => {
     console.log('Unloading project id:', projectStore.loadedProject?.id)
     await projectStore.unloadProject()
 }
+
+
+const  copyToClipboard = async (text: string | undefined) =>  {
+    if (!text) return;
+    await navigator.clipboard.writeText(text)
+
+
+    showToast?.({
+            props: {
+                title: 'Copied to clipboard',
+                body: `File path was copied to clipboard`,
+                value: 2500,
+                variant: 'success',
+                pos: 'top-end',
+            }
+        });
+
+  }
+
+
 </script>
 
 <style>

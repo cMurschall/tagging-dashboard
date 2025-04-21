@@ -33,15 +33,18 @@
                     <BRow v-for="(_, index) in pluginState.columnDataInfos" :key="index" class="mb-2">
                         <BCol cols="4">
                             <!-- <label for="input-data-column"  class="small">Data column:</label> -->
-                            <BFormSelect size="sm" v-model="pluginState.columnDataInfos[index].selectedColumn"
+                            <!-- <BFormSelect size="sm" v-model="pluginState.columnDataInfos[index].selectedColumn"
                                 :options="availableColumns">
                                 <template #first>
                                     <BFormSelectOption :value="null" disabled>-- Please select an option --
                                     </BFormSelectOption>
                                 </template>
-                            </BFormSelect>
-                        </BCol>
+</BFormSelect> -->
 
+                            <FilterableSelect v-model="pluginState.columnDataInfos[index].selectedColumn"
+                                :options="availableColumns" :getLabel="(item: ColumnInfo) => item.name"
+                       placeholder="Select Columns:" />
+                        </BCol>
 
 
                         <BCol cols="3">
@@ -90,9 +93,11 @@
                         <BTd class="value-cell">{{ displayData.timestamp }}</BTd>
                     </BTr>
 
-                    <BTr v-for="(value, key, index) in displayData.values" :key="index">
-                        <BTd class="column-cell">{{ key }}</BTd>
-                        <BTd class="value-cell">{{ formatValue(value, key) }}</BTd>
+                    <BTr v-for="(value, index) in pluginState.columnDataInfos" :key="index">
+
+                        <BTd class="column-cell">{{ value.selectedColumn?.name }}</BTd>
+                        <!-- <BTd class="value-cell">{{ formatValue(value, key) }}</BTd> -->
+                        <BTd class="value-cell">{{ showValue(value.selectedColumn?.name) }}</BTd>
                     </BTr>
                 </BTbody>
 
@@ -108,7 +113,8 @@ import { onMounted, onUnmounted, ref, inject, watch } from 'vue';
 import { TimeseriesDataPoint } from '../../managers/dataManager';
 import { EmptySubscription, Subscription } from '../../observable';
 import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue } from "../../services/utilities";
-import { BCol, BFormSelect, BRow, BButton, BFormInput, BTr, BTd, BTh, BTableSimple, BThead, BTbody } from "bootstrap-vue-next";
+import { BCol, BRow, BButton, BFormInput, BTr, BTd, BTh, BTableSimple, BThead, BTbody } from "bootstrap-vue-next";
+import FilterableSelect from '../FilterableSelect.vue';
 import { ColumnInfo } from "../../../services/restclient";
 import { PluginServices } from '../../managers/pluginManager';
 
@@ -148,10 +154,6 @@ const props = withDefaults(defineProps<ListProps>(), {
 const pluginState = ref<PluginState>(structuredClone(props.pluginState));
 
 
-interface BFormSelectColumnInfo {
-    text: string;
-    value: ColumnInfo;
-}
 
 const pluginService = inject<PluginServices>('pluginService');
 if (!pluginService) {
@@ -164,7 +166,7 @@ if (!pluginService) {
 let subscription: Subscription = EmptySubscription;
 
 
-const availableColumns = ref<BFormSelectColumnInfo[]>([]);
+const availableColumns = ref<ColumnInfo[]>([]);
 const displayData = ref<TimeseriesDataPoint>({ timestamp: 0, values: {} });
 
 const handleAddRow = () => {
@@ -178,6 +180,16 @@ const handleRemoveRow = (index: number) => {
     pluginState.value.columnDataInfos.splice(index, 1);
 };
 
+
+const showValue = (key?: string) => {
+    if (!key) { return 'no key value'; }
+
+    const hasData = displayData.value.values && Object.keys(displayData.value.values).length > 0;
+    if (!hasData) { return 'no data'; }
+    const value = displayData.value.values[key];
+    if (!value) { return 'no value'; }
+    return formatValue(value, key);
+}
 const formatValue = (value: number | number[], key: string): string => {
     const columnInfo = pluginState.value.columnDataInfos.find((x) => x.selectedColumn?.name === key);
     if (columnInfo) {
@@ -253,10 +265,6 @@ watch(pluginState, async (newValue) => {
     }
 
 
-    // // update the gridmanager with the new plugin state
-    // getGridManager().updateItemById(props.id, {
-    //     pluginState: { ...newValue }
-    // });
     pluginService.savePluginState(props.id, newValue);
 }, { deep: true });
 
@@ -271,7 +279,7 @@ const loadColumns = async () => {
         const arrayColumns = response.columns.filter((c: any) => c.type.includes('object') || c.type.includes('array'));
 
         // console.log('Numeric Columns loaded', numericColumns);
-        availableColumns.value =  [...numericColumns, ...arrayColumns].map(x => ({ text: x.name, value: x }));
+        availableColumns.value = [...numericColumns, ...arrayColumns]; //.map(x => ({ text: x.name, value: x }));
 
 
     }

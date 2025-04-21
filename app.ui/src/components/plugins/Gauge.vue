@@ -9,18 +9,8 @@
         </BRow>
         <BRow class="mb-2">
           <BCol cols="12">
-            <div rule=group>
-              <label for="column-filter-query">Filter Columns:</label>
-              <BFormInput onfocus="this.value=''" id="column-filter-query" v-model="searchQuery" type="text"
-                autocomplete="off" placeholder="Search columns..." />
-            </div>
-          </BCol>
-        </BRow>
-        <BRow class="mb-2">
-          <BCol cols="12">
-            <BFormGroup label="Select Columns:">
-              <BFormSelect v-model="pluginState.selectedColumn" :options="filteredColumns" select-size="5" />
-            </BFormGroup>
+            <FilterableSelect v-model="pluginState.selectedColumn" :options="availableColumns"
+              :getLabel="(item: ColumnInfo) => item.name"  placeholder="Select Columns:" />
           </BCol>
         </BRow>
         <BRow class="mb-2">
@@ -82,10 +72,11 @@ import { SVGRenderer } from "echarts/renderers";
 import { TimeseriesDataPoint } from "../../managers/dataManager";
 import { EmptySubscription, Subscription } from "../../observable";
 import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue, IDENTITY_EXPRESSION } from "../../services/utilities";
-import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
+import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import { SetCardTitleFn } from "../../plugins/AppPlugins";
 import { PluginServices } from "../../managers/pluginManager";
+import FilterableSelect from "./../FilterableSelect.vue";
 
 use([GaugeChart, SVGRenderer]);
 
@@ -121,10 +112,7 @@ interface GaugeProps {
   pluginState?: PluginState;
 }
 
-interface BFormSelectColumnInfo {
-  text: string;
-  value: ColumnInfo;
-}
+
 
 // Define component props with default values
 const props = withDefaults(defineProps<GaugeProps>(), {
@@ -202,17 +190,12 @@ defineExpose({ gaugeOption });
 const containerRef = ref(null);
 const chartRef = ref<typeof VChart | null>(null);
 
-const searchQuery = ref('');
-const availableColumns = ref<BFormSelectColumnInfo[]>([]);
+const availableColumns = ref<ColumnInfo[]>([]);
 
 
 let resizeObserver: ResizeObserver | null = null;
 let subscription: Subscription = EmptySubscription;
 
-
-const filteredColumns = computed(() => {
-  return availableColumns.value.filter((c) => c.text.toLowerCase().includes(searchQuery.value.toLowerCase()));
-});
 
 
 let lastSelectedColumn: ColumnInfo | null = null;
@@ -323,7 +306,7 @@ const loadColumns = async () => {
     const numericColumns = response.columns.filter((c: any) => c.type.includes('int') || c.type.includes('float'));
 
     // console.log('Numeric Columns loaded', numericColumns);
-    availableColumns.value = numericColumns.map(x => ({ text: x.name, value: x }));
+    availableColumns.value = numericColumns; //.map(x => ({ text: x.name, value: x }));
 
     // const preSelectedColumn = numericColumns.filter(c => c.name == 'car0_velocity_vehicle')
     // if (preSelectedColumn.length > 0) {

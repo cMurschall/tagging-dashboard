@@ -141,7 +141,10 @@ class TestDriveDataService:
         """
         with open(self.storage_path, "w") as f:
             data = {
-                "test_drive_data_store": {key: model.model_dump() for key, model in self.test_drive_data_store.items()}
+                "test_drive_data_store": {key: model.model_dump()
+                                          for key, model in self.test_drive_data_store.items()
+                                          if key > 0  # Exclude live test drive
+                                          }
             }
             json.dump(data, f, default=str, indent=2)
 

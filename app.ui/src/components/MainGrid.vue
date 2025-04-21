@@ -54,7 +54,7 @@ export default defineComponent({
                 },
                 gridContainer.value as HTMLElement
             );
-    
+
 
             grid.on('resizestop', (event: Event, el: GridItemHTMLElement) => {
                 console.log('Resizestop:', { event, node: el.gridstackNode });
@@ -118,7 +118,7 @@ export default defineComponent({
                             }
                         };
 
-                        // If user clicks remove in the card header, 
+                        // If user clicks remove in the card header,
                         const handleToggleMoveLock = (value: boolean) => {
                             console.log('Move lock changed:', {
                                 value,

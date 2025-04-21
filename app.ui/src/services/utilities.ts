@@ -273,3 +273,11 @@ export const getTimestampStatistics = (table: TimeseriesTable): TimestampStatist
 }
 
 export const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max)
+
+
+
+export const isNonNullOrUndefined = <T>(val: T | null | undefined): val is T =>
+  {return val !== null && val !== undefined}
+
+export const isNullOrUndefined = (val: unknown): val is null | undefined =>
+  {return val === null || val === undefined}

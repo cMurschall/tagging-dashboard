@@ -2,21 +2,13 @@
     <div ref="containerRef" style="width: 100%; height: 100%;">
         <Transition name="fade" mode="out-in">
             <div v-if="showMenu" class="p-3">
-                <BRow class="mb-3">
-                    <BCol cols="12">
-                        <div role="group">
-                            <label for="column-filter-query">Search Columns:</label>
-                            <BFormInput id="column-filter-query" v-model="searchQuery" type="text" autocomplete="off"
-                                placeholder="Filter available columns..." />
-                        </div>
-                    </BCol>
-                </BRow>
+
 
                 <BRow class="mb-3">
                     <BCol cols="12">
                         <BFormGroup label="Select Primary Y Axis Column (Required):">
-                            <BFormSelect v-model="pluginState.selectedYColumnLeft" :options="filteredColumns"
-                                select-size="3" required />
+                            <FilterableSelect v-model="pluginState.selectedYColumnLeft" :options="availableColumns"
+                                :getLabel="(item) => item.name" placeholder="Select column:" />
                         </BFormGroup>
                     </BCol>
                 </BRow>
@@ -27,8 +19,8 @@
                 <BRow class="mb-3">
                     <BCol cols="12">
                         <BFormGroup label="Select Secondary Y Axis Column (Optional):">
-                            <BFormSelect v-model="pluginState.selectedYColumnRight" :options="filteredColumns"
-                                select-size="3" />
+                            <FilterableSelect v-model="pluginState.selectedYColumnRight" :options="availableColumns"
+                                :getLabel="(item) => item.name" placeholder="Select column:" />
                         </BFormGroup>
                     </BCol>
                 </BRow>
@@ -56,12 +48,13 @@
 
 <script setup lang="ts">
 import Chart from "vue-echarts";
-import { ref, onMounted, onUnmounted, inject, computed, watch, toRaw } from "vue";
+import { ref, onMounted, onUnmounted, inject, watch, toRaw } from "vue";
 import { TimeseriesDataPoint } from "../../managers/dataManager";
 import { EmptySubscription, Subscription } from "../../observable";
 import { safeFetch, PlayerApiClient as client, IDENTITY_EXPRESSION, transformMathJsValue } from "../../services/utilities";
-import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
+import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
+import FilterableSelect from "./../FilterableSelect.vue";
 
 
 
@@ -87,7 +80,7 @@ import type {
 import { SeriesOption } from "echarts";
 import { SetCardTitleFn } from "../../plugins/AppPlugins";
 import { PluginServices } from "../../managers/pluginManager";
-import { get } from "video.js/dist/types/tech/middleware";
+
 
 use([
     LegendComponent,
@@ -154,35 +147,14 @@ const pluginState = ref<PluginState>(structuredClone(props.pluginState));
 // --- Reactive State ---
 const containerRef = ref<HTMLDivElement | null>(null);
 const chartRef = ref<typeof Chart | null>(null);
-const searchQuery = ref('');
-const availableColumns = ref<BFormSelectColumnInfo[]>([]);
 
-const defaultExpressionHint = `Enter expression (use '${IDENTITY_EXPRESSION}')`;
-
+const availableColumns = ref<ColumnInfo[]>([]);
 
 
 let subscription: Subscription = EmptySubscription;
 
 
-interface BFormSelectColumnInfo {
-    text: string;
-    value: ColumnInfo | null;
-    disabled?: boolean;
-}
-
 // --- Computed Properties ---
-
-
-const filteredColumns = computed(() => {
-    const noneOption: BFormSelectColumnInfo = { text: '(None - Single Axis)', value: null };
-    return [
-        noneOption,
-        ...availableColumns.value
-            .filter(c => c.text.toLowerCase().includes(searchQuery.value.toLowerCase()))
-    ];
-});
-
-
 
 const leftSeriesData = ref<number[][]>([]);
 const rightSeriesData = ref<number[][]>([]);
@@ -431,7 +403,7 @@ const loadColumns = async () => {
         const numericColumns = response.columns.filter((c: any) =>
             c.type.includes('int') || c.type.includes('float') || c.type.includes('double')
         );
-        availableColumns.value = numericColumns.map((x: ColumnInfo) => ({ text: x.name, value: x }));
+        availableColumns.value = numericColumns; //.map((x: ColumnInfo) => ({ text: x.name, value: x }));
         console.log(`Loaded ${availableColumns.value.length} numeric columns.`);
 
     } else if (error) {

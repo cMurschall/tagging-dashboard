@@ -1,6 +1,6 @@
 
 import { EmptySubscription, Observable, Subscription } from "../observable";
-import { TestDriveProjectInfo, WebSocketBasePath } from "../services/utilities";
+import { isNullOrUndefined, TestDriveProjectInfo, WebSocketBasePath } from "../services/utilities";
 import { DataManager, EmptyDataManager } from "./dataManager";
 import { getGridManager, GridManager, GridManagerItem } from './gridItemManager';
 
@@ -16,6 +16,7 @@ import { WebSocketDataConnection } from "../services/webSocketDataConnection";
 import { WebsocketDataManager } from "./websocketDataManager";
 import { WebSocketSimulationTimeConnection } from "../services/webSocketSimulationTimeConnection";
 import LiveScatterPlot from "../components/plugins/LiveScatterPlot.vue";
+import { isProxy, toRaw } from "vue";
 
 
 export interface PluginServices {
@@ -41,7 +42,7 @@ export class PluginManager {
 
     public readonly simulationTimeObservable = new Observable<number>(0);
 
-    private timeStampSubscription: Subscription =  EmptySubscription
+    private timeStampSubscription: Subscription = EmptySubscription
 
     private pluginSizes = {
         ListView: { w: 3, h: 5 },
@@ -52,20 +53,10 @@ export class PluginManager {
         TagTimeline: { w: 6, h: 7 },
     } as Record<PluginType, { w: number; h: number }>;
 
-    private dataManagers = {
-        ListView: new EmptyDataManager(),
-        VideoPlayer: new EmptyDataManager(),
-        Gauge: new EmptyDataManager(),
-        ScatterPlot: new EmptyDataManager(),
-        TestGridItem: new EmptyDataManager(),
-        TagTimeline: new EmptyDataManager(),
-    } as Record<PluginType, EmptyDataManager>;
 
+    private dataManagers = new Map<string, DataManager>();
 
     private loadedProject: TestDriveProjectInfo | undefined = undefined;
-
-    // subscriptions and unsubscriptions:  todo
-
 
 
     // constructor
@@ -77,9 +68,6 @@ export class PluginManager {
     }
 
 
-
-
-
     public setShowToast(showToast: ShowToastFn) {
         this.showToast = showToast;
     }
@@ -88,11 +76,10 @@ export class PluginManager {
 
         this.timeStampSubscription?.unsubscribe();
 
-        if (!project) {
+        if (isNullOrUndefined(project)) {
             // all data managers back to empty
-            for (const key in this.dataManagers) {
-                this.dataManagers[key as PluginType] = new EmptyDataManager();
-            }
+            this.dataManagers.clear();
+
             this.loadedProject = undefined;
 
             // clear all plugins
@@ -102,7 +89,7 @@ export class PluginManager {
 
         this.registerComponents(project);
 
-        const isLiveProject = project?.isLive
+        const isLiveProject = project.isLive
         if (isLiveProject) {
             // unsubscribe from old data connection todo!!
             this.timeStampSubscription = this.webSocketDataConnection.data$.subscribe((data) => {
@@ -110,24 +97,13 @@ export class PluginManager {
                 // every time we receive a new data point
                 this.simulationTimeObservable.next(data.timestamp);
             });
-            for (const key in this.dataManagers) {
-                const dataManager = new WebsocketDataManager(this.webSocketDataConnection)
-                dataManager.subscribeToTimestamp(this.simulationTimeObservable);
-                this.dataManagers[key as PluginType] = dataManager;
-            }
         }
         else {
-            this.timeStampSubscription =   this.simulationTimeObservable.subscribe((time) => {
+            this.timeStampSubscription = this.simulationTimeObservable.subscribe((time) => {
                 // if we have a non live project we can set the time to an arbitrary value.
                 // so we need to inform the simulation time connection about the current time
                 this.webSocketSimulationTimeConnection.sendCurrentTimeStamp(time);
             });
-
-            for (const key in this.dataManagers) {
-                const dataManager = new ApiDataManager();
-                dataManager.subscribeToTimestamp(this.simulationTimeObservable);
-                this.dataManagers[key as PluginType] = dataManager;
-            }
         }
 
         this.loadedProject = project;
@@ -136,7 +112,7 @@ export class PluginManager {
 
     public restorePlugin(plugin: GridManagerItem): void {
 
-        const service = this.getCurrentService(plugin.component as PluginType);
+        const service = this.getCurrentService(plugin.id);
         // preserve and merge the dependencies
         plugin.dependencies = {
             ...plugin.dependencies,
@@ -148,12 +124,26 @@ export class PluginManager {
 
 
     public showPlugin(pluginName: PluginType, props: Record<string, any>): void {
+        let id: string;
+        switch (pluginName) {
+            case 'VideoPlayer':
+                // only one video player is allowed
+                id = 'VideoPlayer';
+                break;
+            case 'TagTimeline':
+                // only one tag timeline is allowed
+                id = 'TagTimeline';
+                break;
+            default:
+                id = pluginName + '_' + crypto.randomUUID();
+                break;
 
-        const service = this.getCurrentService(pluginName);
+        }
+        const service = this.getCurrentService(id);
 
         const newItem = {
-            id: pluginName + '_' + crypto.randomUUID(),
-            // spread x and y from the gridItemManager
+            id: id,
+            // spread x and y from the gridItemManager (does not really work well yet)
             ...this.gridItemManager.suggestFreeSpace(this.pluginSizes[pluginName].w, this.pluginSizes[pluginName].h),
             w: this.pluginSizes[pluginName].w,
             h: this.pluginSizes[pluginName].h,
@@ -165,20 +155,6 @@ export class PluginManager {
             }
         };
 
-        switch (pluginName) {
-            case 'VideoPlayer':
-                // only one video player is allowed
-                newItem.id = 'VideoPlayer';
-                break;
-            case 'TagTimeline':
-                // only one tag timeline is allowed
-                newItem.id = 'TagTimeline';
-                break;
-            default:
-                break;
-
-        }
-
         this.gridItemManager.addNewItem(newItem);
     }
 
@@ -189,18 +165,33 @@ export class PluginManager {
             ListView: () => (ListView),
             VideoPlayer: () => (VideoPlayer),
             Gauge: () => (Gauge),
-            ScatterPlot: () => project.isLive ? (LiveScatterPlot) :  (ScatterPlot) ,
+            ScatterPlot: () => project.isLive ? (LiveScatterPlot) : (ScatterPlot),
             TestGridItem: () => (TestGridItem),
             TagTimeline: () => (TagTimeline),
         });
     }
 
 
-    private getCurrentService(pluginType: PluginType): PluginServices {
+    private getCurrentService(pluginId: string): PluginServices {
+
+        let dataManager = this.dataManagers.get(pluginId);
+        if (!dataManager) {
+            dataManager = this.loadedProject?.isLive
+                ? new WebsocketDataManager(this.webSocketDataConnection)
+                : new ApiDataManager();
+
+            dataManager.subscribeToTimestamp(this.simulationTimeObservable);
+            this.dataManagers.set(pluginId, dataManager);
+        }
+
+
         return {
             simulationTime: this.simulationTimeObservable,
             getProjectInfo: () => this.loadedProject,
-            getDataManager: () => this.dataManagers[pluginType],
+            getDataManager: () => {
+                if (!dataManager) throw new Error(`No dataManager found for pluginId=${pluginId}`);
+                return dataManager;
+            },
             showToast: this.showToast,
             savePluginState: (id: string, state: Record<string, any>) => {
                 const item = this.gridItemManager.getGridItems().find(i => i.id === id);
@@ -209,8 +200,9 @@ export class PluginManager {
                     return;
                 }
 
+                const rawState = isProxy(state) ? toRaw(state) : state;
                 this.gridItemManager.updateItemById(id, {
-                    pluginState: { ...state },
+                    pluginState: { ...rawState },
                 });
             }
         };

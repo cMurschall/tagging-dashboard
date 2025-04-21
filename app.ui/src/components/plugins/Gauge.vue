@@ -10,7 +10,7 @@
         <BRow class="mb-2">
           <BCol cols="12">
             <FilterableSelect v-model="pluginState.selectedColumn" :options="availableColumns"
-              :getLabel="(item: ColumnInfo) => item.name"  placeholder="Select Columns:" />
+              :getLabel="(item: ColumnInfo) => item.name" placeholder="Select Columns:" />
           </BCol>
         </BRow>
         <BRow class="mb-2">
@@ -135,7 +135,7 @@ const props = withDefaults(defineProps<GaugeProps>(), {
 
 
 
-const pluginState = ref<PluginState>(props.pluginState);
+const pluginState = ref<PluginState>(JSON.parse(JSON.stringify(props.pluginState)));
 
 // Default gauge options
 const gaugeOption = ref({
@@ -178,7 +178,7 @@ const gaugeOption = ref({
         },
         fontSize: 10
       },
-      data: [{ value: -1, name: "" }],
+      data: [{ value: -1 }],
     },
   ],
 });
@@ -257,8 +257,8 @@ onMounted(async () => {
 
   // check if we have a selected column
   if (pluginState.value.selectedColumn) {
+    console.log('Initializing selected column:', pluginState.value.selectedColumn.name);
     await pluginService.getDataManager().initialize([pluginState.value.selectedColumn.name]);
-    // gaugeOption.value.series[0].data[0].name = pluginState.value.selectedColumn.name;
     setCardTitle(pluginState.value.selectedColumn.name);
   } else {
     setCardTitle('No column selected');
@@ -267,12 +267,14 @@ onMounted(async () => {
   subscription = pluginService.getDataManager().measurement$.subscribe((measurements: TimeseriesDataPoint) => {
     // console.log('Received measurements:', measurements);
     // check if measurements has our selected column name
-    if (!pluginState.value.selectedColumn || !measurements.values[pluginState.value.selectedColumn.name]) {
-      return;
-    }
+    // if (!pluginState.value.selectedColumn) {
+    //   console.warn('No measurements for selected column:', pluginState.value.selectedColumn);
+    //   return;
+    // }
     // Use the gauge data.
 
     let x = measurements.values[pluginState.value.selectedColumn?.name ?? ''];
+    // console.log('Raw value:', x);
     // check if the value is a number and not an array
     if (typeof x !== 'number') {
       console.warn('Value is not a number:', x);
@@ -282,7 +284,18 @@ onMounted(async () => {
     if (pluginState.value.gaugeConverter) {
       x = transformMathJsValue(x, pluginState.value.gaugeConverter);
     }
-    gaugeOption.value.series[0].data[0].value = x
+    // console.log('Transformed value:', x);
+    // gaugeOption.value.series[0].data[0].value = x
+
+    chartRef.value?.setOption({
+      series: [
+        {
+          data: [{ value: x }],
+        },
+      ]
+    })
+
+
 
   });
 });

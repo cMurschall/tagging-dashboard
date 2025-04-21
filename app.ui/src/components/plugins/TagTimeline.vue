@@ -220,7 +220,7 @@ const props = withDefaults(defineProps<TagTimelineProps>(), {
 
 });
 
-const pluginState = ref<PluginState>(structuredClone(props.pluginState));
+const pluginState = ref<PluginState>(JSON.parse(JSON.stringify(props.pluginState)));
 
 interface TagViewModel {
     id: string;

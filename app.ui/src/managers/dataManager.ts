@@ -65,6 +65,7 @@ export class EmptyDataManager extends DataManager {
     return Promise.resolve();
   }
   subscribeToTimestamp(_ts$: Observable<number>): void {
+    throw new Error("Method not implemented.");
   }
 }
 

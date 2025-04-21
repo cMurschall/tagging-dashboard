@@ -109,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, inject, watch } from 'vue';
+import { onMounted, onUnmounted, ref, inject, watch, toRaw } from 'vue';
 import { TimeseriesDataPoint } from '../../managers/dataManager';
 import { EmptySubscription, Subscription } from '../../observable';
 import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue } from "../../services/utilities";
@@ -151,7 +151,7 @@ const props = withDefaults(defineProps<ListProps>(), {
     }),
 });
 
-const pluginState = ref<PluginState>(structuredClone(props.pluginState));
+const pluginState = ref<PluginState>(JSON.parse(JSON.stringify(props.pluginState)));
 
 
 
@@ -187,7 +187,6 @@ const showValue = (key?: string) => {
     const hasData = displayData.value.values && Object.keys(displayData.value.values).length > 0;
     if (!hasData) { return 'no data'; }
     const value = displayData.value.values[key];
-    if (!value) { return 'no value'; }
     return formatValue(value, key);
 }
 const formatValue = (value: number | number[], key: string): string => {

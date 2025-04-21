@@ -153,7 +153,7 @@ const props = withDefaults(defineProps<ScatterPlotProps>(), {
   }),
 });
 
-const pluginState = ref<PluginState>(structuredClone(props.pluginState));
+const pluginState = ref<PluginState>(JSON.parse(JSON.stringify(props.pluginState)));
 
 // --- Reactive State ---
 const containerRef = ref<HTMLDivElement | null>(null);

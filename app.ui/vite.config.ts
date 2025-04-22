@@ -11,6 +11,7 @@ export default defineConfig({
     ],
     build: {
         sourcemap: true,
+        outDir: './../app/static',
     },
     css: {
         preprocessorOptions: {

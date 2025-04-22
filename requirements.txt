@@ -13,3 +13,5 @@ easyocr~=1.7.2
 pandas~=2.2.3
 pydantic-settings~=2.7.1
 pyarrow~=19.0.0
+python-multipart~=0.0.20
+pyinstaller~=6.13.0

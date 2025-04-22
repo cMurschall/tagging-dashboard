@@ -1,8 +1,10 @@
 import logging
 import os
+import shutil
+from pathlib import Path
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
+from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException, UploadFile, File
 from pydantic import BaseModel, Field
 
 from app.dependencies import get_testdata_manager, get_settings
@@ -50,6 +52,10 @@ class OptionalTestDriveResponse(BaseModel):
     testdrive: Optional[TestDriveProjectInfo]
 
 
+class UploadResponse(BaseModel):
+    filename: str = Field("", title="Filename", description="The name of the file")
+
+
 class ProjectController:
     def __init__(self):
         self.router = APIRouter()
@@ -85,8 +91,30 @@ class ProjectController:
                                    service: TestDriveDataService = Depends(get_testdata_manager),
                                    settings: Settings = Depends(get_settings)):
 
-            video_path = os.path.join(settings.VIDEO_PATH, payload.video_file_name)
-            csv_path = os.path.join(settings.CSV_PATH, payload.csv_file_name)
+            video_folders = [settings.VIDEO_UPLOAD_DIR.resolve(), Path(settings.VIDEO_PATH)]
+            csv_folders = [settings.CSV_UPLOAD_DIR.resolve(), Path(settings.CSV_PATH)]
+
+            # Find existing video path
+            video_path = next(
+                (folder / payload.video_file_name for folder in video_folders if
+                 (folder / payload.video_file_name).exists()),
+                None
+            )
+
+            # Find existing CSV path
+            csv_path = next(
+                (folder / payload.csv_file_name for folder in csv_folders if (folder / payload.csv_file_name).exists()),
+                None
+            )
+
+            # video_path = os.path.join(settings.VIDEO_PATH, payload.video_file_name)
+            # csv_path = os.path.join(settings.CSV_PATH, payload.csv_file_name)
+
+            if video_path is None:
+                raise HTTPException(status_code=404, detail=f"Video file '{payload.video_file_name}' not found.")
+
+            if csv_path is None:
+                raise HTTPException(status_code=404, detail=f"CSV file '{payload.csv_file_name}' not found.")
 
             # create tag file name: same name as csv file but with _tags suffix and .csv extension
             #  e.g. testdrive.csv -> testdrive_tags.json
@@ -147,3 +175,23 @@ class ProjectController:
             if deactivated_testdrive is None:
                 raise HTTPException(status_code=404, detail="No active testdrive found")
             return {"testdrive": deactivated_testdrive}
+
+        @self.router.post("/upload/csv")
+        async def upload_csv_file(csv_file: UploadFile = File(),
+                                  settings: Settings = Depends(get_settings)) -> UploadResponse:
+            csv_path = settings.CSV_UPLOAD_DIR / csv_file.filename
+
+            with csv_path.open("wb") as f:
+                shutil.copyfileobj(csv_file.file, f)
+
+            return {"filename": csv_file.filename}
+
+        @self.router.post("/upload/video")
+        async def upload_video_file(video_file: UploadFile = File(),
+                                    settings: Settings = Depends(get_settings)) -> UploadResponse:
+            csv_path = settings.VIDEO_UPLOAD_DIR / video_file.filename
+
+            with csv_path.open("wb") as f:
+                shutil.copyfileobj(video_file.file, f)
+
+            return {"filename": video_file.filename}

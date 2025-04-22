@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
@@ -17,3 +19,16 @@ class Settings(BaseSettings):
     CSV_PATH: str = Field("data", env="CSV_PATH")
     VIDEO_PATH: str = Field("videos", env="VIDEO_PATH")
     SPRITE_FOLDER: str = Field("./sprites", env="SPRITE_FOLDER")
+
+    # Derived upload paths
+    @property
+    def CSV_UPLOAD_DIR(self) -> Path:
+        path = Path("uploaded/csv")
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    @property
+    def VIDEO_UPLOAD_DIR(self) -> Path:
+        path = Path("uploaded/videos")
+        path.mkdir(parents=True, exist_ok=True)
+        return path

@@ -181,3 +181,10 @@ cython_debug/
 /openapi-generator-cli.jar
 /openapi.json
 /app.ui/components.d.ts
+/app/static
+/tags/
+/sprites/
+/uploaded/
+
+*.env*
+test_drive_data.json

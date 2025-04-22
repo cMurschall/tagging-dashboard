@@ -4,6 +4,7 @@
             <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddVideo">Add Video</BDropdownItem>
             <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddGauge">Add Gauge</BDropdownItem>
             <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddScatter">Add Chart</BDropdownItem>
+            <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddVectorComponents">Add vector components</BDropdownItem>
             <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddList">Add List</BDropdownItem>
             <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddTagLine">Add Tag Line</BDropdownItem>
             <BDropdownDivider />
@@ -142,6 +143,9 @@ const handleAddList = () => {
 
 const handleAddScatter = () => {
     getPluginManager().showPlugin('ScatterPlot', {});
+};
+const handleAddVectorComponents = () => {
+    getPluginManager().showPlugin('VectorComponents', {});
 };
 
 const handleAddTestGridItem = () => {

@@ -1,7 +1,7 @@
 
 import { EmptySubscription, Observable, Subscription } from "../observable";
 import { isNullOrUndefined, TestDriveProjectInfo, WebSocketBasePath } from "../services/utilities";
-import { DataManager, EmptyDataManager } from "./dataManager";
+import { DataManager } from "./dataManager";
 import { getGridManager, GridManager, GridManagerItem } from './gridItemManager';
 
 import VideoPlayer from './../components/plugins/VideoPlayer.vue';
@@ -10,12 +10,16 @@ import Gauge from './../components/plugins/Gauge.vue';
 import ScatterPlot from './../components/plugins/ScatterPlot.vue';
 import TestGridItem from './../components/plugins/TestGridItem.vue';
 import TagTimeline from './../components/plugins/TagTimeline.vue';
+import LiveScatterPlot from "../components/plugins/LiveScatterPlot.vue";
+import VectorComponentsChart from "../components/plugins/VectorComponentsChart.vue";
+
+
 import { ApiDataManager } from "./apiDataManager";
 import { ShowToastFn } from "../plugins/AppPlugins";
 import { WebSocketDataConnection } from "../services/webSocketDataConnection";
 import { WebsocketDataManager } from "./websocketDataManager";
 import { WebSocketSimulationTimeConnection } from "../services/webSocketSimulationTimeConnection";
-import LiveScatterPlot from "../components/plugins/LiveScatterPlot.vue";
+
 import { isProxy, toRaw } from "vue";
 
 
@@ -27,7 +31,7 @@ export interface PluginServices {
     savePluginState: (id: string, state: Record<string, any>) => void;
 }
 
-export type PluginType = 'ListView' | 'VideoPlayer' | 'Gauge' | 'ScatterPlot' | 'TestGridItem' | 'TagTimeline';
+export type PluginType = 'ListView' | 'VideoPlayer' | 'Gauge' | 'ScatterPlot' | 'TestGridItem' | 'TagTimeline' | 'VectorComponents';
 
 
 
@@ -49,6 +53,7 @@ export class PluginManager {
         VideoPlayer: { w: 6, h: 7 },
         Gauge: { w: 3, h: 5 },
         ScatterPlot: { w: 7, h: 4 },
+        VectorComponents: { w: 7, h: 4 },
         TestGridItem: { w: 5, h: 4 },
         TagTimeline: { w: 6, h: 7 },
     } as Record<PluginType, { w: number; h: number }>;
@@ -168,6 +173,7 @@ export class PluginManager {
             ScatterPlot: () => project.isLive ? (LiveScatterPlot) : (ScatterPlot),
             TestGridItem: () => (TestGridItem),
             TagTimeline: () => (TagTimeline),
+            VectorComponents: () => (VectorComponentsChart),
         });
     }
 

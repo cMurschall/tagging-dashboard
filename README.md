@@ -131,3 +131,8 @@ Change the path settings according to your needs:
   images of the video files.
 - `CSV_UPLOAD_DIR` : This is the path where user uploaded CSV files are stored.
 - `VIDEO_UPLOAD_DIR` : This is the path where user uploaded video files are stored.
+
+If you are planing on using this project on the internet you should reconsider the CORS rules. At the moment they are
+all
+open. This is not recommended for production use. You can change the CORS settings in the [main.py](app/main.py) file.
+

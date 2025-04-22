@@ -208,8 +208,8 @@ const chartOption = ref<EChartsOption>({
       style: {
         fill: 'red',
       },
-      z: 10000, // make sure it's on top
-      zlevel: 1,
+      z: 100, // make sure it's on top
+      zlevel: 2,
     }
   ],
   series: [
@@ -223,7 +223,8 @@ const chartOption = ref<EChartsOption>({
       itemStyle: {
         opacity: 0.8
       },
-      large: true
+      large: true,
+      zlevel: 1,
     },
     {
       id: 'SeriesB',
@@ -236,7 +237,8 @@ const chartOption = ref<EChartsOption>({
         opacity: 0.8
       },
       large: true,
-      yAxisIndex: 1
+      yAxisIndex: 1,
+      zlevel: 1,
     },
   ],
   tooltip: {

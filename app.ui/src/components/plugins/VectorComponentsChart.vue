@@ -14,7 +14,7 @@
       </div>
 
       <Chart v-else ref="componentChartRef" :option="componentChartOption" :style="{ width: '100%', height: '100%' }"
-        :autoresize="{ throttle: 100 }" />
+        @zr:click="handleVChartClick" :autoresize="{ throttle: 100 }" />
 
     </Transition>
   </div>
@@ -117,18 +117,15 @@ const pluginState = ref<PluginState>(JSON.parse(JSON.stringify(props.pluginState
 
 // --- Reactive State ---
 const containerRef = ref<HTMLDivElement | null>(null);
-
-const threeDChartRef = ref<typeof Chart | null>(null);
 const componentChartRef = ref<typeof Chart | null>(null);
-
-
 const availableColumns = ref<ColumnInfo[]>([]);
+
 
 
 let subscription: Subscription = EmptySubscription;
 
 
-
+const { seekTo } = useVideoControl();
 
 
 // --- ECharts Option ---
@@ -167,7 +164,7 @@ const buildMultiGridVectorChart = (table: TimeseriesTable): any => {
   const grids = [];
   const xAxes = [];
   const yAxes = [];
-  const series = [];
+  const dataSeries = [];
   const titles = [];
 
   const gridHeight = 100 / numComponents;
@@ -203,7 +200,7 @@ const buildMultiGridVectorChart = (table: TimeseriesTable): any => {
       componentData[j * 2 + 1] = vectors[i][j];    // y
     }
 
-    series.push({
+    dataSeries.push({
       id: `Series${i}`,
       name: `Component ${i + 1}`,
       type: 'scatter',
@@ -217,6 +214,8 @@ const buildMultiGridVectorChart = (table: TimeseriesTable): any => {
       },
       large: true,
       showSymbol: false,
+      zlevel: 0,
+      z: 2      // Standard z for series
     });
 
     titles.push({
@@ -225,7 +224,9 @@ const buildMultiGridVectorChart = (table: TimeseriesTable): any => {
       text: `Component ${i}`,
       textStyle: { fontSize: 12 },
     });
+
   }
+
 
   return {
     tooltip: {
@@ -242,7 +243,7 @@ const buildMultiGridVectorChart = (table: TimeseriesTable): any => {
     grid: grids,
     xAxis: xAxes,
     yAxis: yAxes,
-    series: series,
+    series: dataSeries,
     dataZoom: [
       {
         type: 'slider',
@@ -255,12 +256,41 @@ const buildMultiGridVectorChart = (table: TimeseriesTable): any => {
         xAxisIndex: Array.from({ length: numComponents }, (_, i) => i),
       }
     ],
+    graphic: table.timestamps.length > 0
+      ? Array.from({ length: numComponents }, (_, i) => ({
+        id: `highlight-point-${i}`,
+        type: 'circle',
+        zlevel: 1 + i,
+        z: 10,
+        shape: { r: 5 },
+        style: { fill: 'red' },
+        // Use `coord` to position it using data coords
+        // This will be updated later
+        position: [0, 0],
+        // Initial invisible (or start at [x0, y0])
+        invisible: true,
+        coordSystem: 'cartesian2d',
+        xAxisIndex: i,
+        yAxisIndex: i,
+      }))
+      : [],
   };
 }
 
 
 
+const handleVChartClick = (params: ElementEvent) => {
 
+  if (!params.target) {
+
+    const chart = componentChartRef.value;
+    if (!chart) return;
+
+
+    const [x, _] = chart.convertFromPixel({ seriesIndex: 0 }, [params.offsetX, params.offsetY]);
+    seekTo(x); // Call the seekTo function with the x value
+  }
+};
 
 // --- Watchers ---
 watch(pluginState, async (newValue) => {
@@ -300,9 +330,8 @@ onMounted(async () => {
 
   if (columnsToInit.length != 0) {
     await pluginService.getDataManager().initialize(columnsToInit);
-    const initialMeasurements = pluginService.getDataManager().getAllMeasurements();
-    // updateChartData(initialMeasurements);
-
+    const allMeasurements = pluginService.getDataManager().getAllMeasurements();
+    componentChartOption.value = buildMultiGridVectorChart(allMeasurements);
     let title = `${columnsToInit.join(' & ')}`;
 
     setCardTitle(title);
@@ -313,11 +342,38 @@ onMounted(async () => {
 
   // Subscribe to live data updates
   subscription = pluginService.getDataManager().measurement$.subscribe((measurement: TimeseriesDataPoint) => {
-    const vChartsRef = threeDChartRef.value;
-    if (!vChartsRef) { return; }
 
-    console.log("Received new measurement:", measurement);
 
+
+
+    const chart = componentChartRef.value;
+    if (!chart) return;
+
+    const vector = measurement.values[pluginState.value.selectedColumn?.name ?? ''];
+    console.log("Received new measurement:", vector);
+
+
+    if (!vector || !Array.isArray(vector) || vector.length === 0) {
+      console.warn("No vector data available");
+      return;
+    }
+
+    const newTimestamp = measurement.timestamp;
+    const numComponents = vector.length;
+
+
+
+    const zr = chart.chart.getZr();
+    for (let i = 0; i < numComponents; i++) {
+      const [x, y] = chart.convertToPixel({ seriesIndex: i }, [newTimestamp, vector[i]]);
+
+      const el = zr.storage.getDisplayList().find((el: any) => el.id == `highlight-point-${i}`);
+      if (el) {
+
+        el.attr({ position: [x, y], invisible: false });
+      }
+
+    }
 
 
   });

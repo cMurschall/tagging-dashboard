@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -6,8 +7,12 @@ from pydantic import Field
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        # `.env.prod` takes priority over `.env`
-        env_file=('.env', '.env.prod'),
+        # `.env.prod` takes priority over `.env`:
+        # Even when using a dotenv file, pydantic will still read environment variables
+        # as well as the dotenv file, environment variables will always take priority
+        # over values loaded from a dotenv file.
+        # https://docs.pydantic.dev/latest/concepts/pydantic_settings/#dotenv-env-support
+        env_file=os.getenv("TAGGING_DASHBOARD_ENV", (".env", ".env.prod")),
         extra='allow'
     )
     # Application settings

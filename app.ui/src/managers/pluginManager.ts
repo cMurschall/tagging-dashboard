@@ -29,6 +29,7 @@ export interface PluginServices {
     getDataManager: () => DataManager,
     showToast: ShowToastFn;
     savePluginState: (id: string, state: Record<string, any>) => void;
+
 }
 
 export type PluginType = 'ListView' | 'VideoPlayer' | 'Gauge' | 'ScatterPlot' | 'TestGridItem' | 'TagTimeline' | 'VectorComponents';
@@ -149,9 +150,9 @@ export class PluginManager {
         const newItem = {
             id: id,
             // spread x and y from the gridItemManager (does not really work well yet)
-            ...this.gridItemManager.suggestFreeSpace(this.pluginSizes[pluginName].w, this.pluginSizes[pluginName].h),
-            w: this.pluginSizes[pluginName].w,
-            h: this.pluginSizes[pluginName].h,
+            //...this.gridItemManager.suggestFreeSpace(this.pluginSizes[pluginName].w, this.pluginSizes[pluginName].h),
+            w: this.pluginSizes[pluginName].w ,
+            h: this.pluginSizes[pluginName].h  * 4,
             component: pluginName,
             title: pluginName,
             props: props,

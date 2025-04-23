@@ -48,9 +48,16 @@ export default defineComponent({
             grid = GridStack.init(
                 {
                     float: true,
-                    cellHeight: 70,
+                    cellHeight: 20,
+
                     minRow: 1,
                     margin: 2,
+                    draggable: {
+                        handle: '.drag-target'
+                    },
+                    resizable: {
+                        handles : 'sw, se'
+                    }
                 },
                 gridContainer.value as HTMLElement
             );
@@ -83,7 +90,6 @@ export default defineComponent({
 
             // GridStack's render callback:
             GridStack.renderCB = (contentEl: HTMLElement, w: GridStackNode) => {
-                w.noMove = true; // Prevent moving the item with drag and drop
 
                 const widget = w as GridManagerItem;
 
@@ -118,23 +124,13 @@ export default defineComponent({
                             }
                         };
 
-                        // If user clicks remove in the card header,
-                        const handleToggleMoveLock = (value: boolean) => {
-                            console.log('Move lock changed:', {
-                                value,
-                                id: widget.id,
-                            });
-                            if (grid && w.el) {
-                                grid?.update(w.el, { noMove: value });
-                            }
-                        };
+
 
                         // Wrap that child in our CardWrapper
                         return () =>
                             h(CardWrapper, {
                                 title: widget.title,
-                                onRemove: handleRemove,
-                                "onMove-lock-changed": handleToggleMoveLock,
+                                onRemove: handleRemove
                             }, {
                                 default: (slotProps: any) => {
                                     return h(compDef, {

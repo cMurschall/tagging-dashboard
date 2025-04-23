@@ -6,7 +6,6 @@ export interface GridManagerItem {
     y?: number;
     w?: number;
     h?: number;
-    noMove?: boolean;
     component?: string;
     title?: string;
     props?: Record<string, any> | undefined;

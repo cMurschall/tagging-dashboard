@@ -3,8 +3,8 @@
         <BDropdown text="Add Plugin" class="me-2" :disable="projectStore.isProjectLoaded">
             <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddVideo">Add Video</BDropdownItem>
             <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddGauge">Add Gauge</BDropdownItem>
-            <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddScatter">Add Chart</BDropdownItem>
-            <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddVectorComponents">Add vector components</BDropdownItem>
+            <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddScatter">Add xy-Chart</BDropdownItem>
+            <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddVectorComponents">Add Vector-Chart</BDropdownItem>
             <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddList">Add List</BDropdownItem>
             <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddTagLine">Add Tag Line</BDropdownItem>
             <BDropdownDivider />
@@ -232,7 +232,6 @@ const handleRestoreLayout = (layoutName: string) => {
             y: item.y,
             w: item.w,
             h: item.h,
-            noMove: true,
             id: item.id,
             title: item.title,
             props: componentProps

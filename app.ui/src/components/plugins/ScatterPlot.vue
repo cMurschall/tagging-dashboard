@@ -179,7 +179,10 @@ const chartOption = ref<EChartsOption>({
     show: true,
   },
   xAxis: [{
-    scale: true
+    scale: true,
+    axisLabel: {
+    formatter: (value: number) => (value).toFixed(0) + 's'
+  }
   }],
   yAxis: [{
     scale: true
@@ -210,6 +213,7 @@ const chartOption = ref<EChartsOption>({
       },
       z: 100, // make sure it's on top
       zlevel: 2,
+      invisible: true, // start as invisible
     }
   ],
   series: [

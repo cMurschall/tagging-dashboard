@@ -350,7 +350,7 @@ onMounted(async () => {
     if (!chart) return;
 
     const vector = measurement.values[pluginState.value.selectedColumn?.name ?? ''];
-    console.log("Received new measurement:", vector);
+    // console.log("Received new measurement:", vector);
 
 
     if (!vector || !Array.isArray(vector) || vector.length === 0) {

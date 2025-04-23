@@ -1,63 +1,30 @@
 <template>
   <div class="card h-100">
-    <div class="card-header d-flex justify-content-between align-items-center smaller-header">
-      <div @click="showMenu = !showMenu" style="cursor: pointer;">
-        <svg v-if="!showMenu" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-          class="feather feather-menu">
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-        <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-          class="feather feather-x">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </div>
+    <div class="card-header d-flex justify-content-between align-items-center smaller-header drag-target">
+
+      <button @click="showMenu = !showMenu" class="btn btn-outline btn-sm  mx-1">
+        <transition name="icon-transition" mode="out-in">
+          <svg v-if="showMenu" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.-->
+          <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512">
+            <path
+              d="M0 416c0 17.7 14.3 32 32 32l54.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 448c17.7 0 32-14.3 32-32s-14.3-32-32-32l-246.7 0c-12.3-28.3-40.5-48-73.3-48s-61 19.7-73.3 48L32 384c-17.7 0-32 14.3-32 32zm128 0a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM320 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32-80c-32.8 0-61 19.7-73.3 48L32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l246.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48l54.7 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-54.7 0c-12.3-28.3-40.5-48-73.3-48zM192 128a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm73.3-64C253 35.7 224.8 16 192 16s-61 19.7-73.3 48L32 64C14.3 64 0 78.3 0 96s14.3 32 32 32l86.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 128c17.7 0 32-14.3 32-32s-14.3-32-32-32L265.3 64z" />
+          </svg>
+
+        </transition>
+      </button>
 
       <h6 class="mb-0">{{ title }}</h6>
 
-
-
       <div class="d-flex justify-content-end align-items-center ">
-        <button class="btn btn-outline-dark btn-sm mx-1" @click="handleToggleMoveLock">
-          <svg v-if="!isMoveLocked" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            aria-label="Move Handle">
-
-            <line x1="12" y1="3" x2="12" y2="21"></line>
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-
-            <polyline points="9 6 12 3 15 6"></polyline>
-            <polyline points="9 18 12 21 15 18"></polyline>
-            <polyline points="6 9 3 12 6 15"></polyline>
-            <polyline points="18 9 21 12 18 15"></polyline>
-          </svg>
-          <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            aria-label="Move Locked Handle">
-
-
-            <g opacity="0.5">
-              <line x1="12" y1="3" x2="12" y2="21"></line>
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-
-              <polyline points="9 6 12 3 15 6"></polyline>
-              <polyline points="9 18 12 21 15 18"></polyline>
-              <polyline points="6 9 3 12 6 15"></polyline>
-              <polyline points="18 9 21 12 18 15"></polyline>
-            </g>
-          </svg>
-        </button>
-
-
 
         <button class="btn btn-outline-danger btn-sm  mx-1" @click="$emit('remove')">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            class="feather feather-x">
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
@@ -81,12 +48,12 @@ export default defineComponent({
       default: ''
     }
   },
-  emits: ['remove', 'move-lock-changed'],
+  emits: ['remove'],
   setup(props, { emit }) {
     const cardTitle = ref(props.title);
 
     const showMenu = ref(false);
-    const isMoveLocked = ref(true);
+
 
     // Watch for prop updates (in case title changes dynamically)
     watch(() => props.title, (newTitle) => {
@@ -98,37 +65,49 @@ export default defineComponent({
       cardTitle.value = newTitle;
     });
 
-    // Function to handle move lock toggle
-    const handleToggleMoveLock = () => {
-      isMoveLocked.value = !isMoveLocked.value;
-      // Emit an event to notify parent component about the move lock state change
-      emit('move-lock-changed', isMoveLocked.value);
-    };
 
 
 
-    return { title: cardTitle, showMenu, isMoveLocked, handleToggleMoveLock };
+    return { title: cardTitle, showMenu };
   }
 });
 </script>
 
 
-<style scoped>
+<style scoped lang="scss">
 .no-scrollbar {
   overflow: auto;
-  scrollbar-width: none;
-  /* For Firefox */
-  -ms-overflow-style: none;
-  /* For IE 10+ */
-}
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE 10+
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-  /* For Chrome, Safari, and Opera */
+  &::-webkit-scrollbar {
+    display: none; // Chrome, Safari, Opera
+  }
 }
 
 .smaller-header {
   padding: 0.5rem 1rem;
   margin: 0;
+}
+
+// Transition for icons
+.icon-transition {
+
+  &-enter-active,
+  &-leave-active {
+    transition: all 0.2s ease;
+  }
+
+  &-enter-from,
+  &-leave-to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  &-enter-to,
+  &-leave-from {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 </style>

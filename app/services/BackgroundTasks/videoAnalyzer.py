@@ -19,6 +19,10 @@ from app.dependencies import get_settings
 def analyze_video(video_info: TestDriveVideoInfo) -> bool:
     faststart_location = find_moov_atom_location(Path(video_info.video_file_full_path))
 
+    # here we check if the moov atom is at the start of the file. This is needed because if it is at the end of
+    # the file, the video will not be playable in a web browser. This is a requirement for the video player
+    # the moove atom is likely at the end of the simulation video, because the simulation video is recorded
+    # and during the recording the final length is not known. So the recorder puts the moov atom at the end of the file
     if faststart_location != MoovPosition.Start:
         print(f"Video {video_info.video_file_name} is not fast start enabled. Processing...")
         move_moov_atom(video_info.video_file_full_path)

@@ -134,7 +134,6 @@ export default defineComponent({
                             }, {
                                 default: (slotProps: any) => {
                                     return h(compDef, {
-                                        ...(widget.props || {}),
                                         showMenu: slotProps.showMenu,
                                         id: widget.id,
                                     });

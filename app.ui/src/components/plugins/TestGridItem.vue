@@ -14,20 +14,16 @@
 
 <script lang="ts">
 import { defineComponent, inject, PropType } from 'vue';
-import { useVideoControl } from '../../composables/useVideoControl';
+// import { useVideoControl } from '../../composables/useVideoControl';
 import { SetCardTitleFn } from '../../plugins/AppPlugins';
 import { PluginServices } from '../../managers/pluginManager';
 
 
-const { seekTo } = useVideoControl()
 
 type PluginState = {
   counter: number;
 }
 
-const isPluginState = (obj: any): obj is PluginState => {
-  return typeof obj === 'object' && 'counter' in obj;
-};
 
 export default defineComponent({
   name: 'ChildComponent',
@@ -62,17 +58,15 @@ export default defineComponent({
 
     return {
       updateTitle: () => setCardTitle('Updated Title from Child ' + Math.random().toFixed(2)),
-      seekTo,
+      seekTo: pluginService.getVideoControl().seekTo,
       pluginService
     };
   },
   mounted() {
+    this.pluginState = this.pluginService.getPluginState() as PluginState || this.pluginState;
+    // Set the card title when the component is mounted
     console.log('Test grid item mounted.');
-    // copy the plugin state from the props to the local state
-    if (this.$props.pluginState && isPluginState(this.$props.pluginState)) {
-      console.log('Updating plugin state from props:', { ...this.$props.pluginState });
-      this.pluginState = { ...this.$props.pluginState };
-    }
+
   },
   unmounted() {
     console.log('Test grid item unmounted');
@@ -80,7 +74,7 @@ export default defineComponent({
   watch: {
     pluginState: {
       handler(newValue) {
-        this.pluginService.savePluginState(this.id, newValue);
+        this.pluginService.savePluginState(newValue);
       },
       deep: true
     }

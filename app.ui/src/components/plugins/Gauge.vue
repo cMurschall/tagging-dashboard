@@ -108,34 +108,25 @@ type PluginState = {
 
 interface GaugeProps {
   showMenu?: boolean,
-  id: string;
-  pluginState?: PluginState;
 }
 
 
 
-// Define component props with default values
-const props = withDefaults(defineProps<GaugeProps>(), {
-  showMenu: false, // Default value for showMenu
+// Define component props
+const props = defineProps<GaugeProps>();
 
-  id: '', // Default value for id
 
-  // Default values for properties within pluginState if pluginState is undefined
-  pluginState: () => ({
-    gaugeMin: 0,
-    gaugeMax: 100,
-    gaugeCountSplits: 10,
-    gaugeColor: "#007bff",
-    gaugeFormat: "{value:F2}",
-    gaugeConverter: `${IDENTITY_EXPRESSION} * 1`,
 
-    selectedColumn: null,
-  }),
+const pluginState = ref<PluginState>({
+  gaugeMin: 0,
+  gaugeMax: 100,
+  gaugeCountSplits: 10,
+  gaugeColor: "#007bff",
+  gaugeFormat: "{value:F2}",
+  gaugeConverter: `${IDENTITY_EXPRESSION} * 1`,
+
+  selectedColumn: null,
 });
-
-
-
-const pluginState = ref<PluginState>(JSON.parse(JSON.stringify(props.pluginState)));
 
 // Default gauge options
 const gaugeOption = ref({
@@ -231,8 +222,8 @@ watch(pluginState, async (newValue) => {
   }
 
 
-  // update the gridmanager with the new plugin state
-  pluginService.savePluginState(props.id, newValue);
+  // update =the new plugin state
+  pluginService.savePluginState(newValue);
 
 }, { deep: true });
 
@@ -241,6 +232,8 @@ watch(pluginState, async (newValue) => {
 
 
 onMounted(async () => {
+
+  pluginState.value = pluginService.getPluginState() as PluginState|| pluginState.value;
 
   await loadColumns();
   // Listen to resize events
@@ -265,16 +258,9 @@ onMounted(async () => {
   }
 
   subscription = pluginService.getDataManager().measurement$.subscribe((measurements: TimeseriesDataPoint) => {
-    // console.log('Received measurements:', measurements);
-    // check if measurements has our selected column name
-    // if (!pluginState.value.selectedColumn) {
-    //   console.warn('No measurements for selected column:', pluginState.value.selectedColumn);
-    //   return;
-    // }
-    // Use the gauge data.
 
     let x = measurements.values[pluginState.value.selectedColumn?.name ?? ''];
-    // console.log('Raw value:', x);
+
     // check if the value is a number and not an array
     if (typeof x !== 'number') {
       console.warn('Value is not a number:', x);
@@ -284,8 +270,7 @@ onMounted(async () => {
     if (pluginState.value.gaugeConverter) {
       x = transformMathJsValue(x, pluginState.value.gaugeConverter);
     }
-    // console.log('Transformed value:', x);
-    // gaugeOption.value.series[0].data[0].value = x
+
 
     chartRef.value?.setOption({
       series: [
@@ -318,14 +303,8 @@ const loadColumns = async () => {
 
     const numericColumns = response.columns.filter((c: any) => c.type.includes('int') || c.type.includes('float'));
 
-    // console.log('Numeric Columns loaded', numericColumns);
     availableColumns.value = numericColumns; //.map(x => ({ text: x.name, value: x }));
 
-    // const preSelectedColumn = numericColumns.filter(c => c.name == 'car0_velocity_vehicle')
-    // if (preSelectedColumn.length > 0) {
-
-    //   pluginState.value.selectedColumn = preSelectedColumn[0];
-    // }
   }
   if (error) {
     console.error('Error loading columns:', error);

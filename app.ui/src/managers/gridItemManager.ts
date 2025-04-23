@@ -1,15 +1,7 @@
 import { Observable } from "../observable";
+import { StoredLayoutItem } from "./layoutManager";
 
-export interface GridManagerItem {
-    id: string;
-    x?: number;
-    y?: number;
-    w?: number;
-    h?: number;
-    component?: string;
-    title?: string;
-    props?: Record<string, any> | undefined;
-    pluginState?: Record<string, any> | undefined;
+export interface GridManagerItem extends StoredLayoutItem {
     dependencies?: Record<string, any> | undefined;
 }
 
@@ -45,15 +37,11 @@ export class GridManager {
             return;
         }
 
-        if (item.dependencies) {
-            item.dependencies = (item.dependencies);
-        }
-
         this.GridManagerItems.push(item);
         GridManager.newItemObservable.next(item);
     }
 
-    public updateItemById(id: string, item: Partial<Omit<GridManagerItem, 'props'>> & { props?: Partial<GridManagerItem['props']> }): void {
+    public updateItemById(id: string, item: Partial<GridManagerItem>): void {
         const index = this.GridManagerItems.findIndex((i) => i.id === id);
         if (index === -1) {
             console.error(`Error: item with id ${id} does not exist`);
@@ -65,7 +53,6 @@ export class GridManager {
         this.GridManagerItems[index] = {
             ...existingItem,
             ...item,
-            props: { ...existingItem.props, ...item.props },
         };
     }
 

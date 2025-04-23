@@ -56,7 +56,7 @@
 
 <script setup lang="ts">
 import Chart from "vue-echarts";
-import { ref, onMounted, onUnmounted, inject, computed, watch } from "vue";
+import { ref, onMounted, onUnmounted, inject, watch } from "vue";
 import { TimeseriesDataPoint, TimeseriesTable } from "../../managers/dataManager";
 import { EmptySubscription, Subscription } from "../../observable";
 import {
@@ -64,9 +64,9 @@ import {
   getTimestampStatistics, clamp, transformMathJsValue,
   IDENTITY_EXPRESSION
 } from "../../services/utilities";
-import { BCol, BFormGroup, BFormSelect, BRow, BFormInput } from "bootstrap-vue-next";
+import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
-import { useVideoControl } from './../../composables/useVideoControl';
+// import { useVideoControl } from './../../composables/useVideoControl';
 import FilterableSelect from './../FilterableSelect.vue';
 
 
@@ -122,9 +122,6 @@ if (!pluginService) {
 }
 
 
-const { seekTo } = useVideoControl();
-
-
 type PluginState = {
   selectedYColumnLeft: ColumnInfo | null;
   selectedYColumnRight: ColumnInfo | null;
@@ -143,17 +140,14 @@ interface ScatterPlotProps {
 }
 const props = withDefaults(defineProps<ScatterPlotProps>(), {
   showMenu: false, // Default value for showMenu
-
-  id: '', // Default value for id
-  pluginState: () => ({
-    selectedYColumnLeft: null,
-    selectedYColumnRight: null,
-    yAxisExpressionLeft: '',
-    yAxisExpressionRight: '',
-  }),
 });
 
-const pluginState = ref<PluginState>(JSON.parse(JSON.stringify(props.pluginState)));
+const pluginState = ref<PluginState>({
+  selectedYColumnLeft: null,
+  selectedYColumnRight: null,
+  yAxisExpressionLeft: IDENTITY_EXPRESSION,
+  yAxisExpressionRight: IDENTITY_EXPRESSION,
+});
 
 // --- Reactive State ---
 const containerRef = ref<HTMLDivElement | null>(null);
@@ -181,8 +175,8 @@ const chartOption = ref<EChartsOption>({
   xAxis: [{
     scale: true,
     axisLabel: {
-    formatter: (value: number) => (value).toFixed(0) + 's'
-  }
+      formatter: (value: number) => (value).toFixed(0) + 's'
+    }
   }],
   yAxis: [{
     scale: true
@@ -279,7 +273,7 @@ const handleVChartClick = (params: ElementEvent) => {
 
 
     const [x, _] = chart.convertFromPixel({ seriesIndex: 0 }, [params.offsetX, params.offsetY]);
-    seekTo(x); // Call the seekTo function with the x value
+    pluginService.getVideoControl().seekTo(x); // Call the seekTo function with the x value
   }
 };
 
@@ -424,13 +418,17 @@ watch(pluginState, async (newValue) => {
   const allMeasurements = pluginService.getDataManager().getAllMeasurements();
   updateChartData(allMeasurements);
 
-  pluginService.savePluginState(props.id, newValue);
+  pluginService.savePluginState(newValue);
 
 }, { deep: true, immediate: true });
 
 
 // --- Lifecycle Hooks ---
 onMounted(async () => {
+
+  // Set the default plugin state if not provided
+  pluginState.value = pluginService.getPluginState() as PluginState || pluginState.value;
+
   await loadColumns();
 
 

@@ -126,23 +126,19 @@ interface ScatterPlotProps {
     showMenu: boolean;
 
     id: string;
-    pluginState?: PluginState;
 
 }
 const props = withDefaults(defineProps<ScatterPlotProps>(), {
-    showMenu: false, // Default value for showMenu
-
-    id: '', // Default value for id
-    pluginState: () => ({
-        selectedYColumnLeft: null,
-        selectedYColumnRight: null,
-        yAxisExpressionLeft: '',
-        yAxisExpressionRight: '',
-        retentionMinutes: 4, // Default retention time in minutes
-    }),
+    showMenu: false, // Default value for showMenu),
 });
 
-const pluginState = ref<PluginState>(JSON.parse(JSON.stringify(props.pluginState)));
+const pluginState = ref<PluginState>({
+    selectedYColumnLeft: null,
+    selectedYColumnRight: null,
+    yAxisExpressionLeft: IDENTITY_EXPRESSION,
+    yAxisExpressionRight: IDENTITY_EXPRESSION,
+    retentionMinutes: 4, // Default retention time in minutes
+});
 
 // --- Reactive State ---
 const containerRef = ref<HTMLDivElement | null>(null);
@@ -280,7 +276,7 @@ watch(pluginState, async (newValue) => {
     let title = `Timestamp vs ${columnsToInitialize.join(' & ')} (live)`;
     setCardTitle(title);
 
-    pluginService.savePluginState(props.id, toRaw(newValue));
+    pluginService.savePluginState(newValue);
 
     // Update axis names based on selections
     getLeftSeries().name = primaryColName ? primaryColName : '';
@@ -292,6 +288,10 @@ let flushTimer: ReturnType<typeof setInterval> | null = null;
 
 // --- Lifecycle Hooks ---
 onMounted(async () => {
+
+    pluginState.value = pluginService.getPluginState() as PluginState || pluginState.value;
+
+
     await loadColumns();
 
 

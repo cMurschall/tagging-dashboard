@@ -7,7 +7,7 @@
 
         <BCardText >
             <BAlert variant="warning" :model-value="true" v-if="props.project.isLive">
-                ⚠️ Connect to Panthera Logger
+                Panthera Live Logger available
             </BAlert>
             <div v-else>
                 <p>Date: {{ dateTime }}</p>

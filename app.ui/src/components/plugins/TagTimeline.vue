@@ -153,7 +153,7 @@ import {
     BTableSimple, BThead, BTr, BTh, BTbody, BTd
 } from "bootstrap-vue-next";
 
-import { useVideoControl } from '../../composables/useVideoControl';
+// import { useVideoControl } from '../../composables/useVideoControl';
 import { Tag, TagCategory } from '../../../services/restclient';
 import { safeFetch, TagApiClient as client, WebSocketBasePath } from '../../services/utilities';
 import { EmptySubscription, Subscription } from '../../observable';
@@ -175,7 +175,7 @@ echarts.use([
 ]);
 
 
-const { seekTo } = useVideoControl();
+
 
 
 // Inject the function from the parent
@@ -212,15 +212,9 @@ interface Cartesian2DCoordSys {
 
 const props = withDefaults(defineProps<TagTimelineProps>(), {
     showMenu: false, // Default value for showMenu
-
-    id: '', // Default value for id
-    pluginState: () => ({
-
-    }),
-
 });
 
-const pluginState = ref<PluginState>(JSON.parse(JSON.stringify(props.pluginState)));
+const pluginState = ref<PluginState>({});
 
 interface TagViewModel {
     id: string;
@@ -896,7 +890,7 @@ const handleOnZrChartClick = (params: any) => {
 
         const [x, _] = chart.convertFromPixel({ seriesIndex: 3 }, [params.offsetX, params.offsetY]);
         console.log("Clicked on chart:", x);
-        seekTo(x); // Seek to the clicked time
+        pluginService.getVideoControl().seekTo(x); // Seek to the clicked time
     }
 
 }

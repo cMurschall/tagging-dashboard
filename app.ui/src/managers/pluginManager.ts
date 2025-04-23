@@ -1,6 +1,6 @@
 
 import { EmptySubscription, Observable, Subscription } from "../observable";
-import { isNullOrUndefined, TestDriveProjectInfo, WebSocketBasePath } from "../services/utilities";
+import { isNotNullOrUndefined, isNullOrUndefined, TestDriveProjectInfo, WebSocketBasePath } from "../services/utilities";
 import { DataManager } from "./dataManager";
 import { getGridManager, GridManager, GridManagerItem } from './gridItemManager';
 
@@ -20,15 +20,23 @@ import { WebSocketDataConnection } from "../services/webSocketDataConnection";
 import { WebsocketDataManager } from "./websocketDataManager";
 import { WebSocketSimulationTimeConnection } from "../services/webSocketSimulationTimeConnection";
 
+
 import { isProxy, toRaw } from "vue";
+
+import { VideoControl } from "./videoControl";
+
+
 
 
 export interface PluginServices {
+    getId: () => string;
     simulationTime: Observable<number>;
     getProjectInfo: () => TestDriveProjectInfo | undefined;
     getDataManager: () => DataManager,
     showToast: ShowToastFn;
-    savePluginState: (id: string, state: Record<string, any>) => void;
+    savePluginState: ( state: Record<string, any>) => void;
+    getPluginState: () => Record<string, any> | undefined;
+    getVideoControl : () => VideoControl;
 
 }
 
@@ -48,6 +56,8 @@ export class PluginManager {
     public readonly simulationTimeObservable = new Observable<number>(0);
 
     private timeStampSubscription: Subscription = EmptySubscription
+
+    private readonly videoControl = new VideoControl()
 
     private pluginSizes = {
         ListView: { w: 3, h: 5 },
@@ -116,12 +126,15 @@ export class PluginManager {
     }
 
 
-    public restorePlugin(plugin: GridManagerItem): void {
+    public restorePlugin(plugin: GridManagerItem, pluginState : Record<string, any> | undefined): void {
 
         const service = this.getCurrentService(plugin.id);
+
+        if (isNotNullOrUndefined(pluginState)) {
+            service.getPluginState = () => pluginState;
+        }
         // preserve and merge the dependencies
         plugin.dependencies = {
-            ...plugin.dependencies,
             pluginService: service
         };
 
@@ -193,6 +206,7 @@ export class PluginManager {
 
 
         return {
+            getId: () => pluginId,
             simulationTime: this.simulationTimeObservable,
             getProjectInfo: () => this.loadedProject,
             getDataManager: () => {
@@ -200,18 +214,27 @@ export class PluginManager {
                 return dataManager;
             },
             showToast: this.showToast,
-            savePluginState: (id: string, state: Record<string, any>) => {
-                const item = this.gridItemManager.getGridItems().find(i => i.id === id);
+            savePluginState: (state: Record<string, any>) => {
+                const item = this.gridItemManager.getGridItems().find(i => i.id === pluginId);
                 if (!item) {
-                    console.warn(`Plugin state update failed: no item found with id '${id}'`);
+                    console.warn(`Plugin state update failed: no item found with id '${pluginId}'`);
                     return;
                 }
 
                 const rawState = isProxy(state) ? toRaw(state) : state;
-                this.gridItemManager.updateItemById(id, {
-                    pluginState: { ...rawState },
+                this.gridItemManager.updateItemById(pluginId, {
+                    pluginState: { ...JSON.parse(JSON.stringify(rawState)) },
                 });
-            }
+            },
+            getPluginState: () => {
+                const item = this.gridItemManager.getGridItems().find(i => i.id === pluginId);
+                if (!item) {
+                    console.warn(`Plugin state retrieval failed: no item found with id '${pluginId}'`);
+                    return undefined;
+                }
+                return item.pluginState;
+            },
+            getVideoControl: () => this.videoControl,
         };
     }
 }

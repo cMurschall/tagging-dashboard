@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
 import { ApiPath, TestDriveVideoInfo, isDevMode, clamp } from '../../services/utilities';
-import { useVideoControl } from './../../composables/useVideoControl'
+// import { useVideoControl } from './../../composables/useVideoControl'
 import videojs from "video.js";
 import "videojs-sprite-thumbnails";
 import Player from 'video.js/dist/types/player';
@@ -133,19 +133,8 @@ const handleError = () => {
   error.value = "Unable to load the video. Please try again.";
 }
 
-// // Updated watch to avoid calling `loadVideo` prematurely
-// watch(() => pluginService.getProjectInfo()?.testDriveVideoInfo.videoFileName, (newValue) => {
-//   // Call loadVideo only if the video player is initialized
-//   if (newValue && videoPlayer.value) {
-//     loadVideo(props.videoInfo);
-//   }
-// },
-//   { immediate: false } // Remove immediate to avoid preemptive execution
-// );
-
 
 onMounted(() => {
-  const { videoRef, setSeekTo } = useVideoControl()
 
   if (!videoElement.value) {
     console.error('Video element not found');
@@ -161,7 +150,7 @@ onMounted(() => {
 
 
     // Define the actual seekTo logic
-    setSeekTo((simulationTime: number) => {
+    pluginService.getVideoControl().setSeekTo((simulationTime: number) => {
       if (videoPlayer.value) {
         const simulationStart = pluginService.getProjectInfo()?.testDriveVideoInfo?.videoSimulationTimeStartS ?? 0;
 
@@ -230,9 +219,6 @@ onMounted(() => {
       loadVideo(videoInfo);
     }
   }) as VideoPlayer; // Cast the player to the custom VideoPlayer type
-
-
-  videoRef.value = videoPlayer.value; // Set the videoRef to the player instance
 
 
 })

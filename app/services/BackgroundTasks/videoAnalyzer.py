@@ -38,12 +38,15 @@ def analyze_video(video_info: TestDriveVideoInfo) -> bool:
         video_info.video_height = info["video_height"]
         video_info.video_frame_rate = info["video_frame_rate"]
 
+        start_by_timestamp_change = estimate_start_timestamp(video_info.video_file_full_path,
+                                                             video_info.video_frame_rate)
         start = process_first_n_frames(video_info.video_file_full_path, video_info.video_frame_rate, 10)
         stop = process_last_n_frames(video_info.video_file_full_path, video_info.video_frame_rate, 10)
 
         video_info.video_simulation_time_start_s = start
         video_info.video_simulation_time_end_s = stop
 
+    # here we generate the thumbnail preview images for the video. This is needed for the video player
     has_thumbnail = video_info.video_sprite_info.sprite_file_name != ""
     if not has_thumbnail:
         settings = get_settings()
@@ -158,7 +161,7 @@ def extract_video_info(video_file_path: str):
     return None
 
 
-def extract_timestamp_from_frame(frame, frame_count):
+def extract_timestamp_from_frame(frame) -> str | None:
     # Define the region of interest (ROI) for the timestamp (top-left corner)
     roi = frame[30:130, 20:650]
 
@@ -167,7 +170,7 @@ def extract_timestamp_from_frame(frame, frame_count):
     return results[0].strip() if results else None
 
 
-def parse_timestamp_to_seconds(timestamp):
+def parse_timestamp_to_seconds(timestamp) -> float:
     # Split the timestamp into hours, minutes, seconds, and microseconds
     parts = timestamp.split('.')  # Split by "."
     if len(parts) != 4:
@@ -185,7 +188,55 @@ def parse_timestamp_to_seconds(timestamp):
     return total_seconds
 
 
-def process_first_n_frames(video_path, frame_rate, frames=20):
+def estimate_start_timestamp(video_path, frame_rate, search_duration_secs=1.5) -> float:
+    def extract_timestamp_at_frame(cap, frame_idx):
+        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+        ret, frame = cap.read()
+        if not ret:
+            return None
+        return extract_timestamp_from_frame(frame)
+
+    cap = cv2.VideoCapture(video_path)
+    max_frame = int(search_duration_secs * frame_rate)
+
+    start_frame = 10
+
+    low = start_frame
+    high = max_frame
+
+    # Get initial timestamp at frame 0
+    first_ts = extract_timestamp_at_frame(cap, start_frame)
+    if not first_ts:
+        cap.release()
+        raise ValueError("No timestamp found at frame 0.")
+
+    # Binary search for first timestamp change
+    while low < high:
+        mid = (low + high) // 2
+        ts = extract_timestamp_at_frame(cap, mid)
+        if not ts or ts == first_ts:
+            low = mid + 1
+        else:
+            high = mid
+
+    # Final extraction at frame with changed timestamp
+    changed_ts = extract_timestamp_at_frame(cap, low)
+    cap.release()
+
+    if changed_ts:
+        ts_seconds = parse_timestamp_to_seconds(changed_ts)
+        seconds_offset = low / frame_rate
+        seconds_at_frame_0 = ts_seconds - seconds_offset
+
+        print(f"Timestamp at frame {low}: {changed_ts} = {ts_seconds:.6f}s")
+        print(f"Estimated timestamp at frame 0: {seconds_at_frame_0:.6f}s")
+
+        return seconds_at_frame_0
+    else:
+        raise ValueError("Unable to determine timestamp change within search window.")
+
+
+def process_first_n_frames(video_path, frame_rate, frames=20) -> float:
     cap = cv2.VideoCapture(video_path)
     frame_count = 0
     total_seconds = 0
@@ -196,7 +247,7 @@ def process_first_n_frames(video_path, frame_rate, frames=20):
             break
 
         # Extract timestamp
-        timestamp = extract_timestamp_from_frame(frame, frame_count)
+        timestamp = extract_timestamp_from_frame(frame)
         if timestamp:
             total_seconds = parse_timestamp_to_seconds(timestamp)
             print(f"Frame {frame_count}: Extracted Timestamp: {timestamp}, Total Seconds: {total_seconds}")
@@ -226,7 +277,7 @@ def process_last_n_frames(video_path, frame_rate, frames=20):
             break
 
         current_frame_number = start_frame + frame_count
-        timestamp = extract_timestamp_from_frame(frame, current_frame_number)
+        timestamp = extract_timestamp_from_frame(frame)
         if timestamp:
             extracted_seconds = parse_timestamp_to_seconds(timestamp)
             print(f"Frame {current_frame_number}: Extracted Timestamp: {timestamp}, Total Seconds: {extracted_seconds}")

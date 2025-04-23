@@ -222,9 +222,7 @@ const handleRestoreLayout = (layoutName: string) => {
 
     for (const item of layoutToRestore) {
 
-        let componentProps: any = {
-            pluginState: item.pluginState,
-        };
+
 
         getPluginManager().restorePlugin({
             component: item.component,
@@ -234,8 +232,7 @@ const handleRestoreLayout = (layoutName: string) => {
             h: item.h,
             id: item.id,
             title: item.title,
-            props: componentProps
-        });
+        }, item.pluginState);
     }
 };
 

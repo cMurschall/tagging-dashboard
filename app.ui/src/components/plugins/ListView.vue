@@ -43,7 +43,7 @@
 
                             <FilterableSelect v-model="pluginState.columnDataInfos[index].selectedColumn"
                                 :options="availableColumns" :getLabel="(item: ColumnInfo) => item.name"
-                       placeholder="Select Columns:" />
+                                placeholder="Select Columns:" />
                         </BCol>
 
 
@@ -136,22 +136,13 @@ type PluginState = {
 
 interface ListProps {
     showMenu?: boolean,
-    id: string;
-    pluginState?: PluginState;
 }
 // Define component props with default values
 const props = withDefaults(defineProps<ListProps>(), {
     showMenu: false, // Default value for showMenu
-
-    id: '', // Default value for id
-
-    // Default values for properties within pluginState if pluginState is undefined
-    pluginState: () => ({
-        columnDataInfos: [], // Default value for columnDataInfos
-    }),
 });
 
-const pluginState = ref<PluginState>(JSON.parse(JSON.stringify(props.pluginState)));
+const pluginState = ref<PluginState>({ columnDataInfos: [] });
 
 
 
@@ -229,6 +220,7 @@ const formatValue = (value: number | number[], key: string): string => {
 
 onMounted(async () => {
 
+    pluginState.value = pluginService.getPluginState() as PluginState || pluginState.value;
     await loadColumns();
 
     subscription = pluginService.getDataManager().measurement$.subscribe((data) => {
@@ -236,7 +228,7 @@ onMounted(async () => {
         console.log('Data received:', data);
     });
 
-    const initialColumnNames = props.pluginState.columnDataInfos.map((x) => x.selectedColumn?.name).filter((x) => x !== undefined) as string[];
+    const initialColumnNames = pluginState.value.columnDataInfos.map((x) => x.selectedColumn?.name).filter((x) => x !== undefined) as string[];
 
 
     // load the new columns
@@ -264,7 +256,7 @@ watch(pluginState, async (newValue) => {
     }
 
 
-    pluginService.savePluginState(props.id, newValue);
+    pluginService.savePluginState(newValue);
 }, { deep: true });
 
 

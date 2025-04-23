@@ -28,7 +28,7 @@ import { EmptySubscription, Subscription } from "../../observable";
 import { safeFetch, PlayerApiClient as client, isNullOrUndefined } from "../../services/utilities";
 import { BCol, BFormGroup, BRow } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
-import { useVideoControl } from '../../composables/useVideoControl';
+// import { useVideoControl } from '../../composables/useVideoControl';
 import FilterableSelect from "./../FilterableSelect.vue";
 
 
@@ -106,14 +106,11 @@ interface ScatterPlotProps {
 }
 const props = withDefaults(defineProps<ScatterPlotProps>(), {
   showMenu: false, // Default value for showMenu
-
-  id: '', // Default value for id
-  pluginState: () => ({
-    selectedColumn: null,
-  }),
 });
 
-const pluginState = ref<PluginState>(JSON.parse(JSON.stringify(props.pluginState)));
+const pluginState = ref<PluginState>({
+    selectedColumn: null,
+  });
 
 // --- Reactive State ---
 const containerRef = ref<HTMLDivElement | null>(null);
@@ -123,9 +120,6 @@ const availableColumns = ref<ColumnInfo[]>([]);
 
 
 let subscription: Subscription = EmptySubscription;
-
-
-const { seekTo } = useVideoControl();
 
 
 // --- ECharts Option ---
@@ -288,7 +282,7 @@ const handleVChartClick = (params: ElementEvent) => {
 
 
     const [x, _] = chart.convertFromPixel({ seriesIndex: 0 }, [params.offsetX, params.offsetY]);
-    seekTo(x); // Call the seekTo function with the x value
+    pluginService.getVideoControl().seekTo(x); // Call the seekTo function with the x value
   }
 };
 
@@ -312,13 +306,16 @@ watch(pluginState, async (newValue) => {
 
   componentChartOption.value = buildMultiGridVectorChart(allMeasurements);
 
-  pluginService.savePluginState(props.id, newValue);
+  pluginService.savePluginState(newValue);
 
 }, { deep: true, immediate: true });
 
 
 // --- Lifecycle Hooks ---
 onMounted(async () => {
+
+  pluginState.value = pluginService.getPluginState() as PluginState || pluginState.value;
+
   await loadColumns();
 
 

@@ -18,7 +18,7 @@
         </transition>
       </button>
 
-      <h6 class="mb-0">{{ title }}</h6>
+      <h6 class="mb-0">{{ cardTitle }}</h6>
 
       <div class="d-flex justify-content-end align-items-center ">
 
@@ -42,6 +42,7 @@
 <script lang="ts">
 import { defineComponent, ref, inject, shallowRef, PropType, watch, onMounted, onUnmounted } from 'vue';
 import { PluginServices, TaggingDashboardPlugin } from '../managers/pluginManager';
+import { useObservable } from '../services/utilities';
 
 
 export default defineComponent({
@@ -49,14 +50,8 @@ export default defineComponent({
   props: {
     title: {
       type: String,
-      default: ''
+      default: 'Card Title',
     },
-    // Accept the plugin instance directly (can have reactivity caveats)
-    // plugin: {
-    //   type: Object as PropType<TaggingDashboardPlugin>,
-    //   required: true // Or false if card can be empty
-    // },
-    // OR, accept a factory function (often safer for instances)
     pluginFactory: {
        type: Function as PropType<() => TaggingDashboardPlugin>,
        required: true // Or false
@@ -69,10 +64,14 @@ export default defineComponent({
       throw new Error('Plugin service not found!');
     }
     // Card's own logic (title, menu, remove button) - mostly stays the same
-    // const cardTitle = useObservable(pluginService.cardTitle$); // Keep if needed
-    // cardTitle.value = props.title;
+    const cardTitle = useObservable(pluginService.cardTitle$); // Keep if needed
+    cardTitle.value = props.title; // Set initial title from prop
+
     const showMenu = ref(false);
-    const handleToggleMenu = () => { /* ... */ };
+    const handleToggleMenu = () => {
+      showMenu.value = !showMenu.value;
+      pluginService.showMenu$.next(showMenu.value); // Update the observable state
+    };
     const handleRemove = () => emit('remove');
 
     // --- New Logic for Plugin Handling ---
@@ -81,7 +80,7 @@ export default defineComponent({
 
     const cleanupPlugin = () => {
         if (currentPlugin.value) {
-            console.log(`CardWrapper (${props.title}): Cleaning up plugin.`);
+            console.log(`CardWrapper (${cardTitle}): Cleaning up plugin.`);
              try {
                  currentPlugin.value.onUnmounted?.();
              } catch(e) { console.error("Error during plugin cleanup:", e); }
@@ -95,7 +94,7 @@ export default defineComponent({
          cleanupPlugin(); // Clean up previous plugin if any
 
          if (pluginContainerRef.value && factory) {
-             console.log(`CardWrapper (${props.title}): Setting up new plugin.`);
+             console.log(`CardWrapper (${cardTitle}): Setting up new plugin.`);
               try {
                  const plugin = factory(); // Create the plugin instance
                  currentPlugin.value = plugin; // Store instance
@@ -138,7 +137,7 @@ export default defineComponent({
 
     return {
         // Return existing refs/methods for template
-        title: props.title, // Or cardTitle if using observable
+        cardTitle,
         showMenu,
         handleToggleMenu,
         handleRemove,

@@ -32,15 +32,17 @@
       </div>
     </div>
     <div class="card-body no-scrollbar">
-      <slot />
+      <div ref="pluginContainerRef" class="plugin-target-within-card h-100">
+
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, inject } from 'vue';
-import { PluginServices } from '../managers/pluginManager';
-import { useObservable } from '../services/utilities';
+import { defineComponent, ref, inject, shallowRef, PropType, watch, onMounted, onUnmounted } from 'vue';
+import { PluginServices, TaggingDashboardPlugin } from '../managers/pluginManager';
+
 
 export default defineComponent({
   name: 'CardWrapper',
@@ -48,28 +50,101 @@ export default defineComponent({
     title: {
       type: String,
       default: ''
+    },
+    // Accept the plugin instance directly (can have reactivity caveats)
+    // plugin: {
+    //   type: Object as PropType<TaggingDashboardPlugin>,
+    //   required: true // Or false if card can be empty
+    // },
+    // OR, accept a factory function (often safer for instances)
+    pluginFactory: {
+       type: Function as PropType<() => TaggingDashboardPlugin>,
+       required: true // Or false
     }
   },
   emits: ['remove'],
-  setup(props) {
-
-
-    const pluginService = inject<PluginServices>('pluginService');
+  setup(props, { emit }) {
+    const pluginService = inject<PluginServices>('pluginService'); // Still useful for CardWrapper logic?
     if (!pluginService) {
       throw new Error('Plugin service not found!');
     }
-
-    const cardTitle = useObservable(pluginService.cardTitle$);
-    cardTitle.value = props.title; // Set the initial title from props
-
+    // Card's own logic (title, menu, remove button) - mostly stays the same
+    // const cardTitle = useObservable(pluginService.cardTitle$); // Keep if needed
+    // cardTitle.value = props.title;
     const showMenu = ref(false);
+    const handleToggleMenu = () => { /* ... */ };
+    const handleRemove = () => emit('remove');
 
-    const handleToggleMenu = () => {
-      showMenu.value = !showMenu.value;
-      pluginService.showMenu$.next(showMenu.value);
+    // --- New Logic for Plugin Handling ---
+    const pluginContainerRef = ref<HTMLElement | null>(null);
+    const currentPlugin = shallowRef<TaggingDashboardPlugin | null>(null); // Holds the active plugin instance
+
+    const cleanupPlugin = () => {
+        if (currentPlugin.value) {
+            console.log(`CardWrapper (${props.title}): Cleaning up plugin.`);
+             try {
+                 currentPlugin.value.onUnmounted?.();
+             } catch(e) { console.error("Error during plugin cleanup:", e); }
+            currentPlugin.value = null;
+             // Clear the container in case plugin didn't
+             if(pluginContainerRef.value) pluginContainerRef.value.innerHTML = '';
+        }
     };
 
-    return { title: cardTitle, showMenu, handleToggleMenu };
+    const setupPlugin = (factory: () => TaggingDashboardPlugin) => {
+         cleanupPlugin(); // Clean up previous plugin if any
+
+         if (pluginContainerRef.value && factory) {
+             console.log(`CardWrapper (${props.title}): Setting up new plugin.`);
+              try {
+                 const plugin = factory(); // Create the plugin instance
+                 currentPlugin.value = plugin; // Store instance
+                 // Pass necessary services. CardWrapper already has access to injected ones.
+                 plugin.create(pluginContainerRef.value, pluginService);
+                 plugin.onMounted?.();
+              } catch(e) {
+                  console.error("Error setting up plugin:", e);
+                  if(pluginContainerRef.value) pluginContainerRef.value.textContent = "Error loading plugin.";
+              }
+         }
+    };
+
+    // Watch for changes in the plugin factory prop
+    watch(() => props.pluginFactory, (newFactory) => {
+         if (newFactory) {
+             // Need to ensure the container element exists. If the factory changes
+             // after mount, ref should be available. If it changes *before* mount,
+             // onMounted will handle the initial setup.
+             if (pluginContainerRef.value) {
+                setupPlugin(newFactory);
+             }
+             // else: onMounted will call setupPlugin
+         } else {
+             cleanupPlugin(); // No factory provided, cleanup any existing plugin
+         }
+    }, { immediate: false }); // Don't run immediately, let onMounted handle initial
+
+    onMounted(() => {
+        // Initial plugin setup when the card mounts
+         if (props.pluginFactory) {
+             setupPlugin(props.pluginFactory);
+         }
+    });
+
+    onUnmounted(() => {
+        // Cleanup when the CardWrapper component itself is destroyed
+        cleanupPlugin();
+    });
+
+    return {
+        // Return existing refs/methods for template
+        title: props.title, // Or cardTitle if using observable
+        showMenu,
+        handleToggleMenu,
+        handleRemove,
+        // Ref for the plugin container div in the template
+        pluginContainerRef
+    };
   },
 });
 </script>

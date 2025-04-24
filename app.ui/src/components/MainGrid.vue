@@ -18,6 +18,7 @@ import { GridItemHTMLElement, GridStack, GridStackNode } from 'gridstack';
 import CardWrapper from './CardWrapper.vue';
 // import {  bootstrap } from "./../plugins/AppPlugins";
 import { getGridManager, GridManagerItem, GridManager } from './../managers/gridItemManager';
+import { TaggingDashboardPlugin } from '../managers/pluginManager';
 
 
 export default defineComponent({
@@ -96,11 +97,12 @@ export default defineComponent({
 
                 // The store's component map (component name -> definition)
                 const compName = widget.component as string;
-                const compDef = getGridManager().getComponentMap()[compName]();
-                if (!compDef) {
-                    contentEl.textContent = `Unknown component: ${compName}`;
+                const pluginFactory = getGridManager().getComponentMap()[compName];
+                if (!pluginFactory || typeof pluginFactory !== 'function') {
+                    contentEl.textContent = `Invalid or missing plugin factory for: ${compName}`;
                     return;
                 }
+
 
 
                 // Create a sub-app that wraps the child component in CardWrapper
@@ -124,13 +126,12 @@ export default defineComponent({
 
 
 
-                        // Wrap that child in our CardWrapper
-                        return () =>
-                            h(CardWrapper, {
-                                title: widget.title,
-                                onRemove: handleRemove
-                                // we render the plugin component here in the child slot
-                            }, { default: () => h(compDef), });
+                        // Render CardWrapper, passing the plugin factory
+                        return () => h(CardWrapper, {
+                            title: widget.title || `Widget ${widget.id}`,
+                            pluginFactory: pluginFactory, // Pass the factory function
+                            onRemove: handleRemove,
+                        });
                     }
                 });
 

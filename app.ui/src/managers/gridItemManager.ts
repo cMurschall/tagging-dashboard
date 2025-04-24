@@ -1,5 +1,6 @@
 import { Observable } from "../observable";
 import { StoredLayoutItem } from "./layoutManager";
+import { TaggingDashboardPlugin } from "./pluginManager";
 
 export interface GridManagerItem extends StoredLayoutItem {
     dependencies?: Record<string, any> | undefined;
@@ -7,7 +8,7 @@ export interface GridManagerItem extends StoredLayoutItem {
 
 export class GridManager {
     private GridManagerItems: GridManagerItem[] = [];
-    private componentMap: Record<string, () => any> = {};
+    private componentMap: Record<string, () => TaggingDashboardPlugin> = {};
 
     public static newItemObservable = new Observable<GridManagerItem>();
     public static removeItemObservable = new Observable<string>();
@@ -16,15 +17,15 @@ export class GridManager {
         return this.GridManagerItems;
     }
 
-    public getComponentMap(): Record<string, () => any> {
+    public getComponentMap(): Record<string, () => TaggingDashboardPlugin> {
         return this.componentMap;
     }
 
-    public setComponentMap(map: Record<string, () => any>): void {
+    public setComponentMap(map: Record<string, () => TaggingDashboardPlugin>): void {
         this.componentMap = map;
     }
 
-    public registerComponent(key: string, componentFactory: () => any): void {
+    public registerComponent(key: string, componentFactory: () => TaggingDashboardPlugin): void {
         if (this.componentMap[key]) {
             console.warn(`Warning: Component with key "${key}" is already registered.`);
         }

@@ -23,18 +23,14 @@ import { WebSocketSimulationTimeConnection } from "../services/webSocketSimulati
 import { isProxy, toRaw } from "vue";
 
 import { VideoControl } from "./videoControl";
+import { createVuePluginAdapter } from "../components/pluginContainer";
 
 
-
-export interface Plugin {
-    // The render function receives a container HTMLElement and the PluginService.
-    render: (container: HTMLElement, pluginService: PluginServices) => void;
-
-    // Optional lifecycle hooks for additional setup/cleanup.
+export interface TaggingDashboardPlugin {
+    create: (container: HTMLElement, pluginService: PluginServices) => void;
     onMounted?: () => void;
     onUnmounted?: () => void;
   }
-
 
 export interface PluginServices {
     getId: () => string;
@@ -193,13 +189,13 @@ export class PluginManager {
 
     private registerComponents(project: TestDriveProjectInfo) {
         this.gridItemManager.setComponentMap({
-            ListView: () => (ListView),
-            VideoPlayer: () => (VideoPlayer),
-            Gauge: () => (Gauge),
-            ScatterPlot: () => project.isLive ? (LiveScatterPlot) : (ScatterPlot),
-            TestGridItem: () => (TestGridItem),
-            TagTimeline: () => (TagTimeline),
-            VectorComponents: () => (VectorComponentsChart),
+            ListView: () => createVuePluginAdapter(ListView),
+            VideoPlayer: () => createVuePluginAdapter(VideoPlayer),
+            Gauge: () => createVuePluginAdapter(Gauge),
+            ScatterPlot: () => project.isLive ? createVuePluginAdapter(LiveScatterPlot) : createVuePluginAdapter(ScatterPlot),
+            TestGridItem: () => createVuePluginAdapter(TestGridItem),
+            TagTimeline: () => createVuePluginAdapter(TagTimeline),
+            VectorComponents: () => createVuePluginAdapter(VectorComponentsChart),
         });
 
 

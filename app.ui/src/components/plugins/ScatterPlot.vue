@@ -401,7 +401,7 @@ watch(pluginState, async (newValue) => {
 
   // generate title based on selected columns
   let title = `Timestamp vs ${columnsToInitialize.join(' & ')}`;
-  setCarpluginService.cardTitle$.nextdTitle(title);
+  pluginService.cardTitle$.next(title);
 
   const allMeasurements = pluginService.getDataManager().getAllMeasurements();
   updateChartData(allMeasurements);

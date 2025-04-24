@@ -92,7 +92,6 @@ import type {
   TooltipComponentOption
 } from 'echarts/components'
 import { SeriesOption } from "echarts";
-import { SetCardTitleFn } from "../../plugins/AppPlugins";
 import { PluginServices } from "../../managers/pluginManager";
 
 use([
@@ -114,8 +113,6 @@ type EChartsOption = ComposeOption<
   | ScatterSeriesOption
 >
 
-
-const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => { });
 
 const pluginService = inject<PluginServices>('pluginService');
 if (!pluginService) {
@@ -404,7 +401,7 @@ watch(pluginState, async (newValue) => {
 
   // generate title based on selected columns
   let title = `Timestamp vs ${columnsToInitialize.join(' & ')}`;
-  setCardTitle(title);
+  setCarpluginService.cardTitle$.nextdTitle(title);
 
   const allMeasurements = pluginService.getDataManager().getAllMeasurements();
   updateChartData(allMeasurements);
@@ -439,7 +436,7 @@ onMounted(async () => {
 
     let title = `Timestamp vs ${columnsToInit.join(' & ')}`;
 
-    setCardTitle(title);
+    pluginService.cardTitle$.next(title);
   }
 
 

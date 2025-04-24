@@ -55,7 +55,6 @@ import type {
 } from 'echarts/components'
 // import { Scatter3DChart, Scatter3DSeriesOption } from 'echarts-gl/charts';
 // import { Grid3DComponent } from 'echarts-gl/components';
-import { SetCardTitleFn } from "../../plugins/AppPlugins";
 import { PluginServices } from "../../managers/pluginManager";
 
 use([
@@ -81,8 +80,6 @@ type EChartsOption = ComposeOption<
 // | Scatter3DSeriesOption
 >
 
-
-const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => { });
 
 const pluginService = inject<PluginServices>('pluginService');
 if (!pluginService) {
@@ -289,7 +286,7 @@ watch(pluginState, async (newValue) => {
 
   // generate title based on selected columns
   let title = `Timestamp vs ${columnsToInitialize.join(' & ')}`;
-  setCardTitle(title);
+  pluginService.cardTitle$.next(title);
 
   const allMeasurements = pluginService.getDataManager().getAllMeasurements();
 
@@ -320,7 +317,7 @@ onMounted(async () => {
     componentChartOption.value = buildMultiGridVectorChart(allMeasurements);
     let title = `${columnsToInit.join(' & ')}`;
 
-    setCardTitle(title);
+    pluginService.cardTitle$.next(title);
   }
 
 

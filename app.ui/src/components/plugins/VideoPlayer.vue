@@ -22,7 +22,6 @@ import videojs from "video.js";
 import "videojs-sprite-thumbnails";
 import Player from 'video.js/dist/types/player';
 import { FrameByFrameButton } from '../../services/frameByFrameButton';
-import { SetCardTitleFn } from '../../plugins/AppPlugins';
 import { PluginServices } from '../../managers/pluginManager';
 
 
@@ -31,8 +30,6 @@ videojs.registerComponent('FrameByFrameButton', FrameByFrameButton);
 
 
 // Inject the function from the parent
-const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => { });
-
 const pluginService = inject<PluginServices>('pluginService');
 if (!pluginService) {
   throw new Error('Plugin service not found!');
@@ -121,7 +118,7 @@ const loadVideo = (videoInfo: TestDriveVideoInfo) => {
   }
 
   if (videoPlayer.value) {
-    setCardTitle(`Player: ${videoInfo.videoFileName}`);
+    pluginService.cardTitle$.next(`Player: ${videoInfo.videoFileName}`);
   }
 }
 

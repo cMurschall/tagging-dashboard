@@ -1,6 +1,6 @@
 
 import { EmptySubscription, Observable, Subscription } from "../observable";
-import { isNotNullOrUndefined, isNullOrUndefined, TestDriveProjectInfo, WebSocketBasePath } from "../services/utilities";
+import { isNotNullOrUndefined, isNullOrUndefined, ShowToastFn, TestDriveProjectInfo, WebSocketBasePath } from "../services/utilities";
 import { DataManager } from "./dataManager";
 import { getGridManager, GridManager, GridManagerItem } from './gridItemManager';
 
@@ -15,7 +15,6 @@ import VectorComponentsChart from "../components/plugins/VectorComponentsChart.v
 
 
 import { ApiDataManager } from "./apiDataManager";
-import { ShowToastFn } from "../plugins/AppPlugins";
 import { WebSocketDataConnection } from "../services/webSocketDataConnection";
 import { WebsocketDataManager } from "./websocketDataManager";
 import { WebSocketSimulationTimeConnection } from "../services/webSocketSimulationTimeConnection";
@@ -27,11 +26,21 @@ import { VideoControl } from "./videoControl";
 
 
 
+export interface Plugin {
+    // The render function receives a container HTMLElement and the PluginService.
+    render: (container: HTMLElement, pluginService: PluginServices) => void;
+
+    // Optional lifecycle hooks for additional setup/cleanup.
+    onMounted?: () => void;
+    onUnmounted?: () => void;
+  }
+
 
 export interface PluginServices {
     getId: () => string;
 
     showMenu$ : Observable<boolean>;
+    cardTitle$ : Observable<string>;
 
     simulationTime: Observable<number>;
     getProjectInfo: () => TestDriveProjectInfo | undefined;
@@ -192,6 +201,8 @@ export class PluginManager {
             TagTimeline: () => (TagTimeline),
             VectorComponents: () => (VectorComponentsChart),
         });
+
+
     }
 
 
@@ -208,12 +219,14 @@ export class PluginManager {
         }
 
         const showMenu$ = new Observable<boolean>(false);
+        const cardTitle$ = new Observable<string>("");
 
 
         return {
             getId: () => pluginId,
 
             showMenu$: showMenu$,
+            cardTitle$ : cardTitle$,
 
             simulationTime: this.simulationTimeObservable,
             getProjectInfo: () => this.loadedProject,

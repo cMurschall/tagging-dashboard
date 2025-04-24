@@ -90,6 +90,7 @@ export const uploadVideoFile = (file: File, onProgress?: ProgressCallback): Prom
 import { isAxiosError } from 'axios';
 import { onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { Observable } from '../observable';
+import { useToastController } from 'bootstrap-vue-next';
 
 export const getAxiosErrorMessage = (error: unknown): string => {
   if (isAxiosError(error)) {
@@ -359,3 +360,6 @@ export const useObservable = <T>(obs: Observable<T>) => {
   return state;
 
 }
+
+
+export type ShowToastFn = ReturnType<typeof useToastController>['show'];

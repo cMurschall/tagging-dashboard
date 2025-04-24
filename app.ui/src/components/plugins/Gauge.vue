@@ -74,7 +74,6 @@ import { EmptySubscription, Subscription } from "../../observable";
 import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue, IDENTITY_EXPRESSION, useObservable } from "../../services/utilities";
 import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
-import { SetCardTitleFn } from "../../plugins/AppPlugins";
 import { PluginServices } from "../../managers/pluginManager";
 import FilterableSelect from "./../FilterableSelect.vue";
 
@@ -82,8 +81,6 @@ use([GaugeChart, SVGRenderer]);
 
 
 
-// Inject the function from the parent
-const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => { });
 
 const pluginService = inject<PluginServices>('pluginService');
 if (!pluginService) {
@@ -107,7 +104,7 @@ type PluginState = {
 
 
 
-const showMenu =useObservable(pluginService.showMenu$);
+const showMenu = useObservable(pluginService.showMenu$);
 
 const pluginState = ref<PluginState>({
   gaugeMin: 0,
@@ -208,7 +205,7 @@ watch(pluginState, async (newValue) => {
   if (selectedColumnUpdated && newValue.selectedColumn) {
     await pluginService.getDataManager().initialize([newValue.selectedColumn.name]);
     // gaugeOption.value.series[0].data[0].name = newVal.selectedColumn.name;
-    setCardTitle(newValue.selectedColumn.name);
+    pluginService.cardTitle$.next(newValue.selectedColumn.name);
 
     lastSelectedColumn = newValue.selectedColumn;
   }
@@ -244,9 +241,9 @@ onMounted(async () => {
   if (pluginState.value.selectedColumn) {
     console.log('Initializing selected column:', pluginState.value.selectedColumn.name);
     await pluginService.getDataManager().initialize([pluginState.value.selectedColumn.name]);
-    setCardTitle(pluginState.value.selectedColumn.name);
+    pluginService.cardTitle$.next(pluginState.value.selectedColumn.name);
   } else {
-    setCardTitle('No column selected');
+    pluginService.cardTitle$.next('No column selected');
   }
 
   subscription = pluginService.getDataManager().measurement$.subscribe((measurements: TimeseriesDataPoint) => {

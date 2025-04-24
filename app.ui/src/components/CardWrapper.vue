@@ -38,8 +38,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, provide, watch, inject } from 'vue';
+import { defineComponent, ref, inject } from 'vue';
 import { PluginServices } from '../managers/pluginManager';
+import { useObservable } from '../services/utilities';
 
 export default defineComponent({
   name: 'CardWrapper',
@@ -51,12 +52,15 @@ export default defineComponent({
   },
   emits: ['remove'],
   setup(props) {
-    const cardTitle = ref(props.title);
+
 
     const pluginService = inject<PluginServices>('pluginService');
     if (!pluginService) {
       throw new Error('Plugin service not found!');
     }
+
+    const cardTitle = useObservable(pluginService.cardTitle$);
+    cardTitle.value = props.title; // Set the initial title from props
 
     const showMenu = ref(false);
 
@@ -65,22 +69,8 @@ export default defineComponent({
       pluginService.showMenu$.next(showMenu.value);
     };
 
-
-    // Watch for prop updates (in case title changes dynamically)
-    watch(() => props.title, (newTitle) => {
-      cardTitle.value = newTitle;
-    });
-
-    // Provide the function to allow children to change the title
-    provide('setCardTitle', (newTitle: string) => {
-      cardTitle.value = newTitle;
-    });
-
-
-
-
     return { title: cardTitle, showMenu, handleToggleMenu };
-  }
+  },
 });
 </script>
 

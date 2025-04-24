@@ -16,7 +16,7 @@ import {
 } from 'vue';
 import { GridItemHTMLElement, GridStack, GridStackNode } from 'gridstack';
 import CardWrapper from './CardWrapper.vue';
-import {  bootstrap } from "./../plugins/AppPlugins";
+// import {  bootstrap } from "./../plugins/AppPlugins";
 import { getGridManager, GridManagerItem, GridManager } from './../managers/gridItemManager';
 
 
@@ -133,9 +133,6 @@ export default defineComponent({
                             }, { default: () => h(compDef), });
                     }
                 });
-
-                // we share boostrap with the child app so it can benefit of tree shaking
-                subApp.use(bootstrap);
 
                 // Mount the child sub-app into the .grid-stack-item-content
                 const vm = subApp.mount(contentEl);

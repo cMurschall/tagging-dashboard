@@ -1,7 +1,15 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 
-import {pinia, bootstrap} from "./plugins/AppPlugins";
+import { createPinia } from 'pinia';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { createBootstrap, } from 'bootstrap-vue-next';
+
+export const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate)
+
+export const bootstrap = createBootstrap();
+
 
 // Import Bootstrap and BootstrapVue CSS files
 import './assets/fonts/Geist/geist-all.css';

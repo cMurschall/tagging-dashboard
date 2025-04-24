@@ -51,7 +51,7 @@ import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, watch, toRaw } from "vue";
 import { TimeseriesDataPoint } from "../../managers/dataManager";
 import { EmptySubscription, Subscription } from "../../observable";
-import { safeFetch, PlayerApiClient as client, IDENTITY_EXPRESSION, transformMathJsValue } from "../../services/utilities";
+import { safeFetch, PlayerApiClient as client, IDENTITY_EXPRESSION, transformMathJsValue, useObservable } from "../../services/utilities";
 import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import FilterableSelect from "./../FilterableSelect.vue";
@@ -120,17 +120,7 @@ type PluginState = {
 
 }
 
-
-// --- Component Props ---
-interface ScatterPlotProps {
-    showMenu: boolean;
-
-    id: string;
-
-}
-const props = withDefaults(defineProps<ScatterPlotProps>(), {
-    showMenu: false, // Default value for showMenu),
-});
+const showMenu = useObservable(pluginService.showMenu$);
 
 const pluginState = ref<PluginState>({
     selectedYColumnLeft: null,

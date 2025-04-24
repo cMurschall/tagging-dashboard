@@ -30,6 +30,9 @@ import { VideoControl } from "./videoControl";
 
 export interface PluginServices {
     getId: () => string;
+
+    showMenu$ : Observable<boolean>;
+
     simulationTime: Observable<number>;
     getProjectInfo: () => TestDriveProjectInfo | undefined;
     getDataManager: () => DataManager,
@@ -204,9 +207,14 @@ export class PluginManager {
             this.dataManagers.set(pluginId, dataManager);
         }
 
+        const showMenu$ = new Observable<boolean>(false);
+
 
         return {
             getId: () => pluginId,
+
+            showMenu$: showMenu$,
+
             simulationTime: this.simulationTimeObservable,
             getProjectInfo: () => this.loadedProject,
             getDataManager: () => {

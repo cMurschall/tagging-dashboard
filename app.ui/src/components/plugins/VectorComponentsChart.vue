@@ -25,7 +25,7 @@ import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, watch } from "vue";
 import { TimeseriesDataPoint, TimeseriesTable } from "../../managers/dataManager";
 import { EmptySubscription, Subscription } from "../../observable";
-import { safeFetch, PlayerApiClient as client, isNullOrUndefined } from "../../services/utilities";
+import { safeFetch, PlayerApiClient as client, isNullOrUndefined, useObservable } from "../../services/utilities";
 import { BCol, BFormGroup, BRow } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 // import { useVideoControl } from '../../composables/useVideoControl';
@@ -89,24 +89,13 @@ if (!pluginService) {
   throw new Error('Plugin service not found!');
 }
 
-
+const showMenu = useObservable(pluginService.showMenu$);
 
 type PluginState = {
   selectedColumn: ColumnInfo | null;
 }
 
 
-// --- Component Props ---
-interface ScatterPlotProps {
-  showMenu: boolean;
-
-  id: string;
-  pluginState?: PluginState;
-
-}
-const props = withDefaults(defineProps<ScatterPlotProps>(), {
-  showMenu: false, // Default value for showMenu
-});
 
 const pluginState = ref<PluginState>({
     selectedColumn: null,

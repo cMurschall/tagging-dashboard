@@ -40,17 +40,13 @@ if (!pluginService) {
 
 
 
-interface VideoPlayerProps {
-  // videoInfo: TestDriveVideoInfo,
-  // simulationTimeObservable: Observable<number>
-}
 
 export interface VideoPlayer extends Player {
   spriteThumbnails: (options: any) => void;
 }
 
 type PlayerOptions = typeof videojs.options;
-const props = defineProps<VideoPlayerProps>()
+
 
 const videoElement = ref<HTMLVideoElement | null>(null); // Reference to the html video element
 const videoPlayer = ref<VideoPlayer | undefined>(undefined); // Reference to the video player instance

@@ -17,7 +17,7 @@ import {
 import { GridItemHTMLElement, GridStack, GridStackNode } from 'gridstack';
 import CardWrapper from './CardWrapper.vue';
 import { pinia, bootstrap } from "./../plugins/AppPlugins";
-import {getGridManager, GridManagerItem, GridManager } from './../managers/gridItemManager';
+import { getGridManager, GridManagerItem, GridManager } from './../managers/gridItemManager';
 
 
 export default defineComponent({
@@ -56,7 +56,7 @@ export default defineComponent({
                         handle: '.drag-target'
                     },
                     resizable: {
-                        handles : 'sw, se'
+                        handles: 'sw, se'
                     }
                 },
                 gridContainer.value as HTMLElement
@@ -73,8 +73,6 @@ export default defineComponent({
                     });
                 }
             });
-
-
 
             grid.on('dragstop', (event: Event, el: GridItemHTMLElement) => {
                 console.log('Drag end:', { event, node: el.gridstackNode });
@@ -131,14 +129,8 @@ export default defineComponent({
                             h(CardWrapper, {
                                 title: widget.title,
                                 onRemove: handleRemove
-                            }, {
-                                default: (slotProps: any) => {
-                                    return h(compDef, {
-                                        showMenu: slotProps.showMenu,
-                                        id: widget.id,
-                                    });
-                                }
-                            });
+                                // we render the plugin component here in the child slot
+                            }, { default: () => h(compDef), });
                     }
                 });
 

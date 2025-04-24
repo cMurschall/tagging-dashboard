@@ -112,7 +112,7 @@
 import { onMounted, onUnmounted, ref, inject, watch, toRaw } from 'vue';
 import { TimeseriesDataPoint } from '../../managers/dataManager';
 import { EmptySubscription, Subscription } from '../../observable';
-import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue } from "../../services/utilities";
+import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue, useObservable } from "../../services/utilities";
 import { BCol, BRow, BButton, BFormInput, BTr, BTd, BTh, BTableSimple, BThead, BTbody } from "bootstrap-vue-next";
 import FilterableSelect from '../FilterableSelect.vue';
 import { ColumnInfo } from "../../../services/restclient";
@@ -134,13 +134,6 @@ type PluginState = {
 }
 
 
-interface ListProps {
-    showMenu?: boolean,
-}
-// Define component props with default values
-const props = withDefaults(defineProps<ListProps>(), {
-    showMenu: false, // Default value for showMenu
-});
 
 const pluginState = ref<PluginState>({ columnDataInfos: [] });
 
@@ -152,7 +145,7 @@ if (!pluginService) {
 }
 
 
-
+const showMenu = useObservable(pluginService.showMenu$);
 
 let subscription: Subscription = EmptySubscription;
 

@@ -155,7 +155,7 @@ import {
 
 // import { useVideoControl } from '../../composables/useVideoControl';
 import { Tag, TagCategory } from '../../../services/restclient';
-import { safeFetch, TagApiClient as client, WebSocketBasePath } from '../../services/utilities';
+import { safeFetch, TagApiClient as client, WebSocketBasePath, useObservable } from '../../services/utilities';
 import { EmptySubscription, Subscription } from '../../observable';
 import { PluginServices } from '../../managers/pluginManager';
 import { WebSocketTagConnection } from '../../services/webSocketTagConnection';
@@ -185,19 +185,14 @@ if (!pluginService) {
 }
 
 
+const showMenu = useObservable(pluginService.showMenu$);
+
 type PluginState = {
 
 }
 
 
 
-
-
-interface TagTimelineProps {
-    showMenu: boolean;
-    id: string;
-    pluginState?: PluginState;
-}
 
 
 interface Cartesian2DCoordSys {
@@ -210,9 +205,6 @@ interface Cartesian2DCoordSys {
 
 
 
-const props = withDefaults(defineProps<TagTimelineProps>(), {
-    showMenu: false, // Default value for showMenu
-});
 
 const pluginState = ref<PluginState>({});
 

@@ -2,6 +2,7 @@
     <div style="width : 100%" class="d-flex flex-row justify-content-start align-items-center">
         <BDropdown text="Add Plugin" class="me-2" :disable="projectStore.isProjectLoaded">
             <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddVideo">Add Video</BDropdownItem>
+            <BDropdownDivider />
             <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddGauge">Add Gauge</BDropdownItem>
             <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddScatter">Add xy-Chart</BDropdownItem>
             <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddVectorComponents">Add Vector-Chart</BDropdownItem>

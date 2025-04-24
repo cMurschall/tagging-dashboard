@@ -88,6 +88,8 @@ export const uploadVideoFile = (file: File, onProgress?: ProgressCallback): Prom
   return uploadFileWithProgress<RestClient.UploadResponse>(file, endpoint, onProgress, 'video_file');
 };
 import { isAxiosError } from 'axios';
+import { onBeforeMount, onBeforeUnmount, ref } from 'vue';
+import { Observable } from '../observable';
 
 export const getAxiosErrorMessage = (error: unknown): string => {
   if (isAxiosError(error)) {
@@ -340,3 +342,20 @@ export const clamp = (val: number, min: number, max: number) => Math.min(Math.ma
 export const isNotNullOrUndefined = <T>(val: T | null | undefined): val is T => { return val !== null && val !== undefined }
 
 export const isNullOrUndefined = (val: unknown): val is null | undefined => { return val === null || val === undefined }
+
+
+
+export const useObservable = <T>(obs: Observable<T>) => {
+  const state = ref<T>(obs.getValue() as T) ;
+
+  const Subscription = obs.subscribe((value: T) => {
+    state.value = value;
+  });
+
+  onBeforeUnmount(() => {
+    Subscription.unsubscribe();
+  })
+
+  return state;
+
+}

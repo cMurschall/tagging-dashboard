@@ -13,10 +13,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, inject, PropType } from 'vue';
+import { defineComponent, inject } from 'vue';
 // import { useVideoControl } from '../../composables/useVideoControl';
 import { SetCardTitleFn } from '../../plugins/AppPlugins';
 import { PluginServices } from '../../managers/pluginManager';
+import { useObservable } from '../../services/utilities';
 
 
 
@@ -34,20 +35,7 @@ export default defineComponent({
       } as PluginState
     };
   },
-  props: {
-    showMenu: {
-      type: Boolean,
-      default: false
-    },
-    id: {
-      type: String,
-      default: ''
-    },
-    pluginState: {
-      type: Object as PropType<PluginState>,
-      default: () => ({ counter: 0 }),
-    }
-  },
+
   setup() {
     const setCardTitle = inject<SetCardTitleFn>('setCardTitle') ?? (() => { });
     const pluginService = inject<PluginServices>('pluginService');
@@ -55,11 +43,16 @@ export default defineComponent({
       throw new Error('Plugin service not found!');
     }
 
+    const id = pluginService.getId();
+    const showMenu =useObservable(pluginService.showMenu$);
+
 
     return {
       updateTitle: () => setCardTitle('Updated Title from Child ' + Math.random().toFixed(2)),
       seekTo: pluginService.getVideoControl().seekTo,
-      pluginService
+      pluginService,
+      id,
+      showMenu,
     };
   },
   mounted() {

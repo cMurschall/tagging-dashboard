@@ -64,14 +64,14 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, inject, computed, watch } from "vue";
+import { ref, onMounted, onUnmounted, inject, watch } from "vue";
 import VChart from "vue-echarts";
 import { use } from "echarts/core";
 import { GaugeChart } from "echarts/charts";
 import { SVGRenderer } from "echarts/renderers";
 import { TimeseriesDataPoint } from "../../managers/dataManager";
 import { EmptySubscription, Subscription } from "../../observable";
-import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue, IDENTITY_EXPRESSION } from "../../services/utilities";
+import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue, IDENTITY_EXPRESSION, useObservable } from "../../services/utilities";
 import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import { SetCardTitleFn } from "../../plugins/AppPlugins";
@@ -106,16 +106,8 @@ type PluginState = {
 
 
 
-interface GaugeProps {
-  showMenu?: boolean,
-}
 
-
-
-// Define component props
-const props = defineProps<GaugeProps>();
-
-
+const showMenu =useObservable(pluginService.showMenu$);
 
 const pluginState = ref<PluginState>({
   gaugeMin: 0,

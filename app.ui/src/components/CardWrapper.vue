@@ -2,7 +2,7 @@
   <div class="card h-100">
     <div class="card-header d-flex justify-content-between align-items-center smaller-header drag-target">
 
-      <button @click="showMenu = !showMenu" class="btn btn-outline btn-sm  mx-1">
+      <button @click="handleToggleMenu" class="btn btn-outline btn-sm  mx-1">
         <transition name="icon-transition" mode="out-in">
           <svg v-if="showMenu" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -32,13 +32,14 @@
       </div>
     </div>
     <div class="card-body no-scrollbar">
-      <slot :showMenu="showMenu" />
+      <slot />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, provide, watch } from 'vue';
+import { defineComponent, ref, provide, watch, inject } from 'vue';
+import { PluginServices } from '../managers/pluginManager';
 
 export default defineComponent({
   name: 'CardWrapper',
@@ -49,10 +50,20 @@ export default defineComponent({
     }
   },
   emits: ['remove'],
-  setup(props, { emit }) {
+  setup(props) {
     const cardTitle = ref(props.title);
 
+    const pluginService = inject<PluginServices>('pluginService');
+    if (!pluginService) {
+      throw new Error('Plugin service not found!');
+    }
+
     const showMenu = ref(false);
+
+    const handleToggleMenu = () => {
+      showMenu.value = !showMenu.value;
+      pluginService.showMenu$.next(showMenu.value);
+    };
 
 
     // Watch for prop updates (in case title changes dynamically)
@@ -68,7 +79,7 @@ export default defineComponent({
 
 
 
-    return { title: cardTitle, showMenu };
+    return { title: cardTitle, showMenu, handleToggleMenu };
   }
 });
 </script>

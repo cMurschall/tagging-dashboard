@@ -62,7 +62,8 @@ import { EmptySubscription, Subscription } from "../../observable";
 import {
   safeFetch, PlayerApiClient as client, TimestampStatistics,
   getTimestampStatistics, clamp, transformMathJsValue,
-  IDENTITY_EXPRESSION
+  IDENTITY_EXPRESSION,
+  useObservable
 } from "../../services/utilities";
 import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
@@ -130,17 +131,7 @@ type PluginState = {
 }
 
 
-// --- Component Props ---
-interface ScatterPlotProps {
-  showMenu: boolean;
-
-  id: string;
-  pluginState?: PluginState;
-
-}
-const props = withDefaults(defineProps<ScatterPlotProps>(), {
-  showMenu: false, // Default value for showMenu
-});
+const showMenu = useObservable(pluginService.showMenu$);
 
 const pluginState = ref<PluginState>({
   selectedYColumnLeft: null,

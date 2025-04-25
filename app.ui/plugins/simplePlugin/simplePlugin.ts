@@ -1,5 +1,5 @@
 
-import { PluginServices, TaggingDashboardPlugin } from './../managers/pluginManager';
+import { PluginServices, TaggingDashboardPlugin } from '../../src/managers/pluginManager';
 
 const simpleNativePlugin: TaggingDashboardPlugin = {
     create: (container: HTMLElement, pluginServices: PluginServices) => {

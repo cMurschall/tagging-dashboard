@@ -1,0 +1,7 @@
+{
+    "id": "simplePlugin",
+    "name": "Simple Plugin",
+    "entry": "simplePlugin.js",
+    "version": "1.0.0",
+    "description": "This plugin displays a greeting message."
+  }

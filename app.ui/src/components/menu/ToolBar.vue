@@ -1,22 +1,41 @@
 <template>
     <div style="width : 100%" class="d-flex flex-row justify-content-start align-items-center">
         <BDropdown text="Add Plugin" class="me-2" :disable="projectStore.isProjectLoaded">
-            <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddVideo">Add Video</BDropdownItem>
-            <BDropdownDivider />
-            <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddGauge">Add Gauge</BDropdownItem>
-            <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddScatter">Add xy-Chart</BDropdownItem>
-            <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddVectorComponents">Add Vector-Chart</BDropdownItem>
-            <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddList">Add List</BDropdownItem>
-            <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddTagLine">Add Tag Line</BDropdownItem>
-            <BDropdownDivider />
-            <BDropdownItem @click="handleAddTestGridItem">Add Test</BDropdownItem>
+            <BDropdownGroup header="Build in">
+                <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddVideo">Add Video
+                </BDropdownItem>
+                <BDropdownDivider />
+                <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddGauge">Add Gauge
+                </BDropdownItem>
+                <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddScatter">Add xy-Chart
+                </BDropdownItem>
+                <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddVectorComponents">Add
+                    Vector-Chart
+                </BDropdownItem>
+                <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddList">Add List</BDropdownItem>
+                <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddTagLine">Add Tag Line
+                </BDropdownItem>
+            </BDropdownGroup>
+
+            <BDropdownGroup header="Externals" v-if="externalPlugins.length > 0">
+                <BDropdownItem v-for="plugin in externalPlugins" :key="plugin.id"
+                    :disabled="!projectStore.isProjectLoaded" @click="handleExternalPlugin(plugin)">Add {{ plugin.name
+                    }}</BDropdownItem>
+            </BDropdownGroup>
+
+
+            <BDropdownGroup header="For testing">
+                <BDropdownItem @click="handleAddTestGridItem">Add Test</BDropdownItem>
+            </BDropdownGroup>
+
 
         </BDropdown>
 
 
         <BDropdown text="Layout" class="me-2">
 
-            <BDropdownItem  :disabled="!projectStore.isProjectLoaded" @click="openSaveLayoutModal">Save Current Layout</BDropdownItem>
+            <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="openSaveLayoutModal">Save Current Layout
+            </BDropdownItem>
             <!-- <BDropdownItem @click="openRenameLayoutModal">Rename Layout</BDropdownItem> -->
             <BDropdownDivider />
 
@@ -26,7 +45,7 @@
             </li>
 
 
-            <BDropdownItem  :disabled="!projectStore.isProjectLoaded" v-for="layout in availableLayouts" :key="layout">
+            <BDropdownItem :disabled="!projectStore.isProjectLoaded" v-for="layout in availableLayouts" :key="layout">
                 <span @click="handleRestoreLayout(layout)" style="cursor: pointer;">{{ layout }}</span>
                 <div>
                     <BButton size="sm" variant="outline-primary" class="me-1" @click="handleRestoreLayout(layout)">
@@ -70,7 +89,7 @@
                 <div v-if="selectedLayoutToRename">
                     <div class="mb-3">
                         <label for="renameLayoutName" class="form-label">New Layout Name for "{{ selectedLayoutToRename
-                            }}":</label>
+                        }}":</label>
                         <BFormInput id="renameLayoutName" v-model="renameLayoutName" placeholder="Enter new name">
                         </BFormInput>
                     </div>
@@ -96,11 +115,11 @@ import { onMounted, onUnmounted, ref } from 'vue'
 
 import { EmptySubscription, Subscription } from '../../observable';
 import { getGridManager } from './../../managers/gridItemManager';
-import  {getLayoutManager,  StoredLayoutItem } from './../../managers/layoutManager';
+import { getLayoutManager, StoredLayoutItem } from './../../managers/layoutManager';
 
-import { getPluginManager } from '../../managers/pluginManager';
+import { ExternalPluginManifest, getPluginManager } from '../../managers/pluginManager';
 import { useProjectStore } from './../../stores/projectStore';
-import { BModal, BFormInput, BFormSelect, BButton, BDropdown, BDropdownItem, BDropdownDivider } from 'bootstrap-vue-next';
+import { BModal, BFormInput, BFormSelect, BButton, BDropdown, BDropdownItem, BDropdownDivider, BDropdownGroup } from 'bootstrap-vue-next';
 
 // Initialize the store
 const projectStore = useProjectStore();
@@ -124,6 +143,8 @@ const showRenameLayoutModal = ref(false);
 const layoutsData = ref<Record<string, StoredLayoutItem[]>>({});
 let layoutSubscription: Subscription = EmptySubscription;
 let simulationTimeSubscription: Subscription = EmptySubscription;
+
+const externalPlugins = ref<ExternalPluginManifest[]>([]);
 
 
 const handleAddTagLine = () => {
@@ -153,6 +174,10 @@ const handleAddTestGridItem = () => {
     getPluginManager().showPlugin('TestGridItem', {});
 };
 
+const handleExternalPlugin = (plugin: ExternalPluginManifest) => {
+    getPluginManager().showPlugin(plugin.id, {});
+};
+
 
 
 onMounted(async () => {
@@ -166,6 +191,8 @@ onMounted(async () => {
     simulationTimeSubscription = getPluginManager().simulationTimeObservable.subscribe((time) => {
         currentSimulationTimeSecond.value = time;
     });
+
+    externalPlugins.value = getPluginManager().getExternalPlugins();
 
 });
 

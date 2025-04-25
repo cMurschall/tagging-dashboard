@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vue-tsc -b && vite build  --mode production",
     "build:fast": "vite build --mode production",
+    "build:scripts": "node scripts/build-plugins.mjs",
     "preview": "vite preview",
     "test": "vitest",
     "type-check": "vue-tsc --noEmit",
@@ -28,6 +29,7 @@
     "vue-echarts": "^7.0.3"
   },
   "devDependencies": {
+    "@types/node": "^22.15.2",
     "@types/video.js": "^7.3.58",
     "@vitejs/plugin-vue": "^5.2.1",
     "jsdom": "^26.0.0",

@@ -12,7 +12,8 @@
                             <div class="text-end">{{ (healthCheckResult.message as HealthCheckResponse).status }}</div>
 
                             <div><strong>Uptime:</strong></div>
-                            <div class="text-end">{{ formatUptime((healthCheckResult.message as HealthCheckResponse).uptime) }}</div>
+                            <div class="text-end">{{ formatUptime((healthCheckResult.message as
+                                HealthCheckResponse).uptime) }}</div>
 
                             <div><strong>Memory:</strong></div>
                             <div class="text-end">{{ ((healthCheckResult.message as
@@ -122,21 +123,21 @@ const friendlyErrorMessage = computed(() => {
 const formatUptime = (raw: string): string => {
     // Split into parts
     const [hStr, mStr, sStr] = raw.split(':');
-  const hours = parseInt(hStr, 10);
-  const minutes = parseInt(mStr, 10);
+    const hours = parseInt(hStr, 10);
+    const minutes = parseInt(mStr, 10);
 
-  const totalMinutes = hours * 60 + minutes;
-  const days = Math.floor(totalMinutes / 1440); // 1440 minutes in a day
-  const remainingMinutes = totalMinutes % 1440;
-  const finalHours = Math.floor(remainingMinutes / 60);
-  const finalMinutes = remainingMinutes % 60;
+    const totalMinutes = hours * 60 + minutes;
+    const days = Math.floor(totalMinutes / 1440); // 1440 minutes in a day
+    const remainingMinutes = totalMinutes % 1440;
+    const finalHours = Math.floor(remainingMinutes / 60);
+    const finalMinutes = remainingMinutes % 60;
 
-  const parts: string[] = [];
-  if (days > 0) parts.push(`${days}d`);
-  if (finalHours > 0) parts.push(`${finalHours}h`);
-  if (finalMinutes > 0 || parts.length === 0) parts.push(`${finalMinutes}m`);
+    const parts: string[] = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (finalHours > 0) parts.push(`${finalHours}h`);
+    if (finalMinutes > 0 || parts.length === 0) parts.push(`${finalMinutes}m`);
 
-  return parts.join(' ');
+    return parts.join(' ');
 }
 
 
@@ -151,7 +152,6 @@ onMounted(async () => {
         layoutsData.value = layouts;
         availableLayouts.value = Object.keys(layouts);
     });
-
     getPluginManager().setShowToast(showToast);
 
 
@@ -219,9 +219,9 @@ aside {
 }
 
 .health-grid {
-  display: grid;
-  grid-template-columns: 1fr auto ;
-  gap: 0.1rem 0.5rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.1rem 0.5rem;
 }
 
 .health-status {

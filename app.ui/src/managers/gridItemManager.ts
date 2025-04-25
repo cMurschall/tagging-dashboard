@@ -21,8 +21,8 @@ export class GridManager {
         return this.componentMap;
     }
 
-    public setComponentMap(map: Record<string, () => TaggingDashboardPlugin>): void {
-        this.componentMap = map;
+    public unregisterAllComponents(): void {
+        this.componentMap = {};
     }
 
     public registerComponent(key: string, componentFactory: () => TaggingDashboardPlugin): void {

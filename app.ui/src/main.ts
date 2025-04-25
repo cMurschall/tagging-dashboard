@@ -20,13 +20,20 @@ import './globalStyles.scss';
 
 // Import Bootstrap JavaScript functionality
 import './../node_modules/bootstrap/dist/js/bootstrap.js';
+import { getPluginManager } from './managers/pluginManager.js';
+
+
+(async () => {
+    await getPluginManager().loadExternalPlugins();
+
+    const app = createApp(App);
+    app.use(bootstrap); // Important
+    app.use(pinia);
+
+    app.mount('#app');
+})();
 
 
 
-const app = createApp(App);
-app.use(bootstrap); // Important
-app.use(pinia);
-
-app.mount('#app');
 
 

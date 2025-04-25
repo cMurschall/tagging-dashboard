@@ -30,22 +30,29 @@ export interface TaggingDashboardPlugin {
     create: (container: HTMLElement, pluginService: PluginServices) => void;
     onMounted?: () => void;
     onUnmounted?: () => void;
-  }
+}
 
 export interface PluginServices {
     getId: () => string;
 
-    showMenu$ : Observable<boolean>;
-    cardTitle$ : Observable<string>;
+    showMenu$: Observable<boolean>;
+    cardTitle$: Observable<string>;
 
     simulationTime: Observable<number>;
     getProjectInfo: () => TestDriveProjectInfo | undefined;
     getDataManager: () => DataManager,
     showToast: ShowToastFn;
-    savePluginState: ( state: Record<string, any>) => void;
+    savePluginState: (state: Record<string, any>) => void;
     getPluginState: () => Record<string, any> | undefined;
-    getVideoControl : () => VideoControl;
+    getVideoControl: () => VideoControl;
+}
 
+export interface ExternalPluginManifest {
+    id: string;
+    name: string;
+    description: string;
+    entry: string; // Path to the main file of the plugin
+    version: string;
 }
 
 export type PluginType = 'ListView' | 'VideoPlayer' | 'Gauge' | 'ScatterPlot' | 'TestGridItem' | 'TagTimeline' | 'VectorComponents';
@@ -68,19 +75,25 @@ export class PluginManager {
     private readonly videoControl = new VideoControl()
 
     private pluginSizes = {
-        ListView: { w: 3, h: 5 },
-        VideoPlayer: { w: 6, h: 7 },
-        Gauge: { w: 3, h: 5 },
-        ScatterPlot: { w: 7, h: 4 },
-        VectorComponents: { w: 7, h: 4 },
-        TestGridItem: { w: 5, h: 4 },
-        TagTimeline: { w: 6, h: 7 },
-    } as Record<PluginType, { w: number; h: number }>;
+        ListView: { w: 3, h: 20 },
+        VideoPlayer: { w: 6, h: 28 },
+        Gauge: { w: 3, h: 20 },
+        ScatterPlot: { w: 7, h: 16 },
+        VectorComponents: { w: 7, h: 16 },
+        TestGridItem: { w: 5, h: 16 },
+        TagTimeline: { w: 6, h: 28 },
+    } as Record<string, { w: number; h: number }>;
 
 
     private dataManagers = new Map<string, DataManager>();
 
     private loadedProject: TestDriveProjectInfo | undefined = undefined;
+
+
+    private externalPlugins = new Map<string, {
+        manifest: ExternalPluginManifest;
+        plugin: TaggingDashboardPlugin;
+    }>();
 
 
     // constructor
@@ -91,6 +104,10 @@ export class PluginManager {
         this.webSocketSimulationTimeConnection = new WebSocketSimulationTimeConnection(WebSocketBasePath + '/simulationTime');
     }
 
+    public getExternalPlugins(): ExternalPluginManifest[] {
+        return Array.from(this.externalPlugins.values()).map((x) => x.manifest);
+
+    }
 
     public setShowToast(showToast: ShowToastFn) {
         this.showToast = showToast;
@@ -134,7 +151,7 @@ export class PluginManager {
     }
 
 
-    public restorePlugin(plugin: GridManagerItem, pluginState : Record<string, any> | undefined): void {
+    public restorePlugin(plugin: GridManagerItem, pluginState: Record<string, any> | undefined): void {
 
         const service = this.getCurrentService(plugin.id);
 
@@ -150,30 +167,25 @@ export class PluginManager {
     }
 
 
-    public showPlugin(pluginName: PluginType, props: Record<string, any>): void {
+    public showPlugin(pluginName: string, props: Record<string, any>): void {
         let id: string;
-        switch (pluginName) {
-            case 'VideoPlayer':
-                // only one video player is allowed
-                id = 'VideoPlayer';
-                break;
-            case 'TagTimeline':
-                // only one tag timeline is allowed
-                id = 'TagTimeline';
-                break;
-            default:
-                id = pluginName + '_' + crypto.randomUUID();
-                break;
-
+        if (pluginName === 'VideoPlayer' || pluginName === 'TagTimeline') {
+            id = pluginName;
+        } else {
+            id = pluginName + '_' + crypto.randomUUID();
         }
+
+
+
         const service = this.getCurrentService(id);
+        const size = this.pluginSizes[pluginName];
 
         const newItem = {
             id: id,
             // spread x and y from the gridItemManager (does not really work well yet)
             //...this.gridItemManager.suggestFreeSpace(this.pluginSizes[pluginName].w, this.pluginSizes[pluginName].h),
-            w: this.pluginSizes[pluginName].w ,
-            h: this.pluginSizes[pluginName].h  * 4,
+            w:  size?.w ?? 5,
+            h:  size?.h ?? 5,
             component: pluginName,
             title: pluginName,
             props: props,
@@ -186,19 +198,57 @@ export class PluginManager {
     }
 
 
+    public async loadExternalPlugins(): Promise<void> {
+        try {
+            const response = await fetch('/plugins/plugin-index.json');
+            const pluginDirs: string[] = await response.json();
+
+            for (const dir of pluginDirs) {
+                try {
+                    const manifestUrl = `/plugins/${dir}/manifest.json`;
+                    const manifest = await fetch(manifestUrl).then(res => res.json());
+                    const pluginModule = await import(/* @vite-ignore */ `/plugins/${dir}/${manifest.entry}`);
+
+                    if (pluginModule?.default) {
+                        //this.externalPlugins.set(manifest, pluginModule.default);
+
+                        this.externalPlugins.set(manifest.id, {
+                            manifest,
+                            plugin: pluginModule.default
+                        });
+
+                        if (!(manifest.id in this.pluginSizes)) {
+                            this.pluginSizes[manifest.id] = { w: 5, h: 5 }; // or from manifest
+                          }
+
+                        console.log(`Loaded external plugin: ${manifest.id}`);
+                    } else {
+                        console.warn(`Plugin ${dir} has no default export`);
+                    }
+                } catch (err) {
+                    console.error(`Failed to load external plugin '${dir}':`, err);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load external plugins:', error);
+        }
+    }
+
 
     private registerComponents(project: TestDriveProjectInfo) {
-        this.gridItemManager.setComponentMap({
-            ListView: () => createVuePluginAdapter(ListView),
-            VideoPlayer: () => createVuePluginAdapter(VideoPlayer),
-            Gauge: () => createVuePluginAdapter(Gauge),
-            ScatterPlot: () => project.isLive ? createVuePluginAdapter(LiveScatterPlot) : createVuePluginAdapter(ScatterPlot),
-            TestGridItem: () => createVuePluginAdapter(TestGridItem),
-            TagTimeline: () => createVuePluginAdapter(TagTimeline),
-            VectorComponents: () => createVuePluginAdapter(VectorComponentsChart),
-        });
 
+        this.gridItemManager.unregisterAllComponents();
+        this.gridItemManager.registerComponent('ListView', () => createVuePluginAdapter(ListView));
+        this.gridItemManager.registerComponent('VideoPlayer', () => createVuePluginAdapter(VideoPlayer));
+        this.gridItemManager.registerComponent('Gauge', () => createVuePluginAdapter(Gauge));
+        this.gridItemManager.registerComponent('ScatterPlot', () => project.isLive ? createVuePluginAdapter(LiveScatterPlot) : createVuePluginAdapter(ScatterPlot));
+        this.gridItemManager.registerComponent('TestGridItem', () => createVuePluginAdapter(TestGridItem));
+        this.gridItemManager.registerComponent('TagTimeline', () => createVuePluginAdapter(TagTimeline));
+        this.gridItemManager.registerComponent('VectorComponents', () => createVuePluginAdapter(VectorComponentsChart));
 
+        for (const [id, external] of this.externalPlugins) {
+            this.gridItemManager.registerComponent(id, () => external.plugin);
+        }
     }
 
 
@@ -222,7 +272,7 @@ export class PluginManager {
             getId: () => pluginId,
 
             showMenu$: showMenu$,
-            cardTitle$ : cardTitle$,
+            cardTitle$: cardTitle$,
 
             simulationTime: this.simulationTimeObservable,
             getProjectInfo: () => this.loadedProject,

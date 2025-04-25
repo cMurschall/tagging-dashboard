@@ -188,3 +188,7 @@ cython_debug/
 
 *.env*
 test_drive_data.json
+app.ui/plugins/plugin-index.json
+# Ignore built plugin JS files
+app.ui/plugins/*/*.js
+app.ui/plugins/*/*.js.map

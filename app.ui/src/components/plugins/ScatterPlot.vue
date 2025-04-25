@@ -18,7 +18,7 @@
         <BRow class="mb-3">
           <BCol cols="12">
             <BFormGroup label="Primary Y Axis Expression:">
-              <BFormInput v-model="pluginState.yAxisExpressionLeft" type="text" autocomplete="off"
+              <BlurUpdateInput v-model="pluginState.yAxisExpressionLeft" type="text" autocomplete="off"
                 :placeholder="defaultExpressionHint" />
             </BFormGroup>
           </BCol>
@@ -40,7 +40,7 @@
         <BRow class="mb-3">
           <BCol cols="12">
             <BFormGroup label="Secondary Y Axis Expression:">
-              <BFormInput v-model="pluginState.yAxisExpressionRight" type="text" autocomplete="off"
+              <BlurUpdateInput v-model="pluginState.yAxisExpressionRight" type="text" autocomplete="off"
                 :placeholder="defaultExpressionHint" />
             </BFormGroup>
           </BCol>
@@ -69,6 +69,7 @@ import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 // import { useVideoControl } from './../../composables/useVideoControl';
 import FilterableSelect from './../FilterableSelect.vue';
+import BlurUpdateInput from './../BlurUpdateInput.vue';
 
 
 

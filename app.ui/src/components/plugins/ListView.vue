@@ -56,9 +56,9 @@
                         </BCol>
                         <BCol cols="3">
                             <!-- <label for="input-value-converter"  class="small">Value converter:</label> -->
-                            <BFormInput v-model="pluginState.columnDataInfos[index].valueConverter"
+                            <BlurUpdateInput v-model="pluginState.columnDataInfos[index].valueConverter"
                                 placeholder="Math js converter:" size="sm" style="font-family: monospace ;">
-                            </BFormInput>
+                            </BlurUpdateInput>
 
                         </BCol>
 
@@ -115,6 +115,7 @@ import { EmptySubscription, Subscription } from '../../observable';
 import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue, useObservable } from "../../services/utilities";
 import { BCol, BRow, BButton, BFormInput, BTr, BTd, BTh, BTableSimple, BThead, BTbody } from "bootstrap-vue-next";
 import FilterableSelect from '../FilterableSelect.vue';
+import BlurUpdateInput from '../BlurUpdateInput.vue';
 import { ColumnInfo } from "../../../services/restclient";
 import { PluginServices } from '../../managers/pluginManager';
 

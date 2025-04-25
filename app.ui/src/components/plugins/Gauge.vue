@@ -48,7 +48,7 @@
           </BCol>
           <BCol cols="6">
             <BFormGroup label="Math js converter:">
-              <BFormInput v-model="pluginState.gaugeConverter" type="text" style="font-family: monospace ;" />
+              <BlurUpdateInput v-model="pluginState.gaugeConverter" type="text" style="font-family: monospace ;" />
             </BFormGroup>
           </BCol>
         </BRow>
@@ -76,6 +76,7 @@ import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import { PluginServices } from "../../managers/pluginManager";
 import FilterableSelect from "./../FilterableSelect.vue";
+import BlurUpdateInput from "./../BlurUpdateInput.vue";
 
 use([GaugeChart, SVGRenderer]);
 

@@ -1,8 +1,8 @@
 {
-    "id": "simplePlugin",
-    "name": "Simple Plugin",
+    "id": "samplePlugin",
+    "name": "Sample Plugin",
     "description": "A basic example plugin.",
-    "entry": "./simplePlugin.ts",
+    "entry": "./samplePlugin.ts",
     "version": "1.0.0",
     "author": "Christian Murschall"
   }

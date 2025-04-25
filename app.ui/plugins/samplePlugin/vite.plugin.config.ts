@@ -2,15 +2,15 @@ import { defineConfig } from 'vite';
 import path from 'path';
 
 
-const pluginName = 'simplePlugin';
+const pluginName = path.basename(__dirname);
 const outDir = path.resolve(__dirname, '../../../app/static/plugins', pluginName);
-console.log(` Building plugin '${pluginName}' into: ${outDir}`);
+console.log(`Building plugin '${pluginName}' into: ${outDir}`);
 
 export default defineConfig({
   build: {
     lib: {
-      entry: path.resolve(__dirname, 'simplePlugin.ts'),
-      name: 'SimplePlugin',
+      entry: path.resolve(__dirname, 'samplePlugin.ts'),
+      name: 'SamplePlugin',
       fileName: pluginName,
       formats: ['es'],
     },

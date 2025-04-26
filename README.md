@@ -116,6 +116,16 @@ pyinstaller --clean tagging_dashboard.spec
 This will create a `dist` directory with the executable and all the necessary files to run the application. It is
 recommended to run the generated executable from a command line to see the output and error log messages.
 
+
+### Installer
+There is a There is a [tagging_dashboard.spec](tagging_dashboard.spec) PyInstaller spec file in the root directory that will pack the project into a windows executable.
+To build the executable pyinstaller in version 6.13.0 or greater is required
+Run
+```powershell
+pyinstaller --clean tagging_dashboard.spec
+```
+and the resulting `tagging_dashboard.exe` file will be output in the `dist` directory. This method is not well tested and it is highly recommended to run the executable from commandline to see any errors on stdout and stderr that might occur.
+
 ### Streamdeck  Plugin
 
 To build the Streamdeck plugin you need to have

@@ -4,7 +4,7 @@ import path from 'path';
 
 const pluginName = path.basename(__dirname);
 const outDir = path.resolve(__dirname, '../../../app/static/plugins', pluginName);
-console.log(`Building plugin '${pluginName}' into: ${outDir}`);
+console.log(`Building sample plugin '${pluginName}' into: ${outDir}`);
 
 export default defineConfig({
   build: {

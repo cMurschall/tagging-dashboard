@@ -1,6 +1,6 @@
 // websocketHandler.ts
-import WebSocket from 'ws';
 import streamDeck from "@elgato/streamdeck";
+import WebSocket from 'ws';
 
 export class WebSocketHandler {
   private socket: WebSocket | null = null;
@@ -94,7 +94,7 @@ export class WebSocketHandler {
   }
   protected startReconnectionLoop(): void {
     this.reconnectTimer = setInterval(() => {
-      if (this.socket.readyState === WebSocket.CLOSED || this.socket.readyState === WebSocket.CLOSING) {
+      if (!this.socket || this.socket.readyState === WebSocket.CLOSED || this.socket.readyState === WebSocket.CLOSING) {
         console.log(`${this.constructor.name} attempting to reconnect...`);
         this.connect();
       }

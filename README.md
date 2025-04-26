@@ -134,7 +134,7 @@ npm run bundle
 This will create a `de.hs-harz.fahrsimulator-tagger.streamDeckPlugin` file that can be installed in the Streamdeck
 software by a simple double click.
 
-if you plan to develop the plugin further, you can should first link the output directory to the Streamdeck plugin
+if you plan to develop the plugin further, you should first link the output directory to the Streamdeck plugin
 folder:
 
 ```powershell
@@ -280,3 +280,23 @@ It supports the following adjustable parameters:
 - Add a new tag category by entering a name and clicking Add
 - Delete existing categories from a list
 - Colors are automatically assigned for visual differentiation
+
+## The stramdeck plugin
+
+The Streamdeck plugin allows you to add new Tags to the tagging dashboard from your streamdeck.
+![](docs/images/streamdeck.PNG)
+
+It has two possible action buttons:
+
+- Add an instant tag: This action adds a tag to the current time of the video. The tag is created with the current
+  simulation time for the start and end time.
+- Add a tag with a duration: This action adds a tag to the current time of the video. This action has two states: When
+  pressed once the current simulation time is used for the start time of the tag. When pressed again the current
+  simulation time is used for the end time of the tag.
+
+Button setup:
+
+- Websocket URL: The URL of the websocket server where the plugin is informed about the current simulation time. This is
+  usually `ws://127.0.0.1:8888/api/v1/ws/simulationTime`
+- Tag Endpoint URL: The URL of the tagging post endpoint. This is usually `http://127.0.0.1:8888/api/v1/tag/create`
+- Tag Category: The category of the tag. This is the name of the category that is used in the tagging dashboard.

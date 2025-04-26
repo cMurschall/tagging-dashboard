@@ -1,67 +1,67 @@
 {
-    "Name": "Fahrsimulator Tagger",
-    "Version": "0.1.0.0",
-    "Author": "Christian Murschall",
-    "Actions": [
-        {
-            "Name": "Tag instantaneous",
-            "UUID": "de.hs-harz.fahrsimulator-tagger.instantaneous",
-            "Icon": "imgs/actions/tagger/icon",
-            "Tooltip": "Instant Tag - Press to quickly tag a moment in time.",
-            "PropertyInspectorPath": "ui/tagger.html",
-            "Controllers": [
-                "Keypad"
-            ],
-            "States": [
-                {
-                    "Image": "imgs/actions/tagger/key",
-                    "TitleAlignment": "middle"
-                }
-            ]
-        },
-        {
-            "Name": "Tag start/stop",
-            "UUID": "de.hs-harz.fahrsimulator-tagger.start-stop",
-            "Icon": "imgs/actions/tagger/icon",
-            "Tooltip": "Tag Event - Press once to start tagging, press again to stop and save the tag.",
-            "PropertyInspectorPath": "ui/tagger.html",
-            "Controllers": [
-                "Keypad"
-            ],
-            "States": [
-                {
-                    "Image": "imgs/actions/tagger/key",
-                    "TitleAlignment": "middle"
-                },
-                {
-                    "Image": "imgs/actions/tagger/key_recording",
-                    "TitleAlignment": "middle"
-                }
-            ]
-        }
-    ],
-    "Category": "HS-Harz",
-    "CategoryIcon": "imgs/plugin/category-icon",
-    "CodePath": "bin/plugin.js",
-    "Description": "Tagger for HS-Harz driving simulator",
-    "Icon": "imgs/plugin/marketplace",
-    "SDKVersion": 2,
-    "Software": {
-        "MinimumVersion": "6.4"
-    },
-    "OS": [
-        {
-            "Platform": "mac",
-            "MinimumVersion": "12"
-        },
-        {
-            "Platform": "windows",
-            "MinimumVersion": "10"
-        }
-    ],
-    "Nodejs": {
-        "Version": "20",
-        "Debug": "enabled"
-    },
-    "UUID": "de.hs-harz.fahrsimulator-tagger"
+	"Name": "Fahrsimulator Tagger",
+	"Version": "0.1.0.0",
+	"Author": "Christian Murschall",
+	"Actions": [
+		{
+			"Name": "Tag instantaneous",
+			"UUID": "de.hs-harz.fahrsimulator-tagger.instantaneous",
+			"Icon": "imgs/actions/tagger/icon",
+			"Tooltip": "Instant Tag - Press to quickly tag a moment in time.",
+			"PropertyInspectorPath": "ui/tagger.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/tagger/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Tag start/stop",
+			"UUID": "de.hs-harz.fahrsimulator-tagger.start-stop",
+			"Icon": "imgs/actions/tagger/icon",
+			"Tooltip": "Tag Event - Press once to start tagging, press again to stop and save the tag.",
+			"PropertyInspectorPath": "ui/tagger.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/tagger/key",
+					"TitleAlignment": "middle"
+				},
+				{
+					"Image": "imgs/actions/tagger/key_recording",
+					"TitleAlignment": "middle"
+				}
+			]
+		}
+	],
+	"Category": "HS-Harz",
+	"CategoryIcon": "imgs/plugin/category-icon",
+	"CodePath": "bin/plugin.js",
+	"Description": "Tagger for HS-Harz driving simulator",
+	"Icon": "imgs/plugin/marketplace",
+	"SDKVersion": 2,
+	"Software": {
+		"MinimumVersion": "6.4"
+	},
+	"OS": [
+		{
+			"Platform": "mac",
+			"MinimumVersion": "12"
+		},
+		{
+			"Platform": "windows",
+			"MinimumVersion": "10"
+		}
+	],
+	"Nodejs": {
+		"Version": "20",
+		"Debug": "enabled"
+	},
+	"UUID": "de.hs-harz.fahrsimulator-tagger"
 }

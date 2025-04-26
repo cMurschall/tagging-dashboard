@@ -204,8 +204,9 @@ const updateMultiGridVectorChart = (table: LiveData): any => {
 
         const componentData = new Float64Array(table.data.length * 2);
         for (let j = 0; j < table.data.length; j++) {
-            componentData[j * 2] = table.data[j].timestamp; // x
-            componentData[j * 2 + 1] = table.data[j].value[i];    // y
+            const point = table.data[j];
+            componentData[j * 2] = point.timestamp; // x
+            componentData[j * 2 + 1] = point.value[i];    // y
         }
 
 

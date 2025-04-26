@@ -192,3 +192,5 @@ app.ui/plugins/plugin-index.json
 # Ignore built plugin JS files
 app.ui/plugins/*/*.js
 app.ui/plugins/*/*.js.map
+
+app/static/

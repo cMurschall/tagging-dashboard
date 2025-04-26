@@ -2,7 +2,7 @@
 import { ColumnDefinition, DataManager, TimeseriesDataPoint, TimeseriesTable } from "./dataManager";
 import { Observable } from "./../observable";
 import { WebSocketDataConnection } from "../services/webSocketDataConnection";
-import { BufferedTimeseriesTableWriter } from "./bufferedTimeseriesTableWriter";
+import { BufferedTimeseriesTableWriter } from "../core/bufferedTimeseriesTableWriter";
 
 export class WebsocketDataManager extends DataManager {
 

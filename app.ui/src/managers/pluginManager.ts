@@ -1,6 +1,6 @@
 
 import { EmptySubscription, Observable, Subscription } from "../observable";
-import { isNotNullOrUndefined, isNullOrUndefined, ShowToastFn, TestDriveProjectInfo, WebSocketBasePath } from "../services/utilities";
+import { isNotNullOrUndefined, isNullOrUndefined, ShowToastFn, TestDriveProjectInfo, WebSocketBasePath } from "../core/utilities/utilities";
 import { DataManager } from "./dataManager";
 import { getGridManager, GridManager, GridManagerItem } from './gridItemManager';
 
@@ -22,7 +22,7 @@ import { WebSocketSimulationTimeConnection } from "../services/webSocketSimulati
 
 import { isProxy, toRaw } from "vue";
 
-import { VideoControl } from "./videoControl";
+import { VideoControl } from "../core/videoControl";
 import { createVuePluginAdapter } from "../components/pluginContainer";
 
 

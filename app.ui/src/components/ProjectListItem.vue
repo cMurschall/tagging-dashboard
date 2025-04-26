@@ -34,7 +34,7 @@
 import { computed } from 'vue'
 import { useProjectStore } from './../stores/projectStore';
 
-import { safeFetch, ProjectApiClient as client, TestDriveProjectInfo } from '../services/utilities'
+import { safeFetch, ProjectApiClient as client, TestDriveProjectInfo } from '../core/utilities/utilities'
 import { useToastController ,BCard,  BCardText, BButton, BAlert } from 'bootstrap-vue-next';
 
 const { show: showToast } = useToastController();

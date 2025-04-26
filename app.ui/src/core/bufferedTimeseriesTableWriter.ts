@@ -1,4 +1,4 @@
-import { TimeseriesDataPoint, TimeseriesTable } from "./dataManager";
+import { TimeseriesDataPoint, TimeseriesTable } from "../managers/dataManager";
 
 
 

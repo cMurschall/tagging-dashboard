@@ -16,7 +16,7 @@
 import { defineComponent, inject } from 'vue';
 // import { useVideoControl } from '../../composables/useVideoControl';
 import { PluginServices } from '../../managers/pluginManager';
-import { useObservable } from '../../services/utilities';
+import { useObservable } from '../../core/utilities/utilities';
 
 
 

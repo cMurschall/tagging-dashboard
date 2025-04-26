@@ -25,7 +25,7 @@ import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, watch } from "vue";
 import { TimeseriesDataPoint, TimeseriesTable } from "../../managers/dataManager";
 import { EmptySubscription, Subscription } from "../../observable";
-import { safeFetch, PlayerApiClient as client, isNullOrUndefined, useObservable } from "../../services/utilities";
+import { safeFetch, PlayerApiClient as client, isNullOrUndefined, useObservable } from "../../core/utilities/utilities";
 import { BCol, BFormGroup, BRow } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 // import { useVideoControl } from '../../composables/useVideoControl';

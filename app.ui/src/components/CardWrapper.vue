@@ -42,7 +42,7 @@
 <script lang="ts">
 import { defineComponent, ref, inject, shallowRef, PropType, watch, onMounted, onUnmounted } from 'vue';
 import { PluginServices, TaggingDashboardPlugin } from '../managers/pluginManager';
-import { useObservable } from '../services/utilities';
+import { useObservable } from '../core/utilities/utilities';
 
 
 export default defineComponent({

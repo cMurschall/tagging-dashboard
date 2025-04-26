@@ -16,7 +16,7 @@
 <script setup lang="ts" generic="T">
 import { ref, computed } from 'vue'
 import { BDropdown, BDropdownItem, BDropdownDivider } from 'bootstrap-vue-next'
-import { isNullOrUndefined } from '../services/utilities';
+import { isNullOrUndefined } from '../core/utilities/utilities';
 
 const props = defineProps<{
   modelValue: T | null

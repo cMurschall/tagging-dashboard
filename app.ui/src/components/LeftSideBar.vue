@@ -227,9 +227,9 @@ import { ref } from 'vue'
 import { useProjectStore } from './../stores/projectStore';
 
 
-import { CreateProjectPayload, getAxiosErrorMessage, isNullOrUndefined, uploadCsvFile, uploadVideoFile } from '../services/utilities';
+import { CreateProjectPayload, getAxiosErrorMessage, isNullOrUndefined, uploadCsvFile, uploadVideoFile } from '../core/utilities/utilities';
 
-import { safeFetch, ProjectApiClient as client } from '../services/utilities';
+import { safeFetch, ProjectApiClient as client } from '../core/utilities/utilities';
 import {
     BButton, BFormGroup, BFormRadio, BFormRadioGroup, BFormSelect, BFormFile,
     BListGroupItem, BListGroup, BCardBody, BCard, BCardHeader, BModal, BProgress, BProgressBar,

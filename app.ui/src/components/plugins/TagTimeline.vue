@@ -155,7 +155,7 @@ import {
 
 // import { useVideoControl } from '../../composables/useVideoControl';
 import { Tag, TagCategory } from '../../../services/restclient';
-import { safeFetch, TagApiClient as client, WebSocketBasePath, useObservable } from '../../services/utilities';
+import { safeFetch, TagApiClient as client, WebSocketBasePath, useObservable } from '../../core/utilities/utilities';
 import { EmptySubscription, Subscription } from '../../observable';
 import { PluginServices } from '../../managers/pluginManager';
 import { WebSocketTagConnection } from '../../services/webSocketTagConnection';

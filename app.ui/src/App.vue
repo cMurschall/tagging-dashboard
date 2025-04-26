@@ -77,7 +77,7 @@ import { getLayoutManager } from './managers/layoutManager';
 import { EmptySubscription, Subscription } from './observable';
 import { BToastOrchestrator, useToastController } from 'bootstrap-vue-next';
 import { getPluginManager } from './managers/pluginManager';
-import { TestDriveProjectInfo, HealthApiClient as client, safeFetch } from './services/utilities';
+import { TestDriveProjectInfo, HealthApiClient as client, safeFetch } from './core/utilities/utilities';
 import { HealthCheckResponse } from '../services/restclient';
 
 

@@ -16,12 +16,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
-import { ApiPath, TestDriveVideoInfo, isDevMode, clamp } from '../../services/utilities';
+import { ApiPath, TestDriveVideoInfo, isDevMode, clamp } from '../../core/utilities/utilities';
 // import { useVideoControl } from './../../composables/useVideoControl'
 import videojs from "video.js";
 import "videojs-sprite-thumbnails";
 import Player from 'video.js/dist/types/player';
-import { FrameByFrameButton } from '../../services/frameByFrameButton';
+import { FrameByFrameButton } from '../../core/frameByFrameButton';
 import { PluginServices } from '../../managers/pluginManager';
 
 

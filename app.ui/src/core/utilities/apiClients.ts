@@ -2,6 +2,7 @@ import * as RestClient from '../../../services/restclient';
 import { TestDriveProjectInfoOutput, CreateProjectPayload, TestDriveVideoInfo } from '../../../services/restclient';
 import axios from 'axios';
 import { isAxiosError } from 'axios';
+import { ApiPath, BasePath } from './env';
 
 
 
@@ -16,21 +17,6 @@ export async function safeFetch<T>(fetchFunction: () => Promise<T>): Promise<[Er
 }
 
 
-// export const BasePath = 'http://localhost:8888';
-// export const ApiPath = BasePath + '/api/v1';
-// export const WebSocketBasePath = "ws://127.0.0.1:8888/api/v1/ws"
-
-export const BasePath = import.meta.env.VITE_BASE_PATH
-export const ApiPath = import.meta.env.VITE_API_PATH
-
-const rawWsPath = import.meta.env.VITE_WS_PATH
-
-export const WebSocketBasePath = rawWsPath.startsWith('ws')
-  ? rawWsPath
-  : `${window.location.protocol === 'https:' ? 'wss://' : 'ws://'}${window.location.host}${import.meta.env.VITE_WS_PATH}`;
-
-console.log("API:", ApiPath);
-console.log("WS:", WebSocketBasePath);
 
 export const ProjectApiClient = new RestClient.ProjectEndpointApi(new RestClient.Configuration({
   basePath: BasePath,
@@ -53,6 +39,8 @@ export const TagApiClient = new RestClient.TagEndpointApi(new RestClient.Configu
 export type { TestDriveProjectInfoOutput as TestDriveProjectInfo, CreateProjectPayload, TestDriveVideoInfo };
 
 type ProgressCallback = (percentage: number) => void;
+
+
 const uploadFileWithProgress = async <T>(file: File, endpoint: string, onProgress?: ProgressCallback, fieldName = 'file'): Promise<T> => {
   const formData = new FormData();
   formData.append(fieldName, file);
@@ -100,3 +88,5 @@ export const getAxiosErrorMessage = (error: unknown): string => {
 
   return String(error) || 'Unknown error';
 };
+
+

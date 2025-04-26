@@ -112,7 +112,7 @@
 import { onMounted, onUnmounted, ref, inject, watch, toRaw } from 'vue';
 import { TimeseriesDataPoint } from '../../managers/dataManager';
 import { EmptySubscription, Subscription } from '../../observable';
-import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue, useObservable } from "../../services/utilities";
+import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue, useObservable } from "../../core/utilities/utilities";
 import { BCol, BRow, BButton, BFormInput, BTr, BTd, BTh, BTableSimple, BThead, BTbody } from "bootstrap-vue-next";
 import FilterableSelect from '../FilterableSelect.vue';
 import BlurUpdateInput from '../BlurUpdateInput.vue';

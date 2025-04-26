@@ -33,7 +33,7 @@ vi.mock('video.js', () => {
         return el;
       }
     }
-  
+
     return {
       default: {
         getComponent: (name: string) => {
@@ -47,7 +47,7 @@ vi.mock('video.js', () => {
   });
 
 // --- Now import the class to test --- //
-import { FrameByFrameButton } from './../../services/frameByFrameButton';
+import { FrameByFrameButton } from '../../core/frameByFrameButton';
 
 // A helper to create a fake player with pause and currentTime methods.
 function createFakePlayer(initialTime = 0) {
@@ -78,7 +78,7 @@ describe('FrameByFrameButton', () => {
 
       // Create an instance with the fake player
       const button = new FrameByFrameButton(fakePlayer, { fps, value });
-      
+
       // Call handleClick to simulate a button click.
       button.handleClick();
 

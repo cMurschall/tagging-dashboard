@@ -64,7 +64,7 @@ import {
   getTimestampStatistics, clamp, transformMathJsValue,
   IDENTITY_EXPRESSION,
   useObservable
-} from "../../services/utilities";
+} from "../../core/utilities/utilities";
 import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 // import { useVideoControl } from './../../composables/useVideoControl';

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { TimestampLookup } from '../../services/timestampLookup';
+import { TimestampLookup } from '../../core/timestampLookup';
 import { TimeseriesDataPoint, TimeseriesTable } from '../../managers/dataManager';
-import { toDenseTable } from '../../services/utilities';
+import { toDenseTable } from '../../core/utilities/utilities';
 
 
 

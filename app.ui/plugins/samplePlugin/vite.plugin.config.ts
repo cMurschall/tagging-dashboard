@@ -16,13 +16,5 @@ export default defineConfig({
     },
     outDir: outDir,
     emptyOutDir: true,
-    rollupOptions: {
-      external: ['vue'],
-      output: {
-        globals: {
-          vue: 'Vue',
-        },
-      },
-    },
   }
 });

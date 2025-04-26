@@ -118,6 +118,37 @@ This will create a `dist` directory with the executable and all the necessary fi
 recommended to run the
 generated executable from a command line to see the output and error log messages.
 
+### Streamdeck Plugin
+
+To build the steamdeck plugin you need to have
+the [Streamdeck SDK](https://docs.elgato.com/streamdeck/sdk/introduction/getting-started) installed.
+You can download it from the official website. After installing the SDK, you can build the plugin with the following
+command inside of the `\streamdeck` directory:
+
+```powershell
+npm install
+
+npm run bundle
+```
+
+This will create a `de.hs-harz.fahrsimulator-tagger.streamDeckPlugin` file that can be installed in the Streamdeck
+software by a simple double click.
+
+if you plan to develop the plugin further, you can should first link the output directory to the Streamdeck plugin
+folder:
+
+```powershell
+npm run link
+```
+
+you can then start a development server that will watch for changes in the plugin directory and automatically rebuild
+the plugin when
+changes are detected. o start the development server, run:
+
+```powershell
+npm run watch
+```
+
 ## Usage
 
 ### Setup

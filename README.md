@@ -281,7 +281,86 @@ It supports the following adjustable parameters:
 - Delete existing categories from a list
 - Colors are automatically assigned for visual differentiation
 
-## The stramdeck plugin
+## Building own component plugins
+
+The application is designed to be extensible, allowing developers to create comprehensive custom components that can be
+added to the web application.
+To build your own component, you need create a new folder with your plugin name into  `app.ui/plugins/` directory.
+Inside of this folder you need to create a `manifest.json` file. This file contains the metadata for your plugin. It
+should look like this:
+
+```json
+{
+  "id": "pluginId",
+  "name": "Display name of the plugin",
+  "entry": "plugin.js",
+  "version": "1.0.0",
+  "description": "A short description of the plugin",
+  "defaultSize": {
+    "width": 5,
+    "height": 5
+  }
+}
+```
+
+your plugin can be written in TypeScript or JavaScript. The entry point should have a default export of of this
+TypeScript interface:
+
+```typescript
+interface TaggingDashboardPlugin {
+    create: (container: HTMLElement, pluginService: PluginServices) => void;
+    onMounted?: () => void;
+    onUnmounted?: () => void;
+}
+```
+
+The `create` method is called when the plugin is loaded. The `container` parameter is the HTML element where the plugin
+is mounted. The `pluginService` parameter is an object that contains an interoop to the main application. It is used to communicate with the main application and to access the data and methods of the application. The `onMounted` and `onUnmounted` methods are called when the plugin is mounted or unmounted.
+
+The putin service exposes the following interface:
+```typescript
+interface PluginServices {
+    // returns the assigned plugin id
+    getId: () => string;
+
+    // an observable that the plugin can subscribe to and show an option menu
+    showMenu$: Observable<boolean>;
+    // a function to set the title of the card
+    cardTitle$: Observable<string>;
+
+    // an observable to receive the current simulation time
+    simulationTime: Observable<number>;
+
+    // function to get the current loaded project
+    getProjectInfo: () => TestDriveProjectInfo | undefined;
+
+    // function to get the current data manager. This allows to request data columns and receive updates about the current next data point to show
+    getDataManager: () => DataManager,
+
+    // function to display a toast message
+    showToast: ShowToastFn;
+
+    // can be used to save the current settings of the plugin. Saved settings are available when a layout is restored via the getPluginState function
+    savePluginState: (state: Record<string, any>) => void;
+    getPluginState: () => Record<string, any> | undefined;
+
+    // the returned VideoControl can be used to update the current video time via the seekTo function. If your plugin wants to pick up the seekTo Messages from other plugins you can set the setSeekTo. This will override the current seekTo messages.
+    getVideoControl: () => VideoControl;
+}
+```
+
+
+The added plugins are build and copied into the output folder with
+```powershell
+npm run build:plugins
+```
+
+A sample plugin is available in the plugin folder of the `app.ui` directory.
+
+
+
+
+## The Streamdeck plugin
 
 The Streamdeck plugin allows you to add new Tags to the tagging dashboard from your streamdeck.
 ![](docs/images/streamdeck.PNG)

@@ -53,9 +53,15 @@ export interface ExternalPluginManifest {
     description: string;
     entry: string; // Path to the main file of the plugin
     version: string;
+    defaultSize: { width: number; height: number };
 }
 
-export type PluginType = 'ListView' | 'VideoPlayer' | 'Gauge' | 'ScatterPlot' | 'TestGridItem' | 'TagTimeline' | 'VectorComponents';
+export interface InternalPluginManifest {
+    name: string;
+    displayName: string;
+    defaultSize: { width: number; height: number };
+
+}
 
 
 
@@ -74,16 +80,6 @@ export class PluginManager {
 
     private readonly videoControl = new VideoControl()
 
-    private pluginSizes = {
-        ListView: { w: 3, h: 20 },
-        VideoPlayer: { w: 6, h: 28 },
-        Gauge: { w: 3, h: 20 },
-        ScatterPlot: { w: 7, h: 16 },
-        VectorComponents: { w: 7, h: 16 },
-        TestGridItem: { w: 5, h: 16 },
-        TagTimeline: { w: 6, h: 28 },
-    } as Record<string, { w: number; h: number }>;
-
 
     private dataManagers = new Map<string, DataManager>();
 
@@ -94,6 +90,60 @@ export class PluginManager {
         manifest: ExternalPluginManifest;
         plugin: TaggingDashboardPlugin;
     }>();
+
+    private internalPlugins = new Map<string, {
+        manifest: InternalPluginManifest;
+    }>([
+        ['VideoPlayer', {
+            manifest: {
+                name: 'VideoPlayer',
+                displayName: 'Video Player',
+                defaultSize: { width: 6, height: 28 },
+            }
+        }],
+        ['ListView', {
+            manifest: {
+                name: 'ListView',
+                displayName: 'List View',
+                defaultSize: { width: 3, height: 20 },
+            }
+        }],
+        ['Gauge', {
+            manifest: {
+                name: 'Gauge',
+                displayName: 'Gauge',
+                defaultSize: { width: 3, height: 20 },
+            }
+        }],
+        ['ScatterPlot', {
+            manifest: {
+                name: 'ScatterPlot',
+                displayName: 'Scatter Plot',
+                defaultSize: { width: 7, height: 16 },
+            }
+        }],
+        ['TestGridItem', {
+            manifest: {
+                name: 'TestGridItem',
+                displayName: 'Test Grid Item',
+                defaultSize: { width: 5, height: 16 },
+            }
+        }],
+        ['TagTimeline', {
+            manifest: {
+                name: 'TagTimeline',
+                displayName: 'Tag Timeline',
+                defaultSize: { width: 6, height: 28 },
+            }
+        }],
+        ['VectorComponents', {
+            manifest: {
+                name: 'VectorComponents',
+                displayName: 'Vector Components Chart',
+                defaultSize: { width: 7, height: 16 },
+            }
+        }],
+    ])
 
 
     // constructor
@@ -106,7 +156,10 @@ export class PluginManager {
 
     public getExternalPlugins(): ExternalPluginManifest[] {
         return Array.from(this.externalPlugins.values()).map((x) => x.manifest);
+    }
 
+    public getInternalPlugins(): InternalPluginManifest[] {
+        return Array.from(this.internalPlugins.values()).map((x) => x.manifest);
     }
 
     public setShowToast(showToast: ShowToastFn) {
@@ -175,17 +228,23 @@ export class PluginManager {
             id = pluginName + '_' + crypto.randomUUID();
         }
 
-
+        const isInternalPlugin = this.internalPlugins.has(pluginName);
+        if (!isInternalPlugin && !this.externalPlugins.has(pluginName)) {
+            console.warn(`Plugin ${pluginName} is not registered`);
+            return;
+        }
 
         const service = this.getCurrentService(id);
-        const size = this.pluginSizes[pluginName];
+        const size = isInternalPlugin
+            ? this.internalPlugins.get(pluginName)?.manifest.defaultSize
+            : this.externalPlugins.get(pluginName)?.manifest.defaultSize;
 
         const newItem = {
             id: id,
             // spread x and y from the gridItemManager (does not really work well yet)
             //...this.gridItemManager.suggestFreeSpace(this.pluginSizes[pluginName].w, this.pluginSizes[pluginName].h),
-            w:  size?.w ?? 5,
-            h:  size?.h ?? 5,
+            w: size?.width,
+            h: size?.height,
             component: pluginName,
             title: pluginName,
             props: props,
@@ -216,10 +275,6 @@ export class PluginManager {
                             manifest,
                             plugin: pluginModule.default
                         });
-
-                        if (!(manifest.id in this.pluginSizes)) {
-                            this.pluginSizes[manifest.id] = { w: 5, h: 5 }; // or from manifest
-                          }
 
                         console.log(`Loaded external plugin: ${manifest.id}`);
                     } else {

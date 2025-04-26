@@ -2,19 +2,10 @@
     <div style="width : 100%" class="d-flex flex-row justify-content-start align-items-center">
         <BDropdown text="Add Plugin" class="me-2" :disable="projectStore.isProjectLoaded">
             <BDropdownGroup header="Build in">
-                <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddVideo">Add Video
-                </BDropdownItem>
-                <BDropdownDivider />
-                <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddGauge">Add Gauge
-                </BDropdownItem>
-                <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddScatter">Add xy-Chart
-                </BDropdownItem>
-                <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddVectorComponents">Add
-                    Vector-Chart
-                </BDropdownItem>
-                <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddList">Add List</BDropdownItem>
-                <BDropdownItem :disabled="!projectStore.isProjectLoaded" @click="handleAddTagLine">Add Tag Line
-                </BDropdownItem>
+
+                <BDropdownItem v-for="plugin in internalPlugins" :key="plugin.name"
+                    :disabled="!projectStore.isProjectLoaded" @click="handleInternalPlugin(plugin)">Add {{ plugin.displayName
+                    }}</BDropdownItem>
             </BDropdownGroup>
 
             <BDropdownGroup header="Externals" v-if="externalPlugins.length > 0">
@@ -89,7 +80,7 @@
                 <div v-if="selectedLayoutToRename">
                     <div class="mb-3">
                         <label for="renameLayoutName" class="form-label">New Layout Name for "{{ selectedLayoutToRename
-                        }}":</label>
+                            }}":</label>
                         <BFormInput id="renameLayoutName" v-model="renameLayoutName" placeholder="Enter new name">
                         </BFormInput>
                     </div>
@@ -117,7 +108,7 @@ import { EmptySubscription, Subscription } from '../../observable';
 import { getGridManager } from './../../managers/gridItemManager';
 import { getLayoutManager, StoredLayoutItem } from './../../managers/layoutManager';
 
-import { ExternalPluginManifest, getPluginManager } from '../../managers/pluginManager';
+import { ExternalPluginManifest, InternalPluginManifest, getPluginManager } from '../../managers/pluginManager';
 import { useProjectStore } from './../../stores/projectStore';
 import { BModal, BFormInput, BFormSelect, BButton, BDropdown, BDropdownItem, BDropdownDivider, BDropdownGroup } from 'bootstrap-vue-next';
 
@@ -145,30 +136,10 @@ let layoutSubscription: Subscription = EmptySubscription;
 let simulationTimeSubscription: Subscription = EmptySubscription;
 
 const externalPlugins = ref<ExternalPluginManifest[]>([]);
+const internalPlugins = ref<InternalPluginManifest[]>([]);
 
 
-const handleAddTagLine = () => {
-    getPluginManager().showPlugin('TagTimeline', {});
-};
 
-const handleAddVideo = () => {
-    getPluginManager().showPlugin('VideoPlayer', {});
-};
-
-const handleAddGauge = () => {
-    getPluginManager().showPlugin('Gauge', {});
-};
-
-const handleAddList = () => {
-    getPluginManager().showPlugin('ListView', {});
-};
-
-const handleAddScatter = () => {
-    getPluginManager().showPlugin('ScatterPlot', {});
-};
-const handleAddVectorComponents = () => {
-    getPluginManager().showPlugin('VectorComponents', {});
-};
 
 const handleAddTestGridItem = () => {
     getPluginManager().showPlugin('TestGridItem', {});
@@ -176,6 +147,10 @@ const handleAddTestGridItem = () => {
 
 const handleExternalPlugin = (plugin: ExternalPluginManifest) => {
     getPluginManager().showPlugin(plugin.id, {});
+};
+
+const handleInternalPlugin = (plugin: InternalPluginManifest) => {
+    getPluginManager().showPlugin(plugin.name, {});
 };
 
 
@@ -193,6 +168,7 @@ onMounted(async () => {
     });
 
     externalPlugins.value = getPluginManager().getExternalPlugins();
+    internalPlugins.value = getPluginManager().getInternalPlugins();
 
 });
 
@@ -249,8 +225,6 @@ const handleRestoreLayout = (layoutName: string) => {
     }
 
     for (const item of layoutToRestore) {
-
-
 
         getPluginManager().restorePlugin({
             component: item.component,

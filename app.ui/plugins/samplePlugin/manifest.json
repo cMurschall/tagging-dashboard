@@ -3,5 +3,9 @@
     "name": "Sample Plugin",
     "entry": "samplePlugin.js",
     "version": "1.0.0",
-    "description": "This plugin displays a greeting message."
+    "description": "This plugin displays a greeting message.",
+    "defaultSize": {
+        "width": 5,
+        "height": 5
+    }
   }

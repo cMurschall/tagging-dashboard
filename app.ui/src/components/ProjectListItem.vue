@@ -19,7 +19,7 @@
         <template #footer>
             <div class="d-flex justify-content-between">
                 <BButton @click="handleLoadProject">Load</BButton>
-                <BButton v-if="!props.project.isLive" variant="info">Edit</BButton>
+                <!-- <BButton v-if="!props.project.isLive" variant="info">Edit</BButton> -->
                 <BButton v-if="!props.project.isLive" variant="danger" @click="handleDeleteProject">Delete</BButton>
             </div>
         </template>

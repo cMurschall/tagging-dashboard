@@ -12,6 +12,7 @@ import TestGridItem from './../components/plugins/TestGridItem.vue';
 import TagTimeline from './../components/plugins/TagTimeline.vue';
 import LiveScatterPlot from "../components/plugins/LiveScatterPlot.vue";
 import VectorComponentsChart from "../components/plugins/VectorComponentsChart.vue";
+import LiveVectorComponentsChart from "../components/plugins/LiveVectorComponentsChart.vue";
 
 
 import { ApiDataManager } from "./apiDataManager";
@@ -299,7 +300,7 @@ export class PluginManager {
         this.gridItemManager.registerComponent('ScatterPlot', () => project.isLive ? createVuePluginAdapter(LiveScatterPlot) : createVuePluginAdapter(ScatterPlot));
         this.gridItemManager.registerComponent('TestGridItem', () => createVuePluginAdapter(TestGridItem));
         this.gridItemManager.registerComponent('TagTimeline', () => createVuePluginAdapter(TagTimeline));
-        this.gridItemManager.registerComponent('VectorComponents', () => createVuePluginAdapter(VectorComponentsChart));
+        this.gridItemManager.registerComponent('VectorComponents', () => project.isLive ?  createVuePluginAdapter(LiveVectorComponentsChart) : createVuePluginAdapter(VectorComponentsChart));
 
         for (const [id, external] of this.externalPlugins) {
             this.gridItemManager.registerComponent(id, () => external.plugin);

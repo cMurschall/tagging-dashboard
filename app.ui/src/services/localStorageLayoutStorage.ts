@@ -1,10 +1,8 @@
-import { StoredLayoutItem } from "../managers/layoutManager";
+import { LayoutStorage, StoredLayoutItem } from "@/types/layout";
 
 
-export interface LayoutStorage {
-    load(): Promise<Record<string, StoredLayoutItem[]>>;
-    save(layouts: Record<string, StoredLayoutItem[]>): Promise<void>;
-}
+
+
 
 export class LocalStorageLayoutStorage implements LayoutStorage {
     constructor(private key: string = 'grid-layouts', private storage: Storage = localStorage) { }

@@ -1,8 +1,8 @@
 
-import { EmptySubscription, Observable, Subscription } from "../core/observable";
-import { isNotNullOrUndefined, isNullOrUndefined, ShowToastFn, TestDriveProjectInfo, WebSocketBasePath } from "../core/utilities/utilities";
+import {  Observable } from "../core/observable";
+import { isNotNullOrUndefined, isNullOrUndefined, TestDriveProjectInfo, WebSocketBasePath } from "../core/utilities/utilities";
 import { DataManager } from "./dataManager";
-import { getGridManager, GridManager, GridManagerItem } from './gridItemManager';
+import { getGridManager, GridManager } from './gridItemManager';
 
 import VideoPlayer from './../components/plugins/VideoPlayer.vue';
 import ListView from './../components/plugins/ListView.vue';
@@ -25,44 +25,12 @@ import { isProxy, toRaw } from "vue";
 
 import { VideoControl } from "../core/videoControl";
 import { createVuePluginAdapter } from "../components/pluginContainer";
+import { ExternalPluginManifest, InternalPluginManifest, PluginServices, TaggingDashboardPlugin } from "@/types/plugin";
+import { GridManagerItem, ShowToastFn } from "@/types/grid";
+import { EmptySubscription, Subscription } from "@/types/observable";
 
 
-export interface TaggingDashboardPlugin {
-    create: (container: HTMLElement, pluginService: PluginServices) => void;
-    onMounted?: () => void;
-    onUnmounted?: () => void;
-}
 
-export interface PluginServices {
-    getId: () => string;
-
-    showMenu$: Observable<boolean>;
-    cardTitle$: Observable<string>;
-
-    simulationTime: Observable<number>;
-    getProjectInfo: () => TestDriveProjectInfo | undefined;
-    getDataManager: () => DataManager,
-    showToast: ShowToastFn;
-    savePluginState: (state: Record<string, any>) => void;
-    getPluginState: () => Record<string, any> | undefined;
-    getVideoControl: () => VideoControl;
-}
-
-export interface ExternalPluginManifest {
-    id: string;
-    name: string;
-    description: string;
-    entry: string; // Path to the main file of the plugin
-    version: string;
-    defaultSize: { width: number; height: number };
-}
-
-export interface InternalPluginManifest {
-    name: string;
-    displayName: string;
-    defaultSize: { width: number; height: number };
-
-}
 
 
 

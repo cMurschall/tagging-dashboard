@@ -1,7 +1,8 @@
 // RandomSpeedDataManager.ts
 
+import { ColumnDefinition, TimeseriesDataPoint, TimeseriesTable } from "@/types/data";
 import { Observable } from "../core/observable";
-import { ColumnDefinition, DataManager, TimeseriesDataPoint, TimeseriesTable } from "./dataManager";
+import {  DataManager} from "./dataManager";
 
 export class RandomDataManager extends DataManager {
     measurement$: Observable<TimeseriesDataPoint>;

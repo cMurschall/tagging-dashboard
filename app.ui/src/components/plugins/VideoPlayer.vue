@@ -20,9 +20,10 @@ import { ApiPath, TestDriveVideoInfo, isDevMode, clamp } from '../../core/utilit
 // import { useVideoControl } from './../../composables/useVideoControl'
 import videojs from "video.js";
 import "videojs-sprite-thumbnails";
-import Player from 'video.js/dist/types/player';
+
 import { FrameByFrameButton } from '../../core/frameByFrameButton';
-import { PluginServices } from '../../managers/pluginManager';
+import { PluginServices } from '@/types/plugin';
+import { VideoPlayer } from '@/types/video';
 
 
 // Register the component with Video.js, so it can be used in players.
@@ -37,10 +38,6 @@ if (!pluginService) {
 
 
 
-
-export interface VideoPlayer extends Player {
-  spriteThumbnails: (options: any) => void;
-}
 
 type PlayerOptions = typeof videojs.options;
 

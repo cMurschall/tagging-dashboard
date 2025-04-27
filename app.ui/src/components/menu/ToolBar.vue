@@ -103,14 +103,14 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
-
-import { EmptySubscription, Subscription } from '../../core/observable';
 import { getGridManager } from './../../managers/gridItemManager';
-import { getLayoutManager, StoredLayoutItem } from './../../managers/layoutManager';
-
-import { ExternalPluginManifest, InternalPluginManifest, getPluginManager } from '../../managers/pluginManager';
+import { getLayoutManager } from './../../managers/layoutManager';
+import { getPluginManager } from '../../managers/pluginManager';
 import { useProjectStore } from './../../stores/projectStore';
 import { BModal, BFormInput, BFormSelect, BButton, BDropdown, BDropdownItem, BDropdownDivider, BDropdownGroup } from 'bootstrap-vue-next';
+import { StoredLayoutItem } from '@/types/layout';
+import { Subscription, EmptySubscription } from '@/types/observable';
+import { ExternalPluginManifest, InternalPluginManifest } from '@/types/plugin';
 
 // Initialize the store
 const projectStore = useProjectStore();

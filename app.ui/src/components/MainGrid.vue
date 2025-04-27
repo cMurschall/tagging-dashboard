@@ -17,8 +17,8 @@ import {
 import { GridItemHTMLElement, GridStack, GridStackNode } from 'gridstack';
 import CardWrapper from './CardWrapper.vue';
 // import {  bootstrap } from "./../plugins/AppPlugins";
-import { getGridManager, GridManagerItem, GridManager } from './../managers/gridItemManager';
-import { TaggingDashboardPlugin } from '../managers/pluginManager';
+import { getGridManager, GridManager } from './../managers/gridItemManager';
+import { GridManagerItem } from '@/types/grid';
 
 
 export default defineComponent({

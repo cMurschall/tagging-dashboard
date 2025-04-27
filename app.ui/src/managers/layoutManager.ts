@@ -1,26 +1,8 @@
+import { GridManagerItem } from "@/types/grid";
 import { Observable } from "../core/observable";
-import { GridManagerItem } from "./gridItemManager";
-import { LayoutStorage, LocalStorageLayoutStorage } from "./../services/localStorageLayoutStorage";
+import { LocalStorageLayoutStorage } from "./../services/localStorageLayoutStorage";
+import { LayoutStorage, StoredLayoutItem } from "@/types/layout";
 
-
-
-
-export interface LayoutManagerConfig {
-    storageKey?: string;
-    storage?: Storage;
-}
-
-// Define a type for the simplified layout item to be stored
-export interface StoredLayoutItem {
-    id: string;
-    x?: number;
-    y?: number;
-    w?: number;
-    h?: number;
-    component?: string;
-    title?: string;
-    pluginState?: Record<string, any> | undefined;
-}
 
 
 

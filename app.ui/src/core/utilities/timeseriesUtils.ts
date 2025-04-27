@@ -1,18 +1,5 @@
-import { TimeseriesDataPoint, TimeseriesTable } from "../../managers/dataManager";
+import { TimeseriesDataPoint, TimeseriesTable, TimestampStatistics } from "@/types/data";
 
-
-
-export interface TimestampStatistics {
-    count: number;
-    min: number;
-    max: number;
-    duration: number;
-    meanInterval: number;
-    medianInterval: number;
-    minInterval: number;
-    maxInterval: number;
-    uniform: boolean;
-  }
 
 
 

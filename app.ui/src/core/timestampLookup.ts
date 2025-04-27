@@ -1,4 +1,4 @@
-import { TimeseriesDataPoint, TimeseriesTable } from "../managers/dataManager";
+import { TimeseriesDataPoint, TimeseriesTable } from "@/types/data";
 
 // the tolerance for checking even spacing (e.g., 1% of the average step)
 const EVEN_SPACING_TOLERANCE_FACTOR = 0.01;
@@ -98,7 +98,7 @@ export class TimestampLookup {
             return null; // Or throw an error
         }
 
-        // -Conditional Logic based on Even Spacing 
+        // -Conditional Logic based on Even Spacing
         if (!this.isEvenlySpaced) {
             // If timestamps are not evenly spaced (or not sorted), skip optimizations and use binary search directly.
             const fallbackIndex = this.binarySearchClosest(targetTs);
@@ -118,7 +118,7 @@ export class TimestampLookup {
         }
 
 
-        //  Reverse Scrubbing 
+        //  Reverse Scrubbing
         const isReverse = targetTs < this.lastTimestamp && this.lastTimestamp - targetTs <= maxScanDelta
         if (isReverse) {
             while (index > 0 && this.table.timestamps[index - 1] >= targetTs) {
@@ -249,7 +249,7 @@ export class TimestampLookup {
         const timestamp = this.table.timestamps[index];
         const values: Record<string, number | number[]> = {};
 
-        
+
         // Scalars
         for (const key in this.table.scalarValues) {
             values[key] = this.table.scalarValues[key][index];
@@ -298,4 +298,4 @@ export class TimestampLookup {
         return true; // All steps are within tolerance
     }
 
-} 
+}

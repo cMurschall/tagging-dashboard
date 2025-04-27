@@ -10,6 +10,11 @@
 
     "types": ["vite/client"], // Add this if using Vite
 
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

@@ -1,14 +1,6 @@
+import { SeekToFunction, UseVideoControl } from "@/types/video"
 
 
-export interface SeekToFunction {
-  (time: number): void
-}
-
-export interface UseVideoControl {
-
-  seekTo: SeekToFunction
-  setSeekTo: (fn: SeekToFunction) => void
-}
 
 export class VideoControl implements UseVideoControl {
   private seekToImpl: SeekToFunction

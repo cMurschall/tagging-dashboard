@@ -1,10 +1,11 @@
-import { Observable } from "../core/observable";
-import { StoredLayoutItem } from "./layoutManager";
-import { TaggingDashboardPlugin } from "./pluginManager";
 
-export interface GridManagerItem extends StoredLayoutItem {
-    dependencies?: Record<string, any> | undefined;
-}
+import { GridManagerItem } from "@/types/grid";
+import { Observable } from "../core/observable";
+import { TaggingDashboardPlugin } from "@/types/plugin";
+
+
+
+
 
 export class GridManager {
     private GridManagerItems: GridManagerItem[] = [];

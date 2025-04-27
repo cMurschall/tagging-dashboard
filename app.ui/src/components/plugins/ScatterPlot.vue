@@ -57,22 +57,17 @@
 <script setup lang="ts">
 import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, watch } from "vue";
-import { TimeseriesDataPoint, TimeseriesTable } from "../../managers/dataManager";
-import { EmptySubscription, Subscription } from "../../core/observable";
 import {
   safeFetch, PlayerApiClient as client, TimestampStatistics,
   getTimestampStatistics, clamp, transformMathJsValue,
   IDENTITY_EXPRESSION,
   useObservable
 } from "../../core/utilities/utilities";
-import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
+import { BCol, BFormGroup, BRow } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 // import { useVideoControl } from './../../composables/useVideoControl';
 import FilterableSelect from './../FilterableSelect.vue';
 import BlurUpdateInput from './../BlurUpdateInput.vue';
-
-
-
 import { use } from 'echarts/core'
 import { ScatterChart } from 'echarts/charts'
 import {
@@ -93,7 +88,9 @@ import type {
   TooltipComponentOption
 } from 'echarts/components'
 import { SeriesOption } from "echarts";
-import { PluginServices } from "../../managers/pluginManager";
+import { TimeseriesTable, TimeseriesDataPoint } from "@/types/data";
+import { Subscription, EmptySubscription } from "@/types/observable";
+import { PluginServices } from "@/types/plugin";
 
 use([
   LegendComponent,

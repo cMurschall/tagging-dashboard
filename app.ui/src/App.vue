@@ -70,15 +70,13 @@ import { useProjectStore } from './stores/projectStore';
 import ToolBar from './components/menu/ToolBar.vue';
 import LeftSideBar from './components/LeftSideBar.vue';
 import MainGrid from './components/MainGrid.vue';
-
-
-import { GridManagerItem } from './managers/gridItemManager';
 import { getLayoutManager } from './managers/layoutManager';
-import { EmptySubscription, Subscription } from './core/observable';
 import { BToastOrchestrator, useToastController } from 'bootstrap-vue-next';
 import { getPluginManager } from './managers/pluginManager';
 import { TestDriveProjectInfo, HealthApiClient as client, safeFetch } from './core/utilities/utilities';
 import { HealthCheckResponse } from '../services/restclient';
+import { GridManagerItem } from './types/grid';
+import { Subscription, EmptySubscription } from './types/observable';
 
 
 const { show: showToast } = useToastController();

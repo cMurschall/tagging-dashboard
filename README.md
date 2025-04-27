@@ -383,6 +383,7 @@ The Streamdeck plugin allows you to add new Tags to the tagging dashboard from y
 
 It has two possible action buttons:
 
+
 - Add an instant tag: This action adds a tag to the current time of the video. The tag is created with the current
   simulation time for the start and end time.
 - Add a tag with a duration: This action adds a tag to the current time of the video. This action has two states: When

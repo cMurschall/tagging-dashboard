@@ -14,9 +14,8 @@
 
 <script lang="ts">
 import { defineComponent, inject } from 'vue';
-// import { useVideoControl } from '../../composables/useVideoControl';
-import { PluginServices } from '../../managers/pluginManager';
 import { useObservable } from '../../core/utilities/utilities';
+import { PluginServices } from '@/types/plugin';
 
 
 

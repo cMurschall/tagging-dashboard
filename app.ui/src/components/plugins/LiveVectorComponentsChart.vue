@@ -31,7 +31,6 @@
 <script setup lang="ts">
 import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, watch } from "vue";
-import { EmptySubscription, Subscription } from "../../core/observable";
 import { safeFetch, PlayerApiClient as client, isNullOrUndefined, useObservable } from "../../core/utilities/utilities";
 import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
@@ -47,7 +46,7 @@ import {
     TooltipComponent
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
-import type { ComposeOption, ElementEvent } from 'echarts/core';
+import type { ComposeOption } from 'echarts/core';
 import type { ScatterSeriesOption } from 'echarts/charts';
 import type {
     LegendComponentOption,
@@ -56,8 +55,9 @@ import type {
     GraphicComponentOption,
     TooltipComponentOption,
 } from 'echarts/components';
-import { PluginServices } from "../../managers/pluginManager";
 import { XAXisOption, YAXisOption } from "echarts/types/dist/shared";
+import { PluginServices } from "@/types/plugin";
+import { EmptySubscription, Subscription } from "@/types/observable";
 
 use([
     TitleComponent,

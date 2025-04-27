@@ -1,6 +1,4 @@
-import { TimeseriesDataPoint, TimeseriesTable } from "../managers/dataManager";
-
-
+import { TimeseriesDataPoint, TimeseriesTable } from "@/types/data";
 
 
 export class BufferedTimeseriesTableWriter {

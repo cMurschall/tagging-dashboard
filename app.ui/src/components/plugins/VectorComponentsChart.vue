@@ -23,16 +23,11 @@
 <script setup lang="ts">
 import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, watch } from "vue";
-import { TimeseriesDataPoint, TimeseriesTable } from "../../managers/dataManager";
-import { EmptySubscription, Subscription } from "../../core/observable";
 import { safeFetch, PlayerApiClient as client, isNullOrUndefined, useObservable } from "../../core/utilities/utilities";
 import { BCol, BFormGroup, BRow } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 // import { useVideoControl } from '../../composables/useVideoControl';
 import FilterableSelect from "./../FilterableSelect.vue";
-
-
-
 import { use } from 'echarts/core'
 import { ScatterChart } from 'echarts/charts'
 import {
@@ -53,10 +48,11 @@ import type {
   GraphicComponentOption,
   TooltipComponentOption
 } from 'echarts/components'
+import { PluginServices } from "@/types/plugin";
+import { EmptySubscription, Subscription } from "@/types/observable";
+import { TimeseriesTable, TimeseriesDataPoint } from "@/types/data";
 // import { Scatter3DChart, Scatter3DSeriesOption } from 'echarts-gl/charts';
 // import { Grid3DComponent } from 'echarts-gl/components';
-import { PluginServices } from "../../managers/pluginManager";
-
 use([
   TitleComponent,
   LegendComponent,

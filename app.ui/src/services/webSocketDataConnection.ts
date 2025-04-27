@@ -1,4 +1,5 @@
-import { TimeseriesDataPoint } from "../managers/dataManager";
+
+import { TimeseriesDataPoint } from "@/types/data";
 import { BaseWebSocketConnection } from "./baseWebSocketConnection";
 
 

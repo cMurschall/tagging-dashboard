@@ -1,5 +1,5 @@
+import { PluginServices, TaggingDashboardPlugin } from '@/types/plugin';
 import { createApp, App, Component, nextTick } from 'vue';
-import { PluginServices, TaggingDashboardPlugin } from '../managers/pluginManager';
 
 
 

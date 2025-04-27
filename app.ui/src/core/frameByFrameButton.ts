@@ -1,16 +1,10 @@
+import { FrameByFrameButtonOptions } from "@/types/video";
 import videojs from "video.js";
 import Player from 'video.js/dist/types/player';
 
 
 
-// Define the options for the FrameByFrameButton
-export interface FrameByFrameButtonOptions {
-    fps: number;
-    value: number;
 
-    children?: any[];
-    className?: string;
-}
 
 // Get the Button component from Video.js
 const Button = videojs.getComponent('Button');

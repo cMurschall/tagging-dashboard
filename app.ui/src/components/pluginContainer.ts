@@ -3,15 +3,7 @@ import { PluginServices, TaggingDashboardPlugin } from '../managers/pluginManage
 
 
 
-
-/**
- * Creates an adapter for a Vue 3 component to fit the TaggingDashboardPlugin interface.
- *
- * @param VueComponent - The Vue 3 component definition (e.g., imported from an .vue file).
- * @param rootProps - Optional props to pass to the root Vue component instance.
- * @returns An object conforming to the TaggingDashboardPlugin interface.
- */
-export function createVuePluginAdapter(    VueComponent: Component): TaggingDashboardPlugin {
+export function createVuePluginAdapter(VueComponent: Component): TaggingDashboardPlugin {
 
     // Store the Vue app instance reference
     let vueAppInstance: App | null = null;
@@ -31,28 +23,16 @@ export function createVuePluginAdapter(    VueComponent: Component): TaggingDash
             // Create the Vue app instance
             vueAppInstance = createApp(VueComponent);
 
-            // Make the pluginService available to the Vue component and its children
-            // via Vue's provide/inject mechanism
             vueAppInstance.provide('pluginService', pluginService);
-
-            // --- Optional: Add other global configurations if needed ---
-            // vueAppInstance.use(router);
-            // vueAppInstance.config.globalProperties.$myGlobal = ...
-
-            // Mount the Vue application to the provided container element
             vueAppInstance.mount(container);
 
-            // Call the user-defined onMounted hook *after* the app is mounted.
-            // Using nextTick ensures it runs after Vue's initial DOM updates.
+
             if (userOnMounted) {
-               nextTick(userOnMounted);
-               // Or, if immediate call after mount() is sufficient:
-               // userOnMounted();
+                nextTick(userOnMounted);
             }
         },
 
-        // Use getters and setters to capture the hooks provided by the consumer
-        // *after* the adapter function has returned the plugin object.
+
         get onMounted(): (() => void) | undefined {
             return userOnMounted;
         },
@@ -65,10 +45,9 @@ export function createVuePluginAdapter(    VueComponent: Component): TaggingDash
             return userOnUnmounted;
         },
         set onUnmounted(hook: (() => void) | undefined) {
-            // Wrap the provided hook with the necessary Vue cleanup logic.
-            // This ensures vueAppInstance.unmount() is always called.
+
             userOnUnmounted = () => {
-                // 1. Call the user's cleanup logic first (if provided)
+
                 if (hook) {
                     try {
                         hook();
@@ -77,7 +56,7 @@ export function createVuePluginAdapter(    VueComponent: Component): TaggingDash
                     }
                 }
 
-                // 2. Perform the Vue app unmounting
+                // Perform the Vue app unmounting
                 if (vueAppInstance) {
                     vueAppInstance.unmount();
                     vueAppInstance = null; // Clear the reference

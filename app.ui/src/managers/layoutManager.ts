@@ -1,4 +1,4 @@
-import { Observable } from "../observable";
+import { Observable } from "../core/observable";
 import { GridManagerItem } from "./gridItemManager";
 import { LayoutStorage, LocalStorageLayoutStorage } from "./../services/localStorageLayoutStorage";
 

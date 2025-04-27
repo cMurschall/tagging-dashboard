@@ -58,7 +58,7 @@
 import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, watch } from "vue";
 import { TimeseriesDataPoint, TimeseriesTable } from "../../managers/dataManager";
-import { EmptySubscription, Subscription } from "../../observable";
+import { EmptySubscription, Subscription } from "../../core/observable";
 import {
   safeFetch, PlayerApiClient as client, TimestampStatistics,
   getTimestampStatistics, clamp, transformMathJsValue,

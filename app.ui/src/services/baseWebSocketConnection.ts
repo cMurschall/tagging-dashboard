@@ -1,4 +1,4 @@
-import { Observable } from "../observable";
+import { Observable } from "../core/observable";
 
 
 export abstract class BaseWebSocketConnection<T> {

@@ -297,7 +297,7 @@ It supports the following adjustable parameters:
 
 ## Building own component plugins
 
-This is a highlight of this project! The application is designed to be extensible, allowing developers to create
+This is a highlight of this project and to be honest: I'm a bit proud of it. The application is designed to be extensible, allowing developers to create
 comprehensive custom components that can be added to the web application.
 
 To build your own component, you need create a new folder with your plugin name into  `app.ui/plugins/` directory.
@@ -328,7 +328,7 @@ interface TaggingDashboardPlugin {
     onUnmounted?: () => void;
 }
 ```
-
+Even the internal plugins work this way and are created and run with the same interface.
 The `create` method is called when the plugin is loaded. The `container` parameter is the HTML element where the plugin
 is mounted. The `pluginService` parameter is an object that contains an interop to the main application. It is used to
 communicate with the main application and to access the data and methods of the application. The `onMounted` and

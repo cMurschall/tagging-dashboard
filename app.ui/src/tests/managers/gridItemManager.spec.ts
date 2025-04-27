@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GridManager, GridManagerItem } from './../../managers/gridItemManager';
-import { Observable } from './../../observable';
+import { Observable } from '../../core/observable';
 
 // Resetting static observables might be needed between tests.
 // Here, we assume that the Observable implementation allows us to reassign subscribers.

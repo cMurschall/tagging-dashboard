@@ -1,5 +1,5 @@
 import { onBeforeUnmount, ref } from "vue";
-import { Observable } from "../../observable";
+import { Observable } from "../observable";
 import { useToastController } from "bootstrap-vue-next";
 
 

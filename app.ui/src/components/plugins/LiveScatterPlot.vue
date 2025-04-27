@@ -50,7 +50,7 @@
 import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, watch, toRaw } from "vue";
 import { TimeseriesDataPoint } from "../../managers/dataManager";
-import { EmptySubscription, Subscription } from "../../observable";
+import { EmptySubscription, Subscription } from "../../core/observable";
 import { safeFetch, PlayerApiClient as client, IDENTITY_EXPRESSION, transformMathJsValue, useObservable } from "../../core/utilities/utilities";
 import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";

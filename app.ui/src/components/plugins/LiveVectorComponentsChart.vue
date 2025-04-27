@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, watch } from "vue";
-import { EmptySubscription, Subscription } from "../../observable";
+import { EmptySubscription, Subscription } from "../../core/observable";
 import { safeFetch, PlayerApiClient as client, isNullOrUndefined, useObservable } from "../../core/utilities/utilities";
 import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";

@@ -74,7 +74,7 @@ import MainGrid from './components/MainGrid.vue';
 
 import { GridManagerItem } from './managers/gridItemManager';
 import { getLayoutManager } from './managers/layoutManager';
-import { EmptySubscription, Subscription } from './observable';
+import { EmptySubscription, Subscription } from './core/observable';
 import { BToastOrchestrator, useToastController } from 'bootstrap-vue-next';
 import { getPluginManager } from './managers/pluginManager';
 import { TestDriveProjectInfo, HealthApiClient as client, safeFetch } from './core/utilities/utilities';

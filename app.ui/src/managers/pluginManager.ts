@@ -1,5 +1,5 @@
 
-import { EmptySubscription, Observable, Subscription } from "../observable";
+import { EmptySubscription, Observable, Subscription } from "../core/observable";
 import { isNotNullOrUndefined, isNullOrUndefined, ShowToastFn, TestDriveProjectInfo, WebSocketBasePath } from "../core/utilities/utilities";
 import { DataManager } from "./dataManager";
 import { getGridManager, GridManager, GridManagerItem } from './gridItemManager';

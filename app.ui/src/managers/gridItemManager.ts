@@ -1,4 +1,4 @@
-import { Observable } from "../observable";
+import { Observable } from "../core/observable";
 import { StoredLayoutItem } from "./layoutManager";
 import { TaggingDashboardPlugin } from "./pluginManager";
 

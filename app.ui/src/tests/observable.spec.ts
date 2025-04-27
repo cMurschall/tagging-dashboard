@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Observable } from '../observable';
+import { Observable } from '../core/observable';
 
 describe('Observable', () => {
   it('should emit the current value immediately upon subscription', () => {

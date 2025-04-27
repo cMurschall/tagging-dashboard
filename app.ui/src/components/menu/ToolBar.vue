@@ -104,7 +104,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 
-import { EmptySubscription, Subscription } from '../../observable';
+import { EmptySubscription, Subscription } from '../../core/observable';
 import { getGridManager } from './../../managers/gridItemManager';
 import { getLayoutManager, StoredLayoutItem } from './../../managers/layoutManager';
 

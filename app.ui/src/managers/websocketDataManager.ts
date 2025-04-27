@@ -1,6 +1,6 @@
 
 import { ColumnDefinition, DataManager, TimeseriesDataPoint, TimeseriesTable } from "./dataManager";
-import { Observable } from "./../observable";
+import { Observable } from "../core/observable";
 import { WebSocketDataConnection } from "../services/webSocketDataConnection";
 import { BufferedTimeseriesTableWriter } from "../core/bufferedTimeseriesTableWriter";
 

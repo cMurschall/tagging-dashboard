@@ -1,4 +1,4 @@
-import { StoredLayoutItem } from "./layoutManager";
+import { StoredLayoutItem } from "../managers/layoutManager";
 
 
 export interface LayoutStorage {

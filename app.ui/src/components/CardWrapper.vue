@@ -53,17 +53,17 @@ export default defineComponent({
       default: 'Card Title',
     },
     pluginFactory: {
-       type: Function as PropType<() => TaggingDashboardPlugin>,
-       required: true // Or false
+      type: Function as PropType<() => TaggingDashboardPlugin>,
+      required: true // Or false
     }
   },
   emits: ['remove'],
   setup(props, { emit }) {
-    const pluginService = inject<PluginServices>('pluginService'); // Still useful for CardWrapper logic?
+    const pluginService = inject<PluginServices>('pluginService');
     if (!pluginService) {
       throw new Error('Plugin service not found!');
     }
-    // Card's own logic (title, menu, remove button) - mostly stays the same
+    // Card's own logic
     const cardTitle = useObservable(pluginService.cardTitle$); // Keep if needed
     cardTitle.value = props.title; // Set initial title from prop
 
@@ -74,75 +74,75 @@ export default defineComponent({
     };
     const handleRemove = () => emit('remove');
 
-    // --- New Logic for Plugin Handling ---
+    // --- Plugin Handling ---
     const pluginContainerRef = ref<HTMLElement | null>(null);
     const currentPlugin = shallowRef<TaggingDashboardPlugin | null>(null); // Holds the active plugin instance
 
     const cleanupPlugin = () => {
-        if (currentPlugin.value) {
-            console.log(`CardWrapper (${cardTitle}): Cleaning up plugin.`);
-             try {
-                 currentPlugin.value.onUnmounted?.();
-             } catch(e) { console.error("Error during plugin cleanup:", e); }
-            currentPlugin.value = null;
-             // Clear the container in case plugin didn't
-             if(pluginContainerRef.value) pluginContainerRef.value.innerHTML = '';
-        }
+      if (currentPlugin.value) {
+        console.log(`CardWrapper (${cardTitle}): Cleaning up plugin.`);
+        try {
+          currentPlugin.value.onUnmounted?.();
+        } catch (e) { console.error("Error during plugin cleanup:", e); }
+        currentPlugin.value = null;
+        // Clear the container in case plugin didn't
+        if (pluginContainerRef.value) pluginContainerRef.value.innerHTML = '';
+      }
     };
 
     const setupPlugin = (factory: () => TaggingDashboardPlugin) => {
-         cleanupPlugin(); // Clean up previous plugin if any
+      cleanupPlugin(); // Clean up previous plugin if any
 
-         if (pluginContainerRef.value && factory) {
-             console.log(`CardWrapper (${cardTitle}): Setting up new plugin.`);
-              try {
-                 const plugin = factory(); // Create the plugin instance
-                 currentPlugin.value = plugin; // Store instance
-                 // Pass necessary services. CardWrapper already has access to injected ones.
-                 plugin.create(pluginContainerRef.value, pluginService);
-                 plugin.onMounted?.();
-              } catch(e) {
-                  console.error("Error setting up plugin:", e);
-                  if(pluginContainerRef.value) pluginContainerRef.value.textContent = "Error loading plugin.";
-              }
-         }
+      if (pluginContainerRef.value && factory) {
+        console.log(`CardWrapper (${cardTitle}): Setting up new plugin.`);
+        try {
+          const plugin = factory(); // Create the plugin instance
+          currentPlugin.value = plugin; // Store instance
+          // Pass necessary services. CardWrapper already has access to injected ones.
+          plugin.create(pluginContainerRef.value, pluginService);
+          plugin.onMounted?.();
+        } catch (e) {
+          console.error("Error setting up plugin:", e);
+          if (pluginContainerRef.value) pluginContainerRef.value.textContent = "Error loading plugin.";
+        }
+      }
     };
 
     // Watch for changes in the plugin factory prop
     watch(() => props.pluginFactory, (newFactory) => {
-         if (newFactory) {
-             // Need to ensure the container element exists. If the factory changes
-             // after mount, ref should be available. If it changes *before* mount,
-             // onMounted will handle the initial setup.
-             if (pluginContainerRef.value) {
-                setupPlugin(newFactory);
-             }
-             // else: onMounted will call setupPlugin
-         } else {
-             cleanupPlugin(); // No factory provided, cleanup any existing plugin
-         }
+      if (newFactory) {
+        // Need to ensure the container element exists. If the factory changes
+        // after mount, ref should be available. If it changes *before* mount,
+        // onMounted will handle the initial setup.
+        if (pluginContainerRef.value) {
+          setupPlugin(newFactory);
+        }
+        // else: onMounted will call setupPlugin
+      } else {
+        cleanupPlugin(); // No factory provided, cleanup any existing plugin
+      }
     }, { immediate: false }); // Don't run immediately, let onMounted handle initial
 
     onMounted(() => {
-        // Initial plugin setup when the card mounts
-         if (props.pluginFactory) {
-             setupPlugin(props.pluginFactory);
-         }
+      // Initial plugin setup when the card mounts
+      if (props.pluginFactory) {
+        setupPlugin(props.pluginFactory);
+      }
     });
 
     onUnmounted(() => {
-        // Cleanup when the CardWrapper component itself is destroyed
-        cleanupPlugin();
+      // Cleanup when the CardWrapper component itself is destroyed
+      cleanupPlugin();
     });
 
     return {
-        // Return existing refs/methods for template
-        cardTitle,
-        showMenu,
-        handleToggleMenu,
-        handleRemove,
-        // Ref for the plugin container div in the template
-        pluginContainerRef
+      // Return existing refs/methods for template
+      cardTitle,
+      showMenu,
+      handleToggleMenu,
+      handleRemove,
+      // Ref for the plugin container div in the template
+      pluginContainerRef
     };
   },
 });
@@ -152,11 +152,11 @@ export default defineComponent({
 <style scoped lang="scss">
 .no-scrollbar {
   overflow: auto;
-  scrollbar-width: none; // Firefox
-  -ms-overflow-style: none; // IE 10+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 
   &::-webkit-scrollbar {
-    display: none; // Chrome, Safari, Opera
+    display: none;
   }
 }
 

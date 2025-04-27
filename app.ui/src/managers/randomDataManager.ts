@@ -1,7 +1,7 @@
 // RandomSpeedDataManager.ts
 
 import { Observable } from "./../observable";
-import { DataManager, TimeseriesDataPoint, TimeseriesTable } from "./dataManager";
+import { ColumnDefinition, DataManager, TimeseriesDataPoint, TimeseriesTable } from "./dataManager";
 
 export class RandomDataManager extends DataManager {
     measurement$: Observable<TimeseriesDataPoint>;
@@ -52,7 +52,7 @@ export class RandomDataManager extends DataManager {
             }
         }
 
-        return { timestamps, scalarValues: values };
+        return { timestamps, scalarValues: values, vectorValues: {} };
     }
 
 
@@ -82,8 +82,13 @@ export class RandomDataManager extends DataManager {
         });
     }
 
-
-    getColumnNames(): string[] {
-        return this.measurementKeys;
+    getColumnNames(): ColumnDefinition[] {
+        return this.measurementKeys.map(key => {
+            return {
+                name: key,
+                type: "scalar",
+                dimension: 1
+            };
+        });
     }
 }

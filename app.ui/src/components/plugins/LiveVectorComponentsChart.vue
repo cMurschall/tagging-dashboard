@@ -194,11 +194,7 @@ const buildMultiGridVectorChart = (table: LiveData): any => {
 
 const updateMultiGridVectorChart = (table: LiveData): any => {
 
-
     const numComponents = table.dimension;
-
-
-
     const series: ScatterSeriesOption[] = []
     for (let i = 0; i < numComponents; i++) {
 
@@ -227,6 +223,7 @@ const updateMultiGridVectorChart = (table: LiveData): any => {
             z: 2      // Standard z for series
         });
     }
+
 
     componentChartOption.value = {
         ...componentChartOption.value,

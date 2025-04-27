@@ -267,8 +267,13 @@ export class PluginManager {
                 try {
                     const manifestUrl = `/plugins/${dir}/manifest.json`;
                     const manifest = await fetch(manifestUrl).then(res => res.json());
+                    // console.log(manifest);
+
+                    // import the plugin module dynamically
                     const pluginModule = await import(/* @vite-ignore */ `/plugins/${dir}/${manifest.entry}`);
 
+
+                    // Check if the module has a default export
                     if (pluginModule?.default) {
                         //this.externalPlugins.set(manifest, pluginModule.default);
 

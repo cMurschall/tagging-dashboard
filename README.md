@@ -128,8 +128,7 @@ pyinstaller --clean tagging_dashboard.spec
 ```
 
 and the resulting `tagging_dashboard.exe` file will be output in the `dist` directory. This method is not well tested (
-the testing method was: "Oh wow, now it finally builds a .exe file and fires up without errors and serves the webpage.")
-and it is highly
+the testing method was: "Oh wow, now it finally builds a .exe file and fires up without errors and serves the webpage.") and it is highly
 recommended to run the executable from commandline to see any errors on stdout and stderr that might occur.
 
 ### Streamdeck  Plugin

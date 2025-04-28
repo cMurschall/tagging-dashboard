@@ -90,9 +90,6 @@ npm run dev
 To build the frontend for production, run:
 
 ```powershell
-# Build the frontend for production with type checking
-npm run build
-
 # Build the frontend for production without type checking
 npm run build:fast
 ```
@@ -100,25 +97,9 @@ npm run build:fast
 After building the frontend, you can find the production files in the `app\static` directory. This is the directory that
 is served by the FastAPI backend.
 
-There is also a PyInstaller spec to create a standalone executable for the application. Make sure you have PyInstaller
-installed.
-
-```powershell
-pip install pyinstaller
-```
-
-Then run the following command to create the executable:
-
-```powershell
-pyinstaller --clean tagging_dashboard.spec
-```
-
-This will create a `dist` directory with the executable and all the necessary files to run the application. It is
-recommended to run the generated executable from a command line to see the output and error log messages.
-
 ### Installer
 
-There is a There is a [tagging_dashboard.spec](tagging_dashboard.spec) PyInstaller spec file in the root directory that
+There is a [tagging_dashboard.spec](tagging_dashboard.spec) PyInstaller spec file in the root directory that
 will pack the project into a windows executable.
 To build the executable pyinstaller in version 6.13.0 or greater is required
 Run

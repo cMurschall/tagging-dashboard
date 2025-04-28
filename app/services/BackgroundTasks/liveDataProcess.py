@@ -3,16 +3,57 @@ import asyncio
 import time
 import logging
 from dataclasses import asdict
-from pathlib import Path
-from threading import Event
+import time
+import functools
+from threading import Event, Lock, Timer
 
 from ..bufferedCsvWriter import BufferedCsvWriter
 from ..dataSources.simulatedPantheraDataSource import start_process as start_simulated_process
 from ..dataSources.replayPantheraDataSource import start_replay as start_replay_process
+from ..dataSources.pantheraDataSource import start_process as start_panthera_process
 from ...dependencies import get_testdata_manager, get_connection_manager_data, get_connection_manager_simulation_time
 from ...models.liveDataRow import LiveDataRow
 
 logger = logging.getLogger('uvicorn.error')
+
+
+def throttle_latest(seconds: float):
+    # Always sends the latest call, without dropping important updates.
+    def decorator(func):
+        last_called = [0.0]
+        latest_args = [None]
+        latest_kwargs = [None]
+        lock = Lock()
+
+        def sender():
+            with lock:
+                if latest_args[0] is not None:
+                    func(*latest_args[0], **latest_kwargs[0])
+                    latest_args[0] = None
+                    latest_kwargs[0] = None
+                    last_called[0] = time.time()
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            now = time.time()
+            with lock:
+                if now - last_called[0] >= seconds:
+                    # Enough time passed: send immediately
+                    last_called[0] = now
+                    func(*args, **kwargs)
+                else:
+                    # Too fast: overwrite the latest
+                    latest_args[0] = args
+                    latest_kwargs[0] = kwargs
+
+            # Schedule sending latest after throttle period
+            delay = seconds - (now - last_called[0])
+            if delay > 0:
+                Timer(delay, sender).start()
+
+        return wrapper
+
+    return decorator
 
 
 def process_live_data(stop_event: Event, loop: asyncio.AbstractEventLoop):
@@ -28,6 +69,7 @@ def process_live_data(stop_event: Event, loop: asyncio.AbstractEventLoop):
                 csv_file = test_drive_data.test_drive_data_info.csv_file_full_path
                 buffered_writer = BufferedCsvWriter(csv_file, stop_event)
 
+                @throttle_latest(0.5)  # 2 calls per second max
                 def new_live_data_arrived(data: LiveDataRow):
                     # logger.info(f"Live Data Arrived @ {data.timestamp}s")
                     # send data to websocket
@@ -43,10 +85,11 @@ def process_live_data(stop_event: Event, loop: asyncio.AbstractEventLoop):
                         loop
                     )
                     # Queue for writing
-                    buffered_writer.enqueue(asdict(data))
+                    # buffered_writer.enqueue(asdict(data))
 
                 # live_data_source = start_replay_process(new_live_data_arrived)
-                live_data_source = start_simulated_process(new_live_data_arrived)
+                # live_data_source = start_simulated_process(new_live_data_arrived)
+                live_data_source = start_panthera_process(new_live_data_arrived)
 
         elif live_data_source is not None:
 

@@ -18,7 +18,6 @@ class Settings(BaseSettings):
     # Application settings
     APP_NAME: str = Field("Tagging Dashboard", env="APP_NAME")
     DEBUG: bool = Field(False, env="DEBUG")
-
     # Paths
     TAG_PATH: str = Field("./tags", env="CSV_PATH")
     CSV_PATH: str = Field("data", env="CSV_PATH")

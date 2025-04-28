@@ -6,12 +6,14 @@ import re
 
 from app.models.tag import Tag
 from app.models.testDriveTagInfo import TestDriveTagInfo
+from app.settings import Settings
 
 
 class TestDriveTagService:
-    def __init__(self):
+    def __init__(self, settings: Settings):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
+        self.settings = settings
 
     def _get_next_id(self, file_path: str, id_prefix="id_"):
         try:

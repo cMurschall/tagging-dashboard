@@ -21,7 +21,8 @@ from app.settings import Settings
 
 
 class TestDriveDataService:
-    def __init__(self, storage_path: str = "test_drive_data.json"):
+    def __init__(self, settings: Settings, storage_path: str = "test_drive_data.json"):
+        self.settings = settings
         self.storage_path = storage_path
         self.test_drive_data_store: Dict[int, TestDriveProjectInfo] = {}
         self.current_id = 1
@@ -244,7 +245,7 @@ class TestDriveDataService:
         Check if the live data module is available.
         :return: True if the module is available, False otherwise.
         """
-        is_debug = True
+        is_debug = self.settings.DEBUG
         if is_debug:
             self.logger.warning("Debug version: live data module check skipped")
             return True

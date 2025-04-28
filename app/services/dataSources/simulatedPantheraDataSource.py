@@ -25,8 +25,8 @@ class MockProcess:
     def _run_loop(self):
         while not self._stop_event.is_set():
             instance = LiveDataRow.create_random_instance()
-            instance.timestamp = self._timestamp
-            self._timestamp += 1
+            instance.timestamp = self._timestamp  # simulated timestamp
+            self._timestamp += self.interval_seconds  # advance "virtual clock"
 
             if self.update_measurement_callback:
                 self.update_measurement_callback(instance)
@@ -36,6 +36,6 @@ class MockProcess:
 
 # Optional convenience function
 def start_process(callback=None):
-    mock = MockProcess(callback, 2)
+    mock = MockProcess(callback, 0.1)
     mock.start()
     return mock

@@ -10,7 +10,15 @@ from threading import Event, Lock, Timer
 from ..bufferedCsvWriter import BufferedCsvWriter
 from ..dataSources.simulatedPantheraDataSource import start_process as start_simulated_process
 from ..dataSources.replayPantheraDataSource import start_replay as start_replay_process
-from ..dataSources.pantheraDataSource import start_process as start_panthera_process
+
+# only inport if panthera module is present
+try:
+    from ..dataSources.pantheraDataSource import start_process as start_panthera_process
+
+    PANTHERA_AVAILABLE = True
+except ImportError:
+    PANTHERA_AVAILABLE = False
+
 from ...dependencies import get_testdata_manager, get_connection_manager_data, get_connection_manager_simulation_time
 from ...models.liveDataRow import LiveDataRow
 
@@ -89,7 +97,10 @@ def process_live_data(stop_event: Event, loop: asyncio.AbstractEventLoop):
 
                 # live_data_source = start_replay_process(new_live_data_arrived)
                 # live_data_source = start_simulated_process(new_live_data_arrived)
-                live_data_source = start_panthera_process(new_live_data_arrived)
+                if PANTHERA_AVAILABLE:
+                    live_data_source = start_panthera_process(new_live_data_arrived)
+                else:
+                    live_data_source = start_simulated_process(new_live_data_arrived)
 
         elif live_data_source is not None:
 

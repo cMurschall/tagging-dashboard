@@ -11,13 +11,13 @@ const props = defineProps<{
   modelValue: string | null | undefined
 }>()
 
-const resetLocalValue = () => {
-  localValue.value = props.modelValue ?? ''
-}
-
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
 }>()
+
+const resetLocalValue = () => {
+  localValue.value = props.modelValue ?? ''
+}
 
 const localValue = ref('')
 

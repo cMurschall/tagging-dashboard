@@ -37,7 +37,7 @@ export class TimestampLookup {
             this.isSorted = true; // Empty array is considered sorted
             this.isEvenlySpaced = true; // And evenly spaced
         } else {
-            // --- 1. Check if timestamps are sorted ---
+            // Check if timestamps are sorted ---
             this.isSorted = this.checkSorting();
             if (!this.isSorted) {
                 // Critical error: The lookup logic relies on sorted timestamps.
@@ -50,7 +50,7 @@ export class TimestampLookup {
             const endTime = this.rowCount > 1 ? table.timestamps[this.rowCount - 1] : this.startTime;
             this.averageStep = this.rowCount > 1 ? (endTime - this.startTime) / (this.rowCount - 1) : 0;
 
-            // --- 2. Check if timestamps are evenly spaced ---
+            // Check if timestamps are evenly spaced ---
             // Only check spacing if sorted and there's more than one point
             if (this.isSorted && this.rowCount > 1) {
                 const tolerance = this.averageStep * EVEN_SPACING_TOLERANCE_FACTOR;

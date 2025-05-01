@@ -180,7 +180,7 @@ export default defineComponent({
             }
         });
 
-        // 6) Cleanup on unmount
+        // Cleanup on unmount
         onBeforeUnmount(() => {
             // Unmount sub-apps
             shadowDom.forEach(vm => vm.$destroy?.());

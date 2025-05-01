@@ -52,7 +52,7 @@ export class ApiDataManager extends DataManager {
         }
       }
 
-      // 2. Fill in data
+      // Fill in data
       for (let i = 0; i < response.data.length; i++) {
         const data: any = response.data[i];
         dataList.timestamps[i] = data.timestamp;

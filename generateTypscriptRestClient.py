@@ -1,6 +1,6 @@
 import json
 import os
-import urllib
+import urllib.request
 
 from uvicorn.importer import import_from_string
 

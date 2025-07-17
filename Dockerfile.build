@@ -76,6 +76,12 @@ RUN . venv/bin/activate && \
 
 # frontend-builder
 FROM base-builder AS frontend-builder
+# Declare build args
+ENV VITE_BASE_PATH=
+ENV VITE_WS_PATH=/api/v1
+ENV VITE_WS_PATH=/api/v1/ws
+
+
 
 COPY --from=client-generator /app/tagging-dashboard/openapi.json /app/tagging-dashboard/openapi-spec.json
 COPY --from=client-generator /app/tagging-dashboard/app.ui/services/restclient/ /app/tagging-dashboard/app.ui/services/restclient/

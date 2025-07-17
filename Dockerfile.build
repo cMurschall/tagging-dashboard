@@ -78,7 +78,7 @@ RUN . venv/bin/activate && \
 FROM base-builder AS frontend-builder
 # Declare build args
 ENV VITE_BASE_PATH=
-ENV VITE_WS_PATH=/api/v1
+ENV VITE_API_PATH=/api/v1
 ENV VITE_WS_PATH=/api/v1/ws
 
 

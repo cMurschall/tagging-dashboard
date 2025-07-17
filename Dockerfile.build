@@ -1,0 +1,145 @@
+
+FROM debian:bookworm-slim AS base-builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    gnupg \
+    build-essential \
+    openjdk-17-jdk-headless \
+    ffmpeg \
+    git \
+    && rm -rf /var/lib/apt/lists/* # Clean up apt cache to reduce image size
+
+
+RUN curl -fsSL https://deb.nodesource.com/setup_21.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/* # Clean up apt cache again
+
+
+WORKDIR /app
+RUN git clone -b master https://github.com/cMurschall/tagging-dashboard.git tagging-dashboard
+
+WORKDIR /app/tagging-dashboard
+
+# Stage 2: backend-deps-installer
+# This stage focuses on installing the Python dependencies for the backend.
+# It uses a Python 3.11 slim Debian image for better compatibility with complex packages like OpenCV and Torch.
+FROM python:3.11-slim-bookworm AS backend-deps-installer
+
+# Copy the cloned repository from the previous stage.
+# This ensures the Python environment has access to the project files, including requirements.txt.
+COPY --from=base-builder /app/tagging-dashboard /app/tagging-dashboard
+WORKDIR /app/tagging-dashboard
+
+# Install system dependencies required for building Python packages like opencv-python and torch on Debian.
+# These include various image processing libraries, build tools, and linear algebra libraries.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    cmake \
+    g++ \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libv4l-dev \
+    libxvidcore-dev \
+    libx264-dev \
+    libgtk-3-dev \
+    libatlas-base-dev \
+    gfortran \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a Python virtual environment to avoid "externally-managed-environment" error (PEP 668).
+# This ensures pip installs packages within an isolated environment.
+RUN python3 -m venv venv
+
+# Activate the virtual environment and then perform pip and setuptools upgrades.
+# This ensures build backend compatibility and resolves common installation issues.
+# Then, install the Python dependencies from requirements.txt.
+RUN . venv/bin/activate && \
+    pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Stage 3: client-generator
+# This stage is responsible for generating the TypeScript client for the frontend.
+# It uses the Python environment set up in 'backend-deps-installer' and Java from 'base-builder'.
+FROM backend-deps-installer AS client-generator
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openjdk-17-jdk-headless && \
+    rm -rf /var/lib/apt/lists/*
+
+# The WORKDIR is already set to /app/tagging-dashboard.
+
+# Run the script to generate 'openapi.json' and the TypeScript client files.
+# Ensure the virtual environment is activated before running the Python script.
+
+RUN java --version
+RUN . venv/bin/activate && \
+    python3 generateTypscriptRestClient.py
+
+
+# Stage 4: frontend-builder
+# This stage builds the Vue.js frontend application.
+FROM base-builder AS frontend-builder
+# The WORKDIR is initially /app/tagging-dashboard.
+
+# Copy the generated 'openapi.json' and TypeScript client files from the 'client-generator' stage.
+# These files are essential for the frontend build process.
+# Paths refer to the absolute paths within the source stage's working directory.
+COPY --from=client-generator /app/tagging-dashboard/openapi.json /app/tagging-dashboard/openapi-spec.json
+COPY --from=client-generator /app/tagging-dashboard/app.ui/services/restclient/ /app/tagging-dashboard/app.ui/services/restclient/
+
+# Change working directory to the frontend application's root.
+WORKDIR /app/tagging-dashboard/app.ui
+
+# Install frontend dependencies.
+RUN npm install
+
+# Build the frontend for production.
+RUN npx vite build --mode production
+
+RUN ls /app/tagging-dashboard/app/static
+
+# Stage 5: streamdeck-builder
+# This stage builds the Streamdeck plugin.
+FROM base-builder AS streamdeck-builder
+# The WORKDIR is initially /app/tagging-dashboard.
+
+# Change working directory to the Streamdeck plugin's root.
+WORKDIR /app/tagging-dashboard/streamdeck
+
+RUN npm install -g @elgato/cli
+# Install Streamdeck plugin dependencies.
+RUN npm install
+
+# Bundle the Streamdeck plugin into its final '.streamDeckPlugin' file.
+RUN npm run build
+RUN npm run bundle
+
+
+# final-export
+FROM debian:bookworm-slim AS final-export
+
+# Copy frontend build output
+COPY --from=frontend-builder /app/tagging-dashboard/app/static /export/frontend-dist
+
+# Copy OpenAPI-generated rest client
+COPY --from=client-generator /app/tagging-dashboard/app.ui/services/restclient /export/restclient
+
+# Copy Streamdeck plugin bundle
+COPY --from=streamdeck-builder /app/tagging-dashboard/streamdeck/*.streamDeckPlugin /export/streamdeck-plugin/
+
+
+
+# Build with:
+# docker build -f Dockerfile.build  --target final-export -t tagging-build-image .
+# docker create --name temp-container tagging-build-image
+# docker cp temp-container:/export ./build-output
+# docker rm temp-container

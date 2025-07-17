@@ -1,0 +1,32 @@
+# Ignore local Python virtual environments
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Ignore Node.js module directories and build outputs
+node_modules/
+app.ui/node_modules/
+streamdeck/node_modules/
+
+# Ignore Git-related files
+.git/
+.gitignore
+
+# Ignore Docker-related files that are not the Dockerfile itself
+Dockerfile
+Dockerfile.build
+.dockerignore
+
+# Ignore logs and temporary files
+*.log
+tmp/
+logs/
+
+# Ignore IDE-specific files (e.g., VS Code)
+.vscode/
+.idea/
+
+# Ignore environment files
+.env
+.env.*

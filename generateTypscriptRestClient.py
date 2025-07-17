@@ -1,6 +1,6 @@
 import json
 import os
-import urllib.request
+import urllib.request as request
 
 from uvicorn.importer import import_from_string
 
@@ -10,7 +10,7 @@ if __name__ == "__main__":
     if not os.path.exists("openapi-generator-cli.jar"):
         print("Downloading openapi-generator-cli.jar")
         url = "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.10.0/openapi-generator-cli-7.10.0.jar"
-        urllib.request.urlretrieve(url, "openapi-generator-cli.jar")
+        request.urlretrieve(url, "openapi-generator-cli.jar")
 
     app = import_from_string("app.main:app")
     openapi = app.openapi()

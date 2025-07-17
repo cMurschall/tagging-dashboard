@@ -2,6 +2,7 @@ import asyncio
 
 import logging
 import sys
+import os
 
 from threading import Thread, Event as ThreadingEvent
 from contextlib import asynccontextmanager
@@ -58,6 +59,10 @@ async def lifespan(fastapi_app: FastAPI):
         if thread.is_alive():
             logger.warning(f"Thread {thread.name} did not stop cleanly!")
 
+# ensure all dirs exists:
+for folder in [get_settings().SPRITE_FOLDER, get_settings().TAG_PATH]:
+    output_dir = os.path.dirname(folder)
+    os.makedirs(output_dir, exist_ok=True)
 
 app = FastAPI(title=get_settings().APP_NAME, debug=get_settings().DEBUG, lifespan=lifespan)
 

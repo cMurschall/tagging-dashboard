@@ -1,8 +1,8 @@
-
-import { ColumnDefinition, DataManager, TimeseriesDataPoint, TimeseriesTable } from "./dataManager";
+import { DataManager } from "./dataManager";
 import { Observable } from "../core/observable";
 import { WebSocketDataConnection } from "../services/webSocketDataConnection";
 import { BufferedTimeseriesTableWriter } from "../core/bufferedTimeseriesTableWriter";
+import { ColumnDefinition, TimeseriesDataPoint, TimeseriesTable } from "@/types/data";
 
 export class WebsocketDataManager extends DataManager {
 
@@ -16,12 +16,18 @@ export class WebsocketDataManager extends DataManager {
 
   bufferedTableWriter: BufferedTimeseriesTableWriter;
 
+  lastData: TimeseriesDataPoint = { timestamp: 0, values: {} }
+
   constructor(webSocketDataConnection: WebSocketDataConnection) {
     super();
 
     this.bufferedTableWriter = new BufferedTimeseriesTableWriter(this.timeseriesData);
 
     webSocketDataConnection.data$.subscribe((data: TimeseriesDataPoint) => {
+
+
+      this.lastData = data;
+
       // Filter only keys the current instance is interested in
       const filteredValues: Record<string, number | number[]> = {};
 
@@ -32,10 +38,10 @@ export class WebsocketDataManager extends DataManager {
       }
 
 
-      this.bufferedTableWriter.add({
-        timestamp: data.timestamp,
-        values: filteredValues,
-      });
+      // this.bufferedTableWriter.add({
+      //   timestamp: data.timestamp,
+      //   values: filteredValues,
+      // });
 
       this.measurement$.next({
         timestamp: data.timestamp,
@@ -52,23 +58,43 @@ export class WebsocketDataManager extends DataManager {
   getColumnNames(): ColumnDefinition[] {
     const definitions: ColumnDefinition[] = [];
 
-    // Scalars
-    for (const key of Object.keys(this.timeseriesData.scalarValues ?? {})) {
-      definitions.push({
-        name: key,
-        type: "scalar",
-        dimension: 1
-      });
+    for (const [key, value] of Object.entries(this.lastData.values)) {
+      if (typeof value === "number") {
+        definitions.push({
+          name: key,
+          type: "scalar",
+          dimension: 1
+        });
+      } else if (Array.isArray(value) && value.every(v => typeof v === "number")) {
+        console.log(`${key} is a number array:`, value);
+        definitions.push({
+          name: key,
+          type: "vector",
+          dimension: value.length
+        });
+      } else {
+        // ignored: either not a number or not an array of numbers
+
+      }
     }
 
-    // Vectors
-    for (const [key, components] of Object.entries(this.timeseriesData.vectorValues ?? {})) {
-      definitions.push({
-        name: key,
-        type: "vector",
-        dimension: components.length
-      });
-    }
+    // // Scalars
+    // for (const key of Object.keys(this.timeseriesData.scalarValues ?? {})) {
+    //   definitions.push({
+    //     name: key,
+    //     type: "scalar",
+    //     dimension: 1
+    //   });
+    // }
+
+    // // Vectors
+    // for (const [key, components] of Object.entries(this.timeseriesData.vectorValues ?? {})) {
+    //   definitions.push({
+    //     name: key,
+    //     type: "vector",
+    //     dimension: components.length
+    //   });
+    // }
 
     return definitions;
   }

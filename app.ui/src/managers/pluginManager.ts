@@ -1,5 +1,5 @@
 
-import {  Observable } from "../core/observable";
+import { Observable } from "../core/observable";
 import { isNotNullOrUndefined, isNullOrUndefined, TestDriveProjectInfo, WebSocketBasePath } from "../core/utilities/utilities";
 import { DataManager } from "./dataManager";
 import { getGridManager, GridManager } from './gridItemManager';
@@ -29,9 +29,7 @@ import { ExternalPluginManifest, InternalPluginManifest, PluginServices, Tagging
 import { GridManagerItem, ShowToastFn } from "@/types/grid";
 import { EmptySubscription, Subscription } from "@/types/observable";
 
-
-
-
+import { isDevMode } from '../core/utilities/utilities';
 
 
 export class PluginManager {
@@ -91,13 +89,6 @@ export class PluginManager {
                 defaultSize: { width: 7, height: 16 },
             }
         }],
-        ['TestGridItem', {
-            manifest: {
-                name: 'TestGridItem',
-                displayName: 'Test Grid Item',
-                defaultSize: { width: 5, height: 16 },
-            }
-        }],
         ['TagTimeline', {
             manifest: {
                 name: 'TagTimeline',
@@ -112,12 +103,31 @@ export class PluginManager {
                 defaultSize: { width: 7, height: 16 },
             }
         }],
+        // ['TestGridItem', {
+        //     manifest: {
+        //         name: 'TestGridItem',
+        //         displayName: 'Test Grid Item',
+        //         defaultSize: { width: 5, height: 16 },
+        //     }
+        // }],
     ])
 
 
     // constructor
     public constructor(gridItemManager: GridManager) {
         this.gridItemManager = gridItemManager;
+
+
+        if (isDevMode()) {
+            this.internalPlugins.set('TestGridItem', {
+                manifest: {
+                    name: 'TestGridItem',
+                    displayName: 'Test Grid Item',
+                    defaultSize: { width: 5, height: 16 },
+                }
+            })
+        }
+
 
         this.webSocketDataConnection = new WebSocketDataConnection(WebSocketBasePath + '/data');
         this.webSocketSimulationTimeConnection = new WebSocketSimulationTimeConnection(WebSocketBasePath + '/simulationTime');
@@ -194,7 +204,7 @@ export class PluginManager {
         if (pluginName === 'VideoPlayer' || pluginName === 'TagTimeline') {
             id = pluginName;
         } else {
-            id = pluginName + '_' + crypto.randomUUID();
+            id = pluginName + '_' + this.uuidv4();
         }
 
         const isInternalPlugin = this.internalPlugins.has(pluginName);
@@ -273,7 +283,7 @@ export class PluginManager {
         this.gridItemManager.registerComponent('ScatterPlot', () => project.isLive ? createVuePluginAdapter(LiveScatterPlot) : createVuePluginAdapter(ScatterPlot));
         this.gridItemManager.registerComponent('TestGridItem', () => createVuePluginAdapter(TestGridItem));
         this.gridItemManager.registerComponent('TagTimeline', () => createVuePluginAdapter(TagTimeline));
-        this.gridItemManager.registerComponent('VectorComponents', () => project.isLive ?  createVuePluginAdapter(LiveVectorComponentsChart) : createVuePluginAdapter(VectorComponentsChart));
+        this.gridItemManager.registerComponent('VectorComponents', () => project.isLive ? createVuePluginAdapter(LiveVectorComponentsChart) : createVuePluginAdapter(VectorComponentsChart));
 
         for (const [id, external] of this.externalPlugins) {
             this.gridItemManager.registerComponent(id, () => external.plugin);
@@ -332,6 +342,15 @@ export class PluginManager {
             },
             getVideoControl: () => this.videoControl,
         };
+    }
+
+
+    private uuidv4(): string {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c: string): string => {
+            const r: number = Math.floor(Math.random() * 16);
+            const v: number = c === 'x' ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+        });
     }
 }
 

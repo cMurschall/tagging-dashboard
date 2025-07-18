@@ -9,6 +9,24 @@ video playback, live data streams, plugin-based visualizations, and real-time up
 
 ---
 
+## Production Build
+
+We provide a [Dockerfile.build](Dockerfile.build) file that builds the project. This eliminates the need to install node.js and Java which is needed during the build process.
+
+
+```powershell
+
+docker build -f Dockerfile.build  --target final-export -t tagging-build-image .
+
+docker create --name temp-container tagging-build-image
+# this copies the build frontend to the static folder so the fast api can serve the frontend
+docker cp temp-container:/export/frontend-dist/. ./app/static/
+# this copies the build streamdeck plugin in the main folder.
+docker cp temp-container:/export/streamdeck-plugin/. ./
+docker rm temp-container
+```
+
+
 ## ️ Development Setup
 
 ### Backend (FastAPI)

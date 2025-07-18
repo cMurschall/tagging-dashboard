@@ -3,6 +3,7 @@ import asyncio
 import logging
 import sys
 import os
+import mimetypes
 
 from threading import Thread, Event as ThreadingEvent
 from contextlib import asynccontextmanager
@@ -61,8 +62,7 @@ async def lifespan(fastapi_app: FastAPI):
 
 # ensure all dirs exists:
 for folder in [get_settings().SPRITE_FOLDER, get_settings().TAG_PATH]:
-    output_dir = os.path.dirname(folder)
-    os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(folder, exist_ok=True)
 
 app = FastAPI(title=get_settings().APP_NAME, debug=get_settings().DEBUG, lifespan=lifespan)
 
@@ -120,6 +120,8 @@ for route in app.routes:
 # Note: We must mount the static files at last, because otherwise it overrides all / routes
 # Yes - also the websocket routes
 if "pytest" not in sys.modules:
+    # pantheras server does not support .js files by default - god knows why. so we add it manually
+    mimetypes.add_type('application/javascript', '.js')
     app.mount("/", StaticFiles(directory="app/static", html=True), name="static")
 
 import atexit

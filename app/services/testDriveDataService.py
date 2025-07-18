@@ -127,7 +127,7 @@ class TestDriveDataService:
                 except json.JSONDecodeError as e:
                     self.logger.error(f"Failed to load JSON: {e}")
 
-        if self.has_live_data() or True:
+        if self.has_live_data():
             live_project_info = self.create_live_data_project(self.storage_path)
             if live_project_info:
                 # push live project to the start of the list

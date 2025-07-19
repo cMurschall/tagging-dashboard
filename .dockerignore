@@ -30,3 +30,5 @@ logs/
 # Ignore environment files
 .env
 .env.*
+
+*.steamDeckPlugin

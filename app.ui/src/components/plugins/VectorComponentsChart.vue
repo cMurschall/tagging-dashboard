@@ -91,8 +91,8 @@ type PluginState = {
 
 
 const pluginState = ref<PluginState>({
-    selectedColumn: null,
-  });
+  selectedColumn: null,
+});
 
 // --- Reactive State ---
 const containerRef = ref<HTMLDivElement | null>(null);
@@ -364,17 +364,16 @@ onUnmounted(() => {
 
 const loadColumns = async () => {
   console.log("Loading columns...");
-  const [error, response] = await safeFetch(() => client.getDataApiV1PlayerColumnsGet());
-  if (response && response.columns) {
-    const multiDimensionalColumns = response.columns.filter((c: any) => c.type.includes('object'));
-    availableColumns.value = multiDimensionalColumns;
-    console.log(`Loaded ${availableColumns.value.length} multidimensional columns.`);
 
-  } else if (error) {
-    console.error('Error loading columns:', error);
-  } else {
-    console.warn('No columns found or unexpected response structure.');
-  }
+  var columns = await pluginService.getDataManager().getAvailableColumnNames();
+  const numericalColumns = columns.filter(c => c.type == "vector").map(c => {
+    return {
+      name: c.name,
+      type: c.type,
+    } as ColumnInfo;
+  });
+  availableColumns.value = numericalColumns;
+
 };
 
 

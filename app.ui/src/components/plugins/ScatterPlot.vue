@@ -549,19 +549,16 @@ onUnmounted(() => {
 
 const loadColumns = async () => {
   console.log("Loading columns...");
-  const [error, response] = await safeFetch(() => client.getDataApiV1PlayerColumnsGet());
-  if (response && response.columns) {
-    const numericColumns = response.columns.filter((c: any) =>
-      c.type.includes('int') || c.type.includes('float') || c.type.includes('double')
-    );
-    availableColumns.value = numericColumns; //.map((x: ColumnInfo) => ({ text: x.name, value: x }));
-    console.log(`Loaded ${availableColumns.value.length} numeric columns.`);
 
-  } else if (error) {
-    console.error('Error loading columns:', error);
-  } else {
-    console.warn('No columns found or unexpected response structure.');
-  }
+  var columns = await pluginService.getDataManager().getAvailableColumnNames();
+  const numericalColumns = columns.filter(c => c.type == "scalar").map(c => {
+    return {
+      name: c.name,
+      type: c.type,
+    } as ColumnInfo;
+  });
+  availableColumns.value = numericalColumns;
+
 };
 
 </script>

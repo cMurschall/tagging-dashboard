@@ -116,7 +116,7 @@ import { BCol, BRow, BButton, BFormInput, BTr, BTd, BTh, BTableSimple, BThead, B
 import FilterableSelect from '../FilterableSelect.vue';
 import BlurUpdateInput from '../BlurUpdateInput.vue';
 import { ColumnInfo } from "../../../services/restclient";
-import { TimeseriesDataPoint } from '@/types/data';
+import { ColumnDefinition, TimeseriesDataPoint } from '@/types/data';
 import { Subscription, EmptySubscription } from '@/types/observable';
 import { PluginServices } from '@/types/plugin';
 
@@ -258,20 +258,14 @@ watch(pluginState, async (newValue) => {
 
 
 const loadColumns = async () => {
-    const [error, response] = await safeFetch(() => client.getDataApiV1PlayerColumnsGet());
-    if (response) {
-
-        const numericColumns = response.columns.filter((c: any) => c.type.includes('int') || c.type.includes('float'));
-        const arrayColumns = response.columns.filter((c: any) => c.type.includes('object') || c.type.includes('array'));
-
-        // console.log('Numeric Columns loaded', numericColumns);
-        availableColumns.value = [...numericColumns, ...arrayColumns]; //.map(x => ({ text: x.name, value: x }));
-
-
-    }
-    if (error) {
-        console.error('Error loading columns:', error);
-    }
+    var columns = await pluginService.getDataManager().getAvailableColumnNames();
+    const numericalColumns = columns.map(c => {
+        return {
+            name: c.name,
+            type: c.type,
+        } as ColumnInfo;
+    });
+    availableColumns.value = numericalColumns;
 }
 
 </script>

@@ -92,4 +92,9 @@ export class RandomDataManager extends DataManager {
             };
         });
     }
+
+
+    getAvailableColumnNames(): Promise<ColumnDefinition[]> {
+        return Promise.resolve(this.getColumnNames());
+    }
 }

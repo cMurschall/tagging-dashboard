@@ -75,6 +75,9 @@ import { ColumnInfo } from "../../../services/restclient";
 import FilterableSelect from "./../FilterableSelect.vue";
 import BlurUpdateInput from "./../BlurUpdateInput.vue";
 import { PluginServices } from "@/types/plugin";
+import { ColumnDefinition, TimeseriesDataPoint } from "@/types/data";
+import { EmptySubscription, Subscription } from "@/types/observable";
+import { a } from "vitest/dist/chunks/suite.d.FvehnV49.js";
 
 use([GaugeChart, SVGRenderer]);
 
@@ -221,7 +224,7 @@ watch(pluginState, async (newValue) => {
 
 onMounted(async () => {
 
-  pluginState.value = pluginService.getPluginState() as PluginState|| pluginState.value;
+  pluginState.value = pluginService.getPluginState() as PluginState || pluginState.value;
 
   await loadColumns();
   // Listen to resize events
@@ -286,17 +289,15 @@ onUnmounted(() => {
 
 
 const loadColumns = async () => {
-  const [error, response] = await safeFetch(() => client.getDataApiV1PlayerColumnsGet());
-  if (response) {
 
-    const numericColumns = response.columns.filter((c: any) => c.type.includes('int') || c.type.includes('float'));
-
-    availableColumns.value = numericColumns; //.map(x => ({ text: x.name, value: x }));
-
-  }
-  if (error) {
-    console.error('Error loading columns:', error);
-  }
+  var columns = await pluginService.getDataManager().getAvailableColumnNames();
+  const numericalColumns = columns.filter(c => c.type == "scalar").map(c => {
+    return {
+      name: c.name,
+      type: c.type,
+    } as ColumnInfo;
+  });
+  availableColumns.value = numericalColumns;
 }
 
 

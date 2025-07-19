@@ -1,5 +1,5 @@
 // ApiDataManager.ts
-import {  DataManager } from "./dataManager";
+import { DataManager } from "./dataManager";
 import { Observable } from "../core/observable";
 import { safeFetch, PlayerApiClient as client } from "../core/utilities/utilities";
 import { TimestampLookup } from "../core/timestampLookup";
@@ -148,6 +148,41 @@ export class ApiDataManager extends DataManager {
 
     return definitions;
   }
+
+
+  async getAvailableColumnNames(): Promise<ColumnDefinition[]> {
+    const [error, response] = await safeFetch(() => client.getDataApiV1PlayerColumnsGet());
+    if (response) {
+
+      const numericColumns = response.columns.filter((c: any) => c.type.includes('int') || c.type.includes('float'));
+
+      const vectorColumns = response.columns.filter((c: any) => c.type.includes('object'));
+
+      const definitions: ColumnDefinition[] = [];
+      for (const col of numericColumns) {
+        definitions.push({
+          name: col.name,
+          type: "scalar",
+          dimension: 1
+        });
+      }
+      for (const col of vectorColumns) {
+        definitions.push({
+          name: col.name,
+          type: "vector",
+          dimension: 2 // Assuming 2 is the correct placeholder for vector dimension
+        });
+      }
+
+      return definitions;
+    }
+    if (error) {
+      console.error('Error loading columns:', error);
+      return [];
+    }
+    return [];
+  }
+
 }
 
 

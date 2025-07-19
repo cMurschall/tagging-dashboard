@@ -3,8 +3,9 @@ import logging
 from dataclasses import asdict
 import time
 import functools
-from threading import Event, Lock, Timer
+from threading import Lock, Timer
 
+from .trackedEvent import TrackedEvent
 from ..bufferedCsvWriter import BufferedCsvWriter
 from ..dataSources.simulatedPantheraDataSource import start_process as start_simulated_process
 from ..dataSources.replayPantheraDataSource import start_replay as start_replay_process
@@ -62,58 +63,59 @@ def throttle_latest(seconds: float):
     return decorator
 
 
-def process_live_data(stop_event: Event, loop: asyncio.AbstractEventLoop):
+def process_live_data(stop_event: TrackedEvent, loop: asyncio.AbstractEventLoop):
     live_data_source = None
-    while not stop_event.is_set():
-        service = get_testdata_manager()
+    buffered_writer = None
 
-        test_drive_data = service.get_active_testdrive()
+    try:
+        while not stop_event.is_set():
+            service = get_testdata_manager()
+            test_drive_data = service.get_active_testdrive()
 
-        has_live_test_drive = test_drive_data is not None and test_drive_data.is_live
-        if has_live_test_drive:
-            if live_data_source is None:
-                csv_file = test_drive_data.test_drive_data_info.csv_file_full_path
-                buffered_writer = BufferedCsvWriter(csv_file, stop_event)
+            has_live_test_drive = test_drive_data is not None and test_drive_data.is_live
 
-                @throttle_latest(0.5)  # 2 calls per second max
-                def new_live_data_arrived(data: LiveDataRow):
-                    # logger.info(f"Live Data Arrived @ {data.timestamp}s")
-                    # send data to websocket
-                    asyncio.run_coroutine_threadsafe(
-                        get_connection_manager_data().broadcast_json(asdict(data)),
-                        loop
-                    )
+            if has_live_test_drive:
+                if live_data_source is None:
+                    csv_file = test_drive_data.test_drive_data_info.csv_file_full_path
+                    buffered_writer = BufferedCsvWriter(csv_file)
 
-                    asyncio.run_coroutine_threadsafe(
-                        get_connection_manager_simulation_time().broadcast_json({
-                            "timestamp": data.timestamp
-                        }),
-                        loop
-                    )
-                    # Queue for writing
-                    # buffered_writer.enqueue(asdict(data))
+                    @throttle_latest(0.5)
+                    def new_live_data_arrived(data: LiveDataRow):
+                        logger.info(f"Live Data Arrived @ {data.timestamp}s")
 
-                # live_data_source = start_replay_process(new_live_data_arrived)
-                # live_data_source = start_simulated_process(new_live_data_arrived)
-                if PANTHERA_AVAILABLE:
-                    live_data_source = start_panthera_process(new_live_data_arrived)
-                else:
-                    live_data_source = start_simulated_process(new_live_data_arrived)
+                        asyncio.run_coroutine_threadsafe(
+                            get_connection_manager_data().broadcast_json(asdict(data)),
+                            loop
+                        )
+                        asyncio.run_coroutine_threadsafe(
+                            get_connection_manager_simulation_time().broadcast_json({
+                                "timestamp": data.timestamp
+                            }),
+                            loop
+                        )
 
-        elif live_data_source is not None:
+                    if PANTHERA_AVAILABLE:
+                        live_data_source = start_panthera_process(new_live_data_arrived)
+                    else:
+                        live_data_source = start_simulated_process(new_live_data_arrived)
 
-            # Stop writing thread
-            buffered_writer.shutdown()
+            elif live_data_source is not None:
+                if buffered_writer:
+                    buffered_writer.shutdown()
+                live_data_source.stop()
+                live_data_source = None
+                buffered_writer = None
+
+            sleep_with_event(stop_event, 2)
+
+    except Exception as e:
+        logger.exception("Exception in live data processing loop")
+
+    finally:
+        if live_data_source:
             live_data_source.stop()
-            live_data_source = None
-
-        sleep_with_event(stop_event, 5)
-
-    if live_data_source is not None:
-        # Stop writing thread
-        buffered_writer.shutdown()
-        live_data_source.stop()
-        live_data_source = None
+        if buffered_writer:
+            buffered_writer.shutdown()
 
 
 def sleep_with_event(stop_event, duration):

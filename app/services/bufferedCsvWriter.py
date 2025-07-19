@@ -4,14 +4,16 @@ from dataclasses import asdict
 from queue import Queue, Empty
 from threading import Thread, Event
 
+from app.services.backgroundTasks.trackedEvent import TrackedEvent
+
 
 class BufferedCsvWriter:
-    def __init__(self, csv_file_path: str, stop_event: Event, flush_interval: float = 10.0, batch_size: int = 100):
+    def __init__(self, csv_file_path: str, flush_interval: float = 10.0, batch_size: int = 100):
         self.csv_file_path = csv_file_path
         self.flush_interval = flush_interval
         self.batch_size = batch_size
+        self.shutdown_event = TrackedEvent()
         self.queue = Queue()
-        self.stop_event = stop_event
         self.thread = Thread(target=self._writer_loop, daemon=True)
         self.thread.start()
 
@@ -19,7 +21,7 @@ class BufferedCsvWriter:
         buffer = []
         last_flush = time.time()
 
-        while not self.stop_event.is_set():
+        while not self.shutdown_event.is_set():
             try:
                 data = self.queue.get(timeout=1)  # Wait max 1 second for new data
                 buffer.append(data)
@@ -43,5 +45,5 @@ class BufferedCsvWriter:
         self.queue.put(data)
 
     def shutdown(self):
-        self.stop_event.set()
+        self.shutdown_event.set()
         self.thread.join(timeout=5)

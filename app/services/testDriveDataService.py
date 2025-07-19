@@ -258,9 +258,6 @@ class TestDriveDataService:
         Get the live data project.
         :return: The live data project or None if not available.
         """
-        if not self.has_live_data():
-            return None
-
         live_project_info = TestDriveProjectInfo(
             id=0,
             is_live=True,

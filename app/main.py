@@ -14,6 +14,7 @@ from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.services.backgroundTasks.trackedEvent import TrackedEvent
 from .api import router as global_router
 from .api.v1 import router as v1_router
 from .dependencies import get_connection_manager_data, get_connection_manager_simulation_time, get_testdata_manager, \
@@ -43,7 +44,7 @@ def start_background_tasks(background_threads, stop_event):
 
 @asynccontextmanager
 async def lifespan(fastapi_app: FastAPI):
-    stop_event = ThreadingEvent()
+    stop_event = TrackedEvent()
     background_threads = []
     start_background_tasks(background_threads, stop_event)
     logger.info(f"Starting {len(background_threads)} background tasks.")
@@ -59,6 +60,7 @@ async def lifespan(fastapi_app: FastAPI):
         thread.join(timeout=5)
         if thread.is_alive():
             logger.warning(f"Thread {thread.name} did not stop cleanly!")
+
 
 # ensure all dirs exists:
 for folder in [get_settings().SPRITE_FOLDER, get_settings().TAG_PATH]:

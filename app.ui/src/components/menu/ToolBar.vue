@@ -4,13 +4,13 @@
             <BDropdownGroup header="Build in">
 
                 <BDropdownItem v-for="plugin in internalPlugins" :key="plugin.name"
-                    :disabled="!projectStore.isProjectLoaded" @click="handleInternalPlugin(plugin)">Add {{ plugin.displayName
+                    :disabled="!projectStore.isProjectLoaded" @click="handleInternalPlugin(plugin)">{{ plugin.displayName
                     }}</BDropdownItem>
             </BDropdownGroup>
 
             <BDropdownGroup header="Externals" v-if="externalPlugins.length > 0">
                 <BDropdownItem v-for="plugin in externalPlugins" :key="plugin.id"
-                    :disabled="!projectStore.isProjectLoaded" @click="handleExternalPlugin(plugin)">Add {{ plugin.name
+                    :disabled="!projectStore.isProjectLoaded" @click="handleExternalPlugin(plugin)">{{ plugin.name
                     }}</BDropdownItem>
             </BDropdownGroup>
 

@@ -15,7 +15,7 @@
             </BDropdownGroup>
 
 
-            <BDropdownGroup header="For testing">
+            <BDropdownGroup v-if="isDevelopment" header="For testing">
                 <BDropdownItem @click="handleAddTestGridItem">Add Test</BDropdownItem>
             </BDropdownGroup>
 
@@ -111,6 +111,7 @@ import { BModal, BFormInput, BFormSelect, BButton, BDropdown, BDropdownItem, BDr
 import { StoredLayoutItem } from '@/types/layout';
 import { Subscription, EmptySubscription } from '@/types/observable';
 import { ExternalPluginManifest, InternalPluginManifest } from '@/types/plugin';
+import { isDevMode } from '@/core/utilities/env';
 
 // Initialize the store
 const projectStore = useProjectStore();
@@ -139,6 +140,7 @@ const externalPlugins = ref<ExternalPluginManifest[]>([]);
 const internalPlugins = ref<InternalPluginManifest[]>([]);
 
 
+const isDevelopment = isDevMode()
 
 
 const handleAddTestGridItem = () => {

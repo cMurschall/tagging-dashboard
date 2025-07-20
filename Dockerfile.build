@@ -12,31 +12,6 @@ RUN apt-get update && \
     openjdk-17-jdk-headless \
     ffmpeg \
     git \
-    && rm -rf /var/lib/apt/lists/* # Clean up apt cache to reduce image size
-
-
-RUN curl -fsSL https://deb.nodesource.com/setup_21.x | bash - && \
-    apt-get install -y --no-install-recommends nodejs && \
-    rm -rf /var/lib/apt/lists/* # Clean up apt cache again
-
-
-WORKDIR /app
-RUN git clone -b master https://github.com/cMurschall/tagging-dashboard.git tagging-dashboard
-
-WORKDIR /app/tagging-dashboard
-
-
-
-
-FROM python:3.11-slim-bookworm AS backend-deps-installer
-
-
-COPY --from=base-builder /app/tagging-dashboard /app/tagging-dashboard
-WORKDIR /app/tagging-dashboard
-
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
     cmake \
     g++ \
     libjpeg-dev \
@@ -53,25 +28,43 @@ RUN apt-get update && \
     gfortran \
     && rm -rf /var/lib/apt/lists/*
 
+RUN curl -fsSL https://deb.nodesource.com/setup_21.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/* # Clean up apt cache again
+
+# Install python3-venv for virtual environment creation
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3-venv && \
+    rm -rf /var/lib/apt/lists/* # Clean up apt cache
+
+
+WORKDIR /app
+# RUN git clone -b master https://github.com/cMurschall/tagging-dashboard.git tagging-dashboard
+# COPY . /app/tagging-dashboard
+
+
+
+FROM base-builder AS client-generator
+
+WORKDIR /app/tagging-dashboard
+
 
 RUN python3 -m venv venv
 
+COPY requirements.txt /app/tagging-dashboard/requirements.txt
 
 RUN . venv/bin/activate && \
     pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
-# client-generator
-FROM backend-deps-installer AS client-generator
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends openjdk-17-jdk-headless && \
-    rm -rf /var/lib/apt/lists/*
-
+COPY generateTypscriptRestClient.py /app/tagging-dashboard/generateTypscriptRestClient.py
+COPY app /app/tagging-dashboard/app
 
 RUN java --version
 RUN . venv/bin/activate && \
     python3 generateTypscriptRestClient.py
+
 
 
 # frontend-builder
@@ -89,9 +82,13 @@ COPY --from=client-generator /app/tagging-dashboard/app.ui/services/restclient/ 
 # Change working directory to the frontend application's root.
 WORKDIR /app/tagging-dashboard/app.ui
 
+# copy package.json and package-lock.json
+COPY app.ui/package.json /app/tagging-dashboard/app.ui/package.json
+COPY app.ui/package-lock.json /app/tagging-dashboard/app.ui/package-lock.json
 
 RUN npm install
 
+COPY app.ui/ /app/tagging-dashboard/app.ui/
 
 RUN npx vite build --mode production
 
@@ -101,9 +98,14 @@ FROM base-builder AS streamdeck-builder
 
 WORKDIR /app/tagging-dashboard/streamdeck
 
-RUN npm install -g @elgato/cli
+# copy package.json and package-lock.json
+COPY streamdeck/package.json /app/tagging-dashboard/streamdeck/package.json
+COPY streamdeck/package-lock.json /app/tagging-dashboard/streamdeck/package-lock.json
 
+RUN npm install -g @elgato/cli
 RUN npm install
+
+COPY streamdeck/ /app/tagging-dashboard/streamdeck/
 
 # Bundle the Streamdeck plugin into its final '.streamDeckPlugin' file.
 RUN npm run build
@@ -118,6 +120,7 @@ COPY --from=frontend-builder /app/tagging-dashboard/app/static /export/frontend-
 COPY --from=client-generator /app/tagging-dashboard/app.ui/services/restclient /export/restclient
 COPY --from=streamdeck-builder /app/tagging-dashboard/streamdeck/*.streamDeckPlugin /export/streamdeck-plugin/
 
+CMD ["echo", "Build artifacts are ready in /export"]
 
 
 # Build with:

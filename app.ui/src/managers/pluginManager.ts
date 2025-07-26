@@ -102,14 +102,7 @@ export class PluginManager {
                 displayName: 'Vector Components Chart',
                 defaultSize: { width: 7, height: 16 },
             }
-        }],
-        // ['TestGridItem', {
-        //     manifest: {
-        //         name: 'TestGridItem',
-        //         displayName: 'Test Grid Item',
-        //         defaultSize: { width: 5, height: 16 },
-        //     }
-        // }],
+        }]
     ])
 
 

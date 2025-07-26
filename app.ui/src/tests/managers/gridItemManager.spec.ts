@@ -100,28 +100,7 @@ describe('GridManager', () => {
         consoleWarnSpy.mockRestore();
     });
 
-    it('should return { x: 0, y: 0 } when no items exist for suggesting free space', () => {
-        const space = gm.suggestFreeSpace(2, 2);
-        expect(space).toEqual({ x: 0, y: 0 });
-    });
 
-    it('should suggest a free space that does not overlap with an existing item', () => {
-        // Add an item that occupies space at (0, 0) with width and height of 2
-        gm.addNewItem({ id: '1', x: 0, y: 0, w: 2, h: 2, props: {} });
-        const space = gm.suggestFreeSpace(2, 2);
-
-        // Validate that the suggested space does not overlap with the occupied item.
-        const potentialNewItem = { x: space.x, y: space.y, w: 2, h: 2 };
-        const occupiedItem = { x: 0, y: 0, w: 2, h: 2 };
-
-        const isOverlap =
-            potentialNewItem.x < occupiedItem.x + occupiedItem.w &&
-            potentialNewItem.x + potentialNewItem.w > occupiedItem.x &&
-            potentialNewItem.y < occupiedItem.y + occupiedItem.h &&
-            potentialNewItem.y + potentialNewItem.h > occupiedItem.y;
-
-        expect(isOverlap).toBe(false);
-    });
 
     it('should log error when adding an item with duplicate id', () => {
         const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });

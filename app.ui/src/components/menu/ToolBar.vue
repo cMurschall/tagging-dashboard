@@ -1,7 +1,7 @@
 <template>
     <div style="width : 100%" class="d-flex flex-row justify-content-start align-items-center">
         <BDropdown text="Add Plugin" class="me-2" :disable="projectStore.isProjectLoaded">
-            <BDropdownGroup header="Build in">
+            <BDropdownGroup header="Build in"  v-if="internalPlugins.length > 0">
 
                 <BDropdownItem v-for="plugin in internalPlugins" :key="plugin.name"
                     :disabled="!projectStore.isProjectLoaded" @click="handleInternalPlugin(plugin)">{{ plugin.displayName

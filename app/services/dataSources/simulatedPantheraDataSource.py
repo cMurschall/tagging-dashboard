@@ -1,14 +1,15 @@
 import threading
 import time
 
-from app.models.liveDataRow import LiveDataRow
+from app.models.liveDataRow import create_random_instance
+from app.services.backgroundTasks.trackedEvent import TrackedEvent
 
 
 class MockProcess:
     def __init__(self, update_measurement_callback=None, interval_seconds=5.0):
         self.update_measurement_callback = update_measurement_callback
         self.interval_seconds = interval_seconds
-        self._stop_event = threading.Event()
+        self._stop_event = TrackedEvent()
         self._thread = None
         self._timestamp = 0
 
@@ -24,8 +25,8 @@ class MockProcess:
 
     def _run_loop(self):
         while not self._stop_event.is_set():
-            instance = LiveDataRow.create_random_instance()
-            instance.timestamp = self._timestamp  # simulated timestamp
+            instance = create_random_instance()
+            instance["timestamp"] = self._timestamp  # simulated timestamp
             self._timestamp += self.interval_seconds  # advance "virtual clock"
 
             if self.update_measurement_callback:

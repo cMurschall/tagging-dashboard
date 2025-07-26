@@ -105,19 +105,6 @@ for route in app.routes:
         pass
         # route.operation_id = route.name  # in this case, 'read_items'
 
-# @app.websocket("/ws/heartbeat")
-# async def websocket_endpoint(websocket: WebSocket):
-#     await get_connection_manager().connect(websocket)
-#     try:
-#         while True:
-#             await websocket.send_text("ping")  # keep alive
-#             await asyncio.sleep(20)  # should be okay so clients may not time out and close the connection
-#     except WebSocketDisconnect:
-#         get_connection_manager().disconnect(websocket)
-#     finally:
-#         get_connection_manager().disconnect(websocket)
-
-
 # Serve static files
 # Note: We must mount the static files at last, because otherwise it overrides all / routes
 # Yes - also the websocket routes

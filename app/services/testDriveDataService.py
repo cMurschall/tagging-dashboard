@@ -12,7 +12,7 @@ from typing import Dict, List
 from pydantic import ValidationError
 import pandas as pd
 
-from app.models.liveDataRow import LiveDataRow
+from app.models.liveDataRow import FIELD_NAME_MAP
 from app.models.testDriveDataInfo import TestDriveDataInfo
 from app.models.testDriveMetaData import TestDriveMetaData
 from app.models.testDriveProjectInfo import TestDriveProjectInfo
@@ -290,7 +290,7 @@ class TestDriveDataService:
         test_drive.test_drive_tag_info.tag_file_full_path = str(tag_file.resolve())
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False, newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=[field for field in LiveDataRow.__annotations__])
+            writer = csv.DictWriter(f, fieldnames=[field for field in FIELD_NAME_MAP])
             writer.writeheader()
             temp_path = Path(f.name)
             test_drive.test_drive_data_info.csv_file_name = f.name

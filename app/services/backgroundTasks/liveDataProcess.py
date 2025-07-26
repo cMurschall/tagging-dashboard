@@ -8,7 +8,6 @@ from threading import Lock, Timer
 from .trackedEvent import TrackedEvent
 from ..bufferedCsvWriter import BufferedCsvWriter
 from ..dataSources.simulatedPantheraDataSource import start_process as start_simulated_process
-from ..dataSources.replayPantheraDataSource import start_replay as start_replay_process
 
 # only inport if panthera module is present
 try:
@@ -19,7 +18,6 @@ except ImportError:
     PANTHERA_AVAILABLE = False
 
 from ...dependencies import get_testdata_manager, get_connection_manager_data, get_connection_manager_simulation_time
-from ...models.liveDataRow import LiveDataRow
 
 logger = logging.getLogger('uvicorn.error')
 
@@ -80,16 +78,16 @@ def process_live_data(stop_event: TrackedEvent, loop: asyncio.AbstractEventLoop)
                     buffered_writer = BufferedCsvWriter(csv_file)
 
                     @throttle_latest(0.5)
-                    def new_live_data_arrived(data: LiveDataRow):
+                    def new_live_data_arrived(data: dict):
                         logger.info(f"Live Data Arrived @ {data.timestamp}s")
 
                         asyncio.run_coroutine_threadsafe(
-                            get_connection_manager_data().broadcast_json(asdict(data)),
+                            get_connection_manager_data().broadcast_json(data),
                             loop
                         )
                         asyncio.run_coroutine_threadsafe(
                             get_connection_manager_simulation_time().broadcast_json({
-                                "timestamp": data.timestamp
+                                "timestamp": data["timestamp"]
                             }),
                             loop
                         )

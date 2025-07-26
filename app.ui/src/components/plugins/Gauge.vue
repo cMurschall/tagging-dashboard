@@ -69,15 +69,14 @@ import VChart from "vue-echarts";
 import { use } from "echarts/core";
 import { GaugeChart } from "echarts/charts";
 import { SVGRenderer } from "echarts/renderers";
-import { safeFetch, PlayerApiClient as client, formatWithTemplate, transformMathJsValue, IDENTITY_EXPRESSION, useObservable } from "../../core/utilities/utilities";
+import { formatWithTemplate, transformMathJsValue, IDENTITY_EXPRESSION, useObservable } from "../../core/utilities/utilities";
 import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import FilterableSelect from "./../FilterableSelect.vue";
 import BlurUpdateInput from "./../BlurUpdateInput.vue";
 import { PluginServices } from "@/types/plugin";
-import { ColumnDefinition, TimeseriesDataPoint } from "@/types/data";
+import { TimeseriesDataPoint } from "@/types/data";
 import { EmptySubscription, Subscription } from "@/types/observable";
-import { a } from "vitest/dist/chunks/suite.d.FvehnV49.js";
 
 use([GaugeChart, SVGRenderer]);
 

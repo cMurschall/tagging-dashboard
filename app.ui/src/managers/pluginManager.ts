@@ -13,7 +13,7 @@ import TagTimeline from './../components/plugins/TagTimeline.vue';
 import LiveScatterPlot from "../components/plugins/LiveScatterPlot.vue";
 import VectorComponentsChart from "../components/plugins/VectorComponentsChart.vue";
 import LiveVectorComponentsChart from "../components/plugins/LiveVectorComponentsChart.vue";
-
+import TrackMap from "../components/plugins/TrackMap.vue";
 
 import { ApiDataManager } from "./apiDataManager";
 import { WebSocketDataConnection } from "../services/webSocketDataConnection";
@@ -101,6 +101,13 @@ export class PluginManager {
                 name: 'VectorComponents',
                 displayName: 'Vector Components Chart',
                 defaultSize: { width: 7, height: 16 },
+            }
+        }],
+         ['TrackMap', {
+            manifest: {
+                name: 'TrackMap',
+                displayName: 'Map',
+                defaultSize: { width: 7, height: 7 },
             }
         }]
     ])
@@ -277,6 +284,7 @@ export class PluginManager {
         this.gridItemManager.registerComponent('TestGridItem', () => createVuePluginAdapter(TestGridItem));
         this.gridItemManager.registerComponent('TagTimeline', () => createVuePluginAdapter(TagTimeline));
         this.gridItemManager.registerComponent('VectorComponents', () => project.isLive ? createVuePluginAdapter(LiveVectorComponentsChart) : createVuePluginAdapter(VectorComponentsChart));
+        this.gridItemManager.registerComponent('TrackMap', () => createVuePluginAdapter(TrackMap));
 
         for (const [id, external] of this.externalPlugins) {
             this.gridItemManager.registerComponent(id, () => external.plugin);

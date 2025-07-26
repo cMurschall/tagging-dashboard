@@ -111,12 +111,12 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, inject, watch } from 'vue';
 
-import { safeFetch, PlayerApiClient as client, areArraysSameUnordered, formatWithTemplate, transformMathJsValue, useObservable } from "../../core/utilities/utilities";
+import { areArraysSameUnordered, formatWithTemplate, transformMathJsValue, useObservable } from "../../core/utilities/utilities";
 import { BCol, BRow, BButton, BFormInput, BTr, BTd, BTh, BTableSimple, BThead, BTbody } from "bootstrap-vue-next";
 import FilterableSelect from '../FilterableSelect.vue';
 import BlurUpdateInput from '../BlurUpdateInput.vue';
 import { ColumnInfo } from "../../../services/restclient";
-import { ColumnDefinition, TimeseriesDataPoint } from '@/types/data';
+import { TimeseriesDataPoint } from '@/types/data';
 import { Subscription, EmptySubscription } from '@/types/observable';
 import { PluginServices } from '@/types/plugin';
 

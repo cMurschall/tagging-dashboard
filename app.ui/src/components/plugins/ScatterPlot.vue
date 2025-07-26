@@ -57,9 +57,7 @@
 <script setup lang="ts">
 import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, watch } from "vue";
-import {
-  safeFetch, PlayerApiClient as client, TimestampStatistics,
-  getTimestampStatistics, clamp, transformMathJsValue,
+import {  getTimestampStatistics, clamp, transformMathJsValue,
   IDENTITY_EXPRESSION,
   useObservable
 } from "../../core/utilities/utilities";
@@ -88,7 +86,7 @@ import type {
   TooltipComponentOption
 } from 'echarts/components'
 import { SeriesOption } from "echarts";
-import { TimeseriesTable, TimeseriesDataPoint } from "@/types/data";
+import { TimeseriesTable, TimeseriesDataPoint, TimestampStatistics } from "@/types/data";
 import { Subscription, EmptySubscription } from "@/types/observable";
 import { PluginServices } from "@/types/plugin";
 

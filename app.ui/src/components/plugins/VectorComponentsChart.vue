@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, watch } from "vue";
-import { safeFetch, PlayerApiClient as client, isNullOrUndefined, useObservable } from "../../core/utilities/utilities";
+import { isNullOrUndefined, useObservable } from "../../core/utilities/utilities";
 import { BCol, BFormGroup, BRow } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 // import { useVideoControl } from '../../composables/useVideoControl';

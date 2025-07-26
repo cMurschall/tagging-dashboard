@@ -49,7 +49,7 @@
 <script setup lang="ts">
 import Chart from "vue-echarts";
 import { ref, onMounted, onUnmounted, inject, watch } from "vue";
-import { safeFetch, PlayerApiClient as client, IDENTITY_EXPRESSION, transformMathJsValue, useObservable } from "../../core/utilities/utilities";
+import { IDENTITY_EXPRESSION, transformMathJsValue, useObservable } from "../../core/utilities/utilities";
 import { BCol, BFormGroup, BRow, BFormInput } from "bootstrap-vue-next";
 import { ColumnInfo } from "../../../services/restclient";
 import FilterableSelect from "./../FilterableSelect.vue";
@@ -73,7 +73,7 @@ import type {
     TooltipComponentOption
 } from 'echarts/components'
 import { SeriesOption } from "echarts";
-import { ColumnDefinition, TimeseriesDataPoint } from "@/types/data";
+import { TimeseriesDataPoint } from "@/types/data";
 import { Subscription, EmptySubscription } from "@/types/observable";
 import { PluginServices } from "@/types/plugin";
 

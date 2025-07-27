@@ -2,6 +2,29 @@
   <div ref="containerRef" style="width: 100%; height: 100%;">
     <Transition name="fade" mode="out-in">
       <div v-if="showMenu">
+        <BRow class="mb-2">
+          <BCol cols="12">
+            <h4>Map Options</h4>
+          </BCol>
+        </BRow>
+        <BRow>
+          <BCol cols="6">
+            <BFormGroup label="Select Z values column:">
+              <FilterableSelect v-model="pluginState.selectedYColumn" :options="availableColumns"
+                :getLabel="(item) => item.name" placeholder="Select column:" />
+            </BFormGroup>
+          </BCol>
+
+
+          <BCol cols="6">
+
+            <label for="mapSelect" class="form-label">Select Map:</label>
+            <BFormSelect id="mapSelect" v-model="selectedMap">
+              <option value="Cruden World">Cruden World</option>
+              <option value="Empty">Empty</option>
+            </BFormSelect>
+          </BCol>
+        </BRow>
 
       </div>
     </Transition>
@@ -20,21 +43,25 @@ import { use } from "echarts/core";
 import { ScatterChart, EffectScatterChart } from "echarts/charts";
 import { GeoComponent, VisualMapComponent, GraphicComponent, DataZoomComponent } from "echarts/components";
 import { SVGRenderer, CanvasRenderer } from "echarts/renderers";
+import { GeoJSONSourceInput } from "echarts/types/src/coord/geo/geoTypes.js";
 import { useObservable } from "../../core/utilities/utilities";
 import { ColumnInfo } from "../../../services/restclient";
 import { PluginServices } from "@/types/plugin";
 import { TimeseriesDataPoint } from "@/types/data";
 import { EmptySubscription, Subscription } from "@/types/observable";
 
-import cw2 from '@/assets/cw2.json';
+import cw2 from '@/assets/maps/cw2.json';
+
 
 
 use([ScatterChart, EffectScatterChart, GeoComponent, VisualMapComponent, GraphicComponent, DataZoomComponent, SVGRenderer]);
 
 
 
-echarts.registerMap('Cruden World', cw2);
-echarts.registerMap('empty', {
+
+const selectedMap = ref<'Cruden World' | 'Empty'>('Cruden World');
+echarts.registerMap('Cruden World', cw2 as GeoJSONSourceInput);
+echarts.registerMap('Empty', {
   type: 'FeatureCollection',
   features: []
 });
@@ -46,18 +73,18 @@ if (!pluginService) {
 
 
 type PluginState = {
-
-  selectedColumn: ColumnInfo | null;
+  selectedYColumn: ColumnInfo | null;
 }
 
-
+// x, y, speed, time
 const positionWithSpeed: [number, number, number, number][] = [];
 
 const showMenu = useObservable(pluginService.showMenu$);
 
 const pluginState = ref<PluginState>({
-  selectedColumn: null,
+  selectedYColumn: null,
 });
+
 
 // Default gauge options
 const mapOption = ref({
@@ -81,50 +108,6 @@ const mapOption = ref({
       xAxisIndex: 0,
       yAxisIndex: 0
     },
-    // {
-    //   type: 'slider',
-    //   xAxisIndex: 0
-    // },
-    // {
-    //   type: 'slider',
-    //   yAxisIndex: 0
-    // }
-  ],
-  geo: {
-    map: 'Cruden World', // Use the registered map name
-    roam: true, // Enable zooming and panning
-
-    itemStyle: {
-      areaColor: '#e0ffff', // Default area color
-      borderColor: '#aaa',  // Border color of regions
-      borderWidth: 1
-    },
-    emphasis: { // Style when hovering over a region
-      itemStyle: {
-        areaColor: '#2a6a9b'
-      },
-      label: {
-        show: true,
-        color: '#fff'
-      }
-    }
-  },
-  graphic: [
-    {
-      id: 'highlight-point',
-      type: 'circle',
-      shape: {
-        cx: 0,
-        cy: 0,
-        r: 5,
-      },
-      style: {
-        fill: 'red',
-      },
-      z: 100,
-      zlevel: 2,
-      invisible: true
-    }
   ],
   series: [
     {
@@ -143,6 +126,11 @@ const chartRef = ref<typeof VChart | null>(null);
 const availableColumns = ref<ColumnInfo[]>([]);
 
 
+watch(selectedMap, () => {
+  updateChartOptions();
+});
+
+
 let resizeObserver: ResizeObserver | null = null;
 let subscription: Subscription = EmptySubscription;
 
@@ -153,15 +141,18 @@ let lastSelectedColumn: ColumnInfo | null = null;
 watch(pluginState, async (newValue) => {
 
 
-  const selectedColumnUpdated = newValue.selectedColumn != lastSelectedColumn;
+  const selectedColumnUpdated = newValue.selectedYColumn != lastSelectedColumn;
 
   // check if the selected column is different from the old value
-  if (selectedColumnUpdated && newValue.selectedColumn) {
-    await pluginService.getDataManager().initialize([newValue.selectedColumn.name]);
-    // gaugeOption.value.series[0].data[0].name = newVal.selectedColumn.name;
-    pluginService.cardTitle$.next(newValue.selectedColumn.name);
+  if (selectedColumnUpdated && newValue.selectedYColumn) {
+    await pluginService.getDataManager().initialize(['car0_vehicle_pos', newValue.selectedYColumn.name]);
 
-    lastSelectedColumn = newValue.selectedColumn;
+    pluginService.cardTitle$.next(newValue.selectedYColumn.name);
+
+    lastSelectedColumn = newValue.selectedYColumn;
+
+      await loadData();
+  updateChartOptions();
   }
 
 
@@ -179,6 +170,11 @@ onMounted(async () => {
   pluginState.value = pluginService.getPluginState() as PluginState || pluginState.value;
 
   await loadColumns();
+
+  if (!pluginState.value.selectedYColumn) {
+    pluginState.value.selectedYColumn = availableColumns.value.find(c => c.name === 'car0_velocity') || null;
+  }
+
   // Listen to resize events
   // Create a ResizeObserver to watch the container element
   if (containerRef.value) {
@@ -192,67 +188,16 @@ onMounted(async () => {
   }
 
   // check if we have a selected column
-  await pluginService.getDataManager().initialize(['car0_vehicle_pos', 'car0_velocity']);
-
-
-  const data = pluginService.getDataManager().getAllMeasurements();
-
-
-  const time = data.timestamps;
-  const x = data.vectorValues["car0_vehicle_pos"][0]
-  const y = data.vectorValues["car0_vehicle_pos"][1]
-  const speed = data.scalarValues["car0_velocity"];
-
-  for (let i = 0; i < x.length && i < speed.length; i += 10) {
-    positionWithSpeed.push([x[i], y[i], speed[i], time[i]]);
-  }
-
-  chartRef.value?.setOption({
-    visualMap: {
-      type: 'continuous',
-      min: Math.min(...speed),
-      max: Math.max(...speed),
-      dimension: 2,
-      orient: 'vertical',
-      right: 10,
-      top: 20,
-      calculable: true,
-      inRange: {
-        color: ['#00bcd4', '#8bc34a', '#ffc107']
-      },
-      formatter: (value: number) => "",
-      text: [
-        `${Math.max(...speed).toFixed(1)} m/s`,
-        `${Math.min(...speed).toFixed(1)} m/s`
-      ]
-    },
-    series: [
-      {
-        name: 'Track',
-        type: 'scatter',
-        coordinateSystem: 'geo',
-        symbolSize: 8,
-        data: positionWithSpeed
-      },
-      {
-        name: 'Current Point',
-        type: 'effectScatter',
-        coordinateSystem: 'geo',
-        data: [],
-        symbolSize: 12,
-        itemStyle: { color: 'red' },
-        rippleEffect: { scale: 4, brushType: 'stroke' },
-        zlevel: 10
-      }
-    ]
-  });
+  await loadData();
+  updateChartOptions();
 
   subscription = pluginService.getDataManager().measurement$.subscribe((measurements: TimeseriesDataPoint) => {
     const vChartsRef = chartRef.value;
     if (!vChartsRef) { return; }
 
-    const xValue = measurements['values']['car0_vehicle_pos'][0];
-    const yValue = measurements['values']['car0_vehicle_pos'][1];
+    const pos = measurements.values['car0_vehicle_pos'] as number[];
+    const xValue = pos[0];
+    const yValue = pos[1];
 
 
 
@@ -314,5 +259,109 @@ const loadColumns = async () => {
   availableColumns.value = numericalColumns;
 }
 
+const loadData = async () => {
+  const selectedColumn = pluginState.value.selectedYColumn?.name ?? 'car0_velocity' ;
+  await pluginService.getDataManager().initialize([selectedColumn, 'car0_vehicle_pos']);
+
+
+  const data = pluginService.getDataManager().getAllMeasurements();
+
+
+  const time = data.timestamps;
+  const x = data.vectorValues["car0_vehicle_pos"][0]
+  const y = data.vectorValues["car0_vehicle_pos"][1]
+  const speed = data.scalarValues[selectedColumn];
+
+  for (let i = 0; i < x.length && i < speed.length; i += 100) {
+    positionWithSpeed.push([x[i], y[i], speed[i], time[i]]);
+  }
+};
+
+const updateChartOptions = () => {
+  const boundingCoords = getBoundingCoords(positionWithSpeed.map(p => [p[0], p[1]]));
+
+  const speed = positionWithSpeed.map(p => p[2]);
+  chartRef.value?.setOption({
+      graphic: [
+    {
+      id: 'highlight-point',
+      type: 'circle',
+      shape: {
+        cx: 0,
+        cy: 0,
+        r: 5,
+      },
+      style: {
+        fill: 'red',
+      },
+      z: 100,
+      zlevel: 2,
+      invisible: true
+    }
+  ],
+
+    geo: {
+      map: selectedMap.value,
+      roam: true,
+      boundingCoords: selectedMap.value === 'Empty' ? boundingCoords : undefined,
+      itemStyle: {
+        areaColor: '#e0ffff',
+        borderColor: '#aaa',
+        borderWidth: 1
+      },
+      emphasis: {
+        itemStyle: { areaColor: '#2a6a9b' },
+        label: { show: true, color: '#fff' }
+      }
+    },
+    visualMap: {
+      type: 'continuous',
+      min: Math.min(...speed),
+      max: Math.max(...speed),
+      dimension: 2,
+      orient: 'vertical',
+      right: 10,
+      top: 20,
+      calculable: true,
+      inRange: {
+        color: ['#00bcd4', '#8bc34a', '#ffc107']
+      },
+      formatter: (value: number) => "",
+      text: [
+        `${Math.max(...speed).toFixed(1)}`,
+        `${Math.min(...speed).toFixed(1)}`
+      ]
+    },
+    series: [
+      {
+        name: 'Track',
+        type: 'scatter',
+        coordinateSystem: 'geo',
+        symbolSize: 8,
+        data: positionWithSpeed
+      },
+      {
+        name: 'Current Point',
+        type: 'effectScatter',
+        coordinateSystem: 'geo',
+        data: [],
+        symbolSize: 12,
+        itemStyle: { color: 'red' },
+        rippleEffect: { scale: 4, brushType: 'stroke' },
+        zlevel: 10
+      }
+    ]
+  }, true); // true for merge
+};
+
+const getBoundingCoords = (data: [number, number][]) => {
+  const xs = data.map(p => p[0]);
+  const ys = data.map(p => p[1]);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  return [[minX, minY], [maxX, maxY]];
+};
 
 </script>

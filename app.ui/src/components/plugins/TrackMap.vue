@@ -26,6 +26,14 @@
           </BCol>
         </BRow>
 
+        <BRow>
+          <BCol cols="6">
+            <label for="skipEveryNth" class="form-label mb-0">Skip every nth route point:</label>
+            <BFormInput id="skipEveryNth" type="number" v-model="pluginState.skipEveryNth" size="sm"
+              class="input-width-100" />
+          </BCol>
+        </BRow>
+
       </div>
     </Transition>
 
@@ -54,7 +62,13 @@ import cw2 from '@/assets/maps/cw2.json';
 
 
 
-use([ScatterChart, EffectScatterChart, GeoComponent, VisualMapComponent, GraphicComponent, DataZoomComponent, SVGRenderer]);
+use([ScatterChart,
+  EffectScatterChart,
+  GeoComponent,
+  VisualMapComponent,
+  GraphicComponent,
+  DataZoomComponent,
+  CanvasRenderer]);
 
 
 
@@ -74,15 +88,17 @@ if (!pluginService) {
 
 type PluginState = {
   selectedYColumn: ColumnInfo | null;
+  skipEveryNth: number;
 }
 
 // x, y, speed, time
-const positionWithSpeed: [number, number, number, number][] = [];
+const positionValues: [number, number, number, number][] = [];
 
 const showMenu = useObservable(pluginService.showMenu$);
 
 const pluginState = ref<PluginState>({
   selectedYColumn: null,
+  skipEveryNth: 100
 });
 
 
@@ -150,11 +166,11 @@ watch(pluginState, async (newValue) => {
     pluginService.cardTitle$.next(newValue.selectedYColumn.name);
 
     lastSelectedColumn = newValue.selectedYColumn;
-
-      await loadData();
-  updateChartOptions();
+    await loadData();
   }
 
+
+  updateChartOptions();
 
   // update =the new plugin state
   pluginService.savePluginState(newValue);
@@ -224,7 +240,7 @@ onMounted(async () => {
 
     const { dataIndex, value, componentType } = params;
     console.log('Track point clicked:', { dataIndex, value });
-    const time = positionWithSpeed[dataIndex][3];
+    const time = positionValues[dataIndex][3];
 
     pluginService.getVideoControl().seekTo(time);
 
@@ -260,7 +276,7 @@ const loadColumns = async () => {
 }
 
 const loadData = async () => {
-  const selectedColumn = pluginState.value.selectedYColumn?.name ?? 'car0_velocity' ;
+  const selectedColumn = pluginState.value.selectedYColumn?.name ?? 'car0_velocity';
   await pluginService.getDataManager().initialize([selectedColumn, 'car0_vehicle_pos']);
 
 
@@ -272,33 +288,39 @@ const loadData = async () => {
   const y = data.vectorValues["car0_vehicle_pos"][1]
   const speed = data.scalarValues[selectedColumn];
 
-  for (let i = 0; i < x.length && i < speed.length; i += 100) {
-    positionWithSpeed.push([x[i], y[i], speed[i], time[i]]);
+
+  for (let i = 0; i < x.length && i < speed.length; i++) {
+    positionValues.push([x[i], y[i], speed[i], time[i]]);
   }
 };
 
 const updateChartOptions = () => {
-  const boundingCoords = getBoundingCoords(positionWithSpeed.map(p => [p[0], p[1]]));
+  const boundingCoords = getBoundingCoords(positionValues.map(p => [p[0], p[1]]));
 
-  const speed = positionWithSpeed.map(p => p[2]);
+  const skipEveryNth = Math.max(pluginState.value.skipEveryNth, 1);
+  const zValues = positionValues.map(p => p[2]);
+
+
+
+
   chartRef.value?.setOption({
-      graphic: [
-    {
-      id: 'highlight-point',
-      type: 'circle',
-      shape: {
-        cx: 0,
-        cy: 0,
-        r: 5,
-      },
-      style: {
-        fill: 'red',
-      },
-      z: 100,
-      zlevel: 2,
-      invisible: true
-    }
-  ],
+    graphic: [
+      {
+        id: 'highlight-point',
+        type: 'circle',
+        shape: {
+          cx: 0,
+          cy: 0,
+          r: 5,
+        },
+        style: {
+          fill: 'red',
+        },
+        z: 100,
+        zlevel: 2,
+        invisible: true
+      }
+    ],
 
     geo: {
       map: selectedMap.value,
@@ -316,8 +338,8 @@ const updateChartOptions = () => {
     },
     visualMap: {
       type: 'continuous',
-      min: Math.min(...speed),
-      max: Math.max(...speed),
+      min: Math.min(...zValues),
+      max: Math.max(...zValues),
       dimension: 2,
       orient: 'vertical',
       right: 10,
@@ -328,8 +350,8 @@ const updateChartOptions = () => {
       },
       formatter: (value: number) => "",
       text: [
-        `${Math.max(...speed).toFixed(1)}`,
-        `${Math.min(...speed).toFixed(1)}`
+        `${Math.max(...zValues).toFixed(1)}`,
+        `${Math.min(...zValues).toFixed(1)}`
       ]
     },
     series: [
@@ -338,7 +360,7 @@ const updateChartOptions = () => {
         type: 'scatter',
         coordinateSystem: 'geo',
         symbolSize: 8,
-        data: positionWithSpeed
+        data: positionValues.filter((_, index) => index % skipEveryNth === 0)
       },
       {
         name: 'Current Point',

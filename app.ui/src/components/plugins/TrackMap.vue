@@ -63,14 +63,14 @@ const pluginState = ref<PluginState>({
 const mapOption = ref({
   xAxis: {
     type: 'value',
-    name: 'X',
+    show: false,
     nameLocation: 'middle',
     nameGap: 25,
     axisLine: { onZero: false }
   },
   yAxis: {
     type: 'value',
-    name: 'Y',
+    show: false,
     nameLocation: 'middle',
     nameGap: 35,
     axisLine: { onZero: false }

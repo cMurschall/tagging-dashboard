@@ -163,7 +163,8 @@ watch(pluginState, async (newValue) => {
   if (selectedColumnUpdated && newValue.selectedYColumn) {
     await pluginService.getDataManager().initialize(['car0_vehicle_pos', newValue.selectedYColumn.name]);
 
-    pluginService.cardTitle$.next(newValue.selectedYColumn.name);
+    const title = `Map: ${selectedMap.value} with z-values: ${newValue.selectedYColumn.name}`;
+    pluginService.cardTitle$.next(title);
 
     lastSelectedColumn = newValue.selectedYColumn;
     await loadData();
@@ -240,9 +241,8 @@ onMounted(async () => {
 
     const { dataIndex, value, componentType } = params;
     console.log('Track point clicked:', { dataIndex, value });
-    const time = positionValues[dataIndex][3];
 
-    pluginService.getVideoControl().seekTo(time);
+    pluginService.getVideoControl().seekTo(value[3]);
 
 
   });

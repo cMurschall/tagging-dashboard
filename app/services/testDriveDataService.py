@@ -46,7 +46,10 @@ class TestDriveDataService:
             return
 
         self.current_project_info = project_info
-        self.active_testdrive_df = pd.read_csv(project_info.test_drive_data_info.csv_file_full_path, skiprows=[1])
+        df = pd.read_csv(project_info.test_drive_data_info.csv_file_full_path, skiprows=[1])
+        str_cols = df.select_dtypes(include='object').columns
+        df[str_cols] = df[str_cols].apply(lambda col: col.str.replace(r'[\[\]]', '', regex=True))
+        self.active_testdrive_df = df
 
     def get_csv_data_columns(self):
 

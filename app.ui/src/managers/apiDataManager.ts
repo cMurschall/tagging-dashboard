@@ -35,8 +35,10 @@ export class ApiDataManager extends DataManager {
         if (Array.isArray(value)) {
           parsed = value;
         } else if (typeof value === "string" && value.includes(",")) {
+          // remove [ and ] if present
+          const cleanedValue = value.replace(/[\[\]]/g, "").trim();
           // Try parsing as a number array
-          parsed = value.split(",").map(Number);
+          parsed = cleanedValue.split(",").map(Number);
           if (parsed.some(isNaN)) {
             parsed = null; // fallback if not all are valid numbers
           }

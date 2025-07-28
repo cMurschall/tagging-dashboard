@@ -220,8 +220,7 @@ onMounted(async () => {
 
     // Convert logical coordinates → pixel space
     const pixel = vChartsRef.convertToPixel({ seriesIndex: 0 }, [xValue, yValue]);
-
-    if (!pixel) return;
+    if (!pixel || !Array.isArray(pixel)) return;
 
     const zr = vChartsRef.chart.getZr();
     const el = zr.storage.getDisplayList().find((el: any) => el.id === 'highlight-point');
@@ -288,7 +287,8 @@ const loadData = async () => {
   const y = data.vectorValues["car0_vehicle_pos"][1]
   const speed = data.scalarValues[selectedColumn];
 
-
+  // Clear previous data
+  positionValues.length = 0;
   for (let i = 0; i < x.length && i < speed.length; i++) {
     positionValues.push([x[i], y[i], speed[i], time[i]]);
   }
@@ -298,8 +298,7 @@ const updateChartOptions = () => {
   const boundingCoords = getBoundingCoords(positionValues.map(p => [p[0], p[1]]));
 
   const skipEveryNth = Math.max(pluginState.value.skipEveryNth, 1);
-  const zValues = positionValues.map(p => p[2]);
-
+  const zValues = positionValues.length != 0 ? positionValues.map(p => p[2]) : [0];
 
 
 
@@ -377,6 +376,9 @@ const updateChartOptions = () => {
 };
 
 const getBoundingCoords = (data: [number, number][]) => {
+  if (data.length === 0) {
+    return [[0, 0], [1, 1]];
+  }
   const xs = data.map(p => p[0]);
   const ys = data.map(p => p[1]);
   const minX = Math.min(...xs);

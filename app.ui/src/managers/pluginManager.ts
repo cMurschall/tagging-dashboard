@@ -107,7 +107,7 @@ export class PluginManager {
             manifest: {
                 name: 'TrackMap',
                 displayName: 'Map',
-                defaultSize: { width: 7, height: 7 },
+                defaultSize: { width: 4, height: 20 },
             }
         }]
     ])
